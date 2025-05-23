@@ -486,7 +486,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.ToTable("User");
 
             entity.Property(e => e.UserId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("user_id");
             entity.Property(e => e.AvatarUrl)
                 .HasMaxLength(255)
@@ -515,6 +515,10 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("username");
+            // add
+            entity.HasOne(d => d.AdminProfile)
+                .WithOne(p => p.Admin)
+                .HasForeignKey<AdminProfile>(d => d.AdminId);
         });
 
         modelBuilder.Entity<UserBadge>(entity =>
