@@ -1,6 +1,0 @@
-@WebSmokingSpport_HostAddress = http://localhost:5012
-
-GET {{WebSmokingSpport_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

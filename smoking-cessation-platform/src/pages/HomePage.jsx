@@ -1,8 +1,15 @@
-export default function HomePage() {
+
+import React from 'react';
+
+const Home = () => {
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Chào mừng đến với Nền tảng Cai nghiện Thuốc lá</h1>
-      <p>Giới thiệu, sứ mệnh, lợi ích, các gói dịch vụ...</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 text-gray-800">
+      <h1 className="text-4xl font-bold mb-4">Nền tảng hỗ trợ cai nghiện thuốc lá</h1>
+      <p className="text-lg text-center max-w-xl">
+        Hành trình bỏ thuốc của bạn bắt đầu tại đây. Lên kế hoạch – theo dõi – được hỗ trợ – vượt qua cám dỗ.
+      </p>
     </div>
   );
-}
+};
+
+export default Home;

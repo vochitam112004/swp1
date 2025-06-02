@@ -5,8 +5,8 @@ import BlogPage from "../pages/BlogPage";
 import PricingPage from "../pages/PricingPage";
 import DashboardPage from "../pages/DashboardPage";
 import NotFoundPage from "../pages/NotFoundPage";
-import LoginPage from "../features/authentication/LoginPage";
-import RegisterPage from "../features/authentication/RegisterPage";
+import LoginPage from "../authentication/LoginPage";
+import RegisterPage from "../authentication/RegisterPage";
 import ProtectedRoute from "./ProtectedRoute";
 
 export default function AppRouter() {
