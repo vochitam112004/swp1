@@ -1,0 +1,220 @@
+/* Thiết lập cơ bản cho toàn trang */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  width: 100vw;
+  overflow: auto; /* Cho phép cuộn */
+}
+
+/* Nền trang gradient sống động */
+.register-bg {
+  background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Thêm đoạn này để hỗ trợ dark mode */
+.dark-theme .register-bg {
+  background: linear-gradient(120deg, #23272b 0%, #181818 100%) !important;
+}
+
+/* Container glassmorphism nổi bật */
+.register-container {
+  max-width: 420px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 28px;
+  box-shadow: 0 12px 40px 0 rgba(52, 152, 219, 0.22),
+    0 2px 8px 0 rgba(116, 235, 213, 0.1);
+  padding: 48px 38px 38px 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+    border: 2px solid rgba(255, 255, 255, 0.34);
+  animation: fadeInUp 0.7s cubic-bezier(0.23, 1.02, 0.32, 1);
+  position: relative;
+  /* Xóa margin để căn giữa */
+  margin: 0;
+}
+
+/* Dark mode cho register-container */
+.dark-theme .register-container {
+  background: rgba(30, 32, 36, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px 0 rgba(24, 90, 157, 0.18),
+    0 2px 8px 0 rgba(67, 206, 162, 0.08);
+}
+
+/* Hiệu ứng fade */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Bóng sáng phía trên */
+.register-container::before {
+  content: "";
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 48px;
+  background: radial-gradient(circle, #fff8 60%, transparent 100%);
+  filter: blur(10px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Tiêu đề gradient nổi bật */
+.register-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 32px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #43cea2, #185a9d 80%);
+  -webkit-background-clip: text;
+  background-clip: text; /* Thêm dòng này cho chuẩn */
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 24px #43cea255;
+}
+
+/* Dark mode cho tiêu đề */
+.dark-theme .register-title {
+  background: linear-gradient(90deg, #43cea2, #a1c4fd 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 24px #43cea255;
+}
+
+/* Form đăng ký */
+.register-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  z-index: 2;
+}
+
+/* Nhãn input */
+.register-form label {
+  font-weight: 700;
+  color: #185a9d;
+  margin-bottom: 6px;
+  font-size: 1.08rem;
+  letter-spacing: 0.5px;
+}
+
+/* Ô nhập dữ liệu */
+.register-form input {
+  width: 100%;
+  padding: 15px 16px;
+  border-radius: 12px;
+  border: 2px solid #b2dfdb;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 1.08rem;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 10px 0 rgba(67, 206, 162, 0.1);
+  outline: none;
+}
+
+/* Dark mode cho ô nhập dữ liệu */
+.dark-theme .register-form input {
+  background: rgba(40, 42, 48, 0.92);
+  color: #f1f1f1;
+  border: 2px solid #23272b;
+}
+
+.register-form input:focus {
+  border: 2px solid #185a9d;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(24, 90, 157, 0.13);
+}
+
+/* Dark mode cho ô nhập dữ liệu khi focus */
+.dark-theme .register-form input:focus {
+  background: #23272b;
+  border: 2px solid #43cea2;
+  color: #fff;
+}
+
+/* Nút đăng ký gradient nổi bật */
+.register-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
+  color: #fff;
+  font-weight: 800;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.18rem;
+  cursor: pointer;
+  margin-top: 10px;
+  box-shadow: 0 4px 18px 0 rgba(67, 206, 162, 0.18);
+  transition: transform 0.18s, box-shadow 0.18s;
+  letter-spacing: 0.7px;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-btn:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 10px 32px 0 rgba(24, 90, 157, 0.18);
+  background: linear-gradient(90deg, #185a9d 0%, #43cea2 100%);
+}
+
+/* Nút đăng nhập */
+.login-btn {
+  width: 100%;
+  padding: 13px;
+  background: rgba(255, 255, 255, 0.93);
+  color: #185a9d;
+  font-weight: 800;
+  border: 2px solid #43cea2;
+  border-radius: 12px;
+  font-size: 1.07rem;
+  cursor: pointer;
+  margin-top: 14px;
+  transition: color 0.18s, border 0.18s, transform 0.18s;
+  box-shadow: 0 2px 10px 0 rgba(67, 206, 162, 0.1);
+  letter-spacing: 0.4px;
+}
+
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 600px) {
+  .register-container {
+    max-width: 98vw;
+    padding: 18px 3vw 16px 3vw;
+    border-radius: 16px;
+  }
+  .register-title {
+    font-size: 1.5rem;
+  }
+  .register-btn,
+  .login-btn {
+    font-size: 1rem;
+    padding: 11px;
+  }
+  .register-form input {
+    font-size: 1rem;
+    padding: 10px 11px;
+  }
+}
