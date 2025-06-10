@@ -1,0 +1,136 @@
+/*CSS tổng thể.*/
+/* Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Body background */
+body {
+  background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #212529;
+  min-height: 100vh;
+}
+
+/* Register form container */
+.register-container {
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px 0 rgba(33, 147, 176, 0.18),
+    0 1.5px 8px 0 rgba(33, 147, 176, 0.08);
+  padding: 2.5rem 2rem 2rem 2rem;
+  width: 100%;
+  max-width: 370px;
+  margin: 32px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.9s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Title */
+.register-title {
+  font-size: 2.3rem;
+  font-weight: 700;
+  color: #2193b0;
+  margin-bottom: 28px;
+  text-align: center;
+  letter-spacing: 1px;
+  text-shadow: 0 4px 18px #6dd5ed55, 0 2px 6px #2193b055;
+}
+
+/* Label */
+.register-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2193b0;
+  margin-bottom: 7px;
+  margin-top: 16px;
+  letter-spacing: 0.5px;
+}
+
+/* Input - use Bootstrap form-control for styling */
+.register-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #b2d8f7;
+  border-radius: 0.5rem;
+  background: #f8fbfd;
+  font-size: 1rem;
+  margin-bottom: 6px;
+  transition: border 0.2s, box-shadow 0.2s;
+  outline: none;
+  box-shadow: 0 1px 4px 0 #b2d8f733;
+}
+
+.register-input:focus {
+  border: 1.5px solid #2193b0;
+  box-shadow: 0 2px 12px 0 #6dd5ed33;
+  background: #f0fbff;
+}
+
+/* Button - use Bootstrap btn classes for styling */
+.register-btn {
+  width: 100%;
+  padding: 13px 0;
+  margin-top: 22px;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(90deg, #6dd5ed 0%, #2193b0 100%);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px 0 #2193b033;
+  transition: background 0.18s, transform 0.13s;
+}
+
+.register-btn:hover,
+.btn-primary:hover {
+  background: linear-gradient(90deg, #2193b0 0%, #6dd5ed 100%);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 24px 0 #2193b055;
+}
+
+/* Google button wrapper */
+.google-btn-wrapper {
+  width: 100%;
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Custom styles */
+.hero-gradient {
+  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .register-container {
+    padding: 24px 8px 20px 8px;
+    max-width: 98vw;
+  }
+  .register-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* --- Remove Tailwind directives if present --- */
+/* @tailwind base; */
+/* @tailwind components; */
+/* @tailwind utilities; */
