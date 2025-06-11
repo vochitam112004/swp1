@@ -8,6 +8,10 @@ const Footer = () => {
     navigate("/about");
   };
 
+  const handleBlogClick = () => {
+    navigate("/blog");
+  };
+
   return (
     <footer className="bg-dark text-white pt-5 pb-4">
       <div className="container">
@@ -30,7 +34,12 @@ const Footer = () => {
           <div className="col-6 col-md-3">
             <h3 className="text-uppercase fs-6 fw-semibold mb-3">Tài nguyên</h3>
             <ul className="list-unstyled">
-              <li><a href="#" className="text-secondary text-decoration-none d-block mb-2">Blog chia sẻ</a></li>
+              <li><button
+                  onClick={handleBlogClick}
+                  className="btn btn-link text-secondary text-decoration-none d-block mb-2 p-0"
+                >
+                  Blog chia sẻ
+                </button></li>
               <li><a href="#" className="text-secondary text-decoration-none d-block mb-2">Nghiên cứu</a></li>
               <li><a href="#" className="text-secondary text-decoration-none d-block">Câu hỏi thường gặp</a></li>
             </ul>
