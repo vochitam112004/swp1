@@ -13,6 +13,7 @@ import Footer from "./components/footer";
 import Register from "./components/Register";
 import Blog from "./components/Blog";
 import BXH from "./components/BXH";
+import About from "./components/About";
 import ChatSupport from "./components/ChatSupport";
 import Payment from "./components/Payment";
 
@@ -45,6 +46,7 @@ function App() {
         <Route path="/membership" element={<Membership />} />
         <Route path="/register" element={<Register />} />
         <Route path="/payment" element={<Payment />} />
+        <Route path="/about" element={<About />} />
         {/* Thêm các route khác nếu cần */}
       </Routes>
       <Footer />
