@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Box, Button, TextField, Typography, Paper } from "@mui/material";
-
+import axios from "axios"; // Thêm dòng này
+import GoogleLogin from "./GoogleLogin"; // Giả sử bạn đã tạo component GoogleLogin
 export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
@@ -9,22 +10,29 @@ export default function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Giả lập thông tin đăng nhập đúng
-    const validUsername = "admin";
-    const validPassword = "123456";
-
-    if (form.username === validUsername && form.password === validPassword) {
+    try {
+      const response = await axios.post(
+        "https://your-backend-url/api/auth/login",
+        {
+          username: form.username,
+          password: form.password,
+        }
+      );
       setMessage("Đăng nhập thành công!");
-      console.log("Login Data:", form);
-    } else {
+      // Lưu token hoặc thông tin người dùng nếu cần
+      // localStorage.setItem("token", response.data.token);
+      console.log("Login Data:", response.data);
+    } catch (error) {
       setMessage("Tên đăng nhập hoặc mật khẩu không đúng!");
+      console.error("Login error:", error);
     }
   };
 
   return (
+    // ...existing code...
     <Box
       sx={{
         minHeight: "80vh",
@@ -67,6 +75,9 @@ export default function Login() {
             Đăng nhập
           </Button>
         </form>
+        <Box mt={2}>
+          <GoogleLogin />
+        </Box>
         {message && (
           <Typography
             color={
@@ -81,5 +92,6 @@ export default function Login() {
         )}
       </Paper>
     </Box>
+    // ...existing code...
   );
 }

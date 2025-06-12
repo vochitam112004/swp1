@@ -1,32 +1,43 @@
 import React from "react";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const LoginPage: React.FC = () => {
+const GoogleLoginComponent: React.FC = () => {
+    const navigate = useNavigate();
+
     const handleGoogleSuccess = async (credentialResponse: any) => {
-        try {
-            const idToken = credentialResponse.credential;
+        const idToken = credentialResponse?.credential;
 
-            // Gửi idToken đến backend
-            const response = await axios.post("https://your-backend-url/api/auth/google-login", {
+        if (!idToken) {
+            console.error("Không nhận được ID Token từ Google");
+            return;
+        }
+
+        try {
+            const response = await axios.post("https://d336-118-69-182-144.ngrok-free.app/api/auth/google-login", {
                 idToken: idToken,
             });
 
-            console.log("Login successful", response.data);
-            // Lưu thông tin người dùng hoặc token vào state/localStorage
-        } catch (error) {
-            console.error("Error during Google login:", error);
+            console.log("Đăng nhập thành công", response.data);
+
+            // Lưu token vào localStorage nếu cần
+            localStorage.setItem("authToken", response.data.token);
+
+            // Chuyển hướng sang trang user/profile
+            navigate("/loginPage");
+        } catch (error: any) {
+            console.error("Lỗi khi gửi ID Token đến backend:", error?.response?.data || error.message);
         }
     };
 
     return (
-        <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
-            <div>
-                <h2>Đăng nhập</h2>
+        <GoogleOAuthProvider clientId="416297449029-062617cbgu0dmevpbmr91m76gjjhdevu.apps.googleusercontent.com">
+            <div style={{ textAlign: "center", margin: "0 auto", width:"50%" }}>
                 <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={() => {
-                        console.log("Đăng nhập Google thất bại");
+                        console.error("Đăng nhập Google thất bại");
                     }}
                 />
             </div>
@@ -34,4 +45,4 @@ const LoginPage: React.FC = () => {
     );
 };
 
-export default LoginPage;
+export default GoogleLoginComponent;
