@@ -1,24 +1,24 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import React, { useState } from "react";
-import Navigation from "./components/navigation";
-import HeroSection from "./components/heroSection";
-import StatsSection from "./components/statsSection";
-import FeaturesSection from "./components/featuresSection";
-import Dashboard from "./components/dashboard";
-import Membership from "./components/membership";
-import Testimonials from "./components/testimonials";
-import CTASection from "./components/CTASection";
-import Login from "./components/Login";
-import Footer from "./components/footer";
-import Register from "./components/Register";
-import Blog from "./components/Blog";
-import BXH from "./components/BXH";
-import About from "./components/About";
-import ChatSupport from "./components/ChatSupport";
-import Payment from "./components/Payment";
+// import React, { useState } from "react";
+import Navigation from "./components/layout/navigation";
+import HeroSection from "./components/layout/heroSection";
+import StatsSection from "./components/dashboard/statsSection";
+import FeaturesSection from "./components/dashboard/featuresSection";
+import Dashboard from "./components/dashboard/dashboard";
+import Membership from "./components/dashboard/membership";
+import Testimonials from "./components/dashboard/testimonials";
+import CTASection from "./components/layout/CTASection";
+import Login from "./components/auth/Login";
+import Footer from "./components/layout/footer";
+import Register from "./components/auth/Register";
+import Blog from "./components/common/Blog";
+import BXH from "./components/dashboard/BXH";
+import About from "./components/common/About";
+// import ChatSupport from "./components/chat/ChatSupport";
+import Payment from "./components/common/Payment";
 
 function App() {
-  const [showChat, setShowChat] = useState(false);
+  // const [showChat, setShowChat] = useState(false);
 
   return (
     <Router>

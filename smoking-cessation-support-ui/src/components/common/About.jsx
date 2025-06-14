@@ -1,5 +1,5 @@
 import React from "react";
-import "../css/About.css";
+import "../../css/About.css"; // Import CSS styles for the About component
 
 const About = () => (
   <div className="about-bg">
