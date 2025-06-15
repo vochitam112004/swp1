@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, Button, TextField, Typography, Paper } from "@mui/material";
 import axios from "axios"; // Thêm dòng này
 import GoogleLogin from "./GoogleLogin"; // Giả sử bạn đã tạo component GoogleLogin
+import { toast } from "react-toastify";
 export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
@@ -15,18 +16,18 @@ export default function Login() {
 
     try {
       const response = await axios.post(
-        "https://your-backend-url/api/auth/login",
+        "/login",
         {
           username: form.username,
           password: form.password,
         }
       );
-      setMessage("Đăng nhập thành công!");
+      toast.success("Đăng nhập thành công!");
       // Lưu token hoặc thông tin người dùng nếu cần
       // localStorage.setItem("token", response.data.token);
       console.log("Login Data:", response.data);
     } catch (error) {
-      setMessage("Tên đăng nhập hoặc mật khẩu không đúng!");
+      toast.error("Tên đăng nhập hoặc mật khẩu không đúng!");
       console.error("Login error:", error);
     }
   };
