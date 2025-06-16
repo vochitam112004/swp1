@@ -15,13 +15,13 @@ const GoogleLoginComponent: React.FC = () => {
             return;
         }
         try {
-            const response = await axios.post("auth/GoogleLogin", {
+            const response = await axios.post("https://7d98-118-69-182-149.ngrok-free.app/api/Auth/google-login", {
                 idToken: idToken,
             });
             console.log("Đăng nhập thành công", response.data);
             toast.success("Đăng nhập thành công!");
             localStorage.setItem("authToken", response.data.token);
-            navigate("/dashboard");
+            navigate("/membership");
         } catch (error: any) {
             console.error("Lỗi khi gửi ID Token đến backend:", error?.response?.data || error.message);
         }
