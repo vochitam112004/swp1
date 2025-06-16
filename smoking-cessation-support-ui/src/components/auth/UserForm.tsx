@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
+import "../css/About.css";
 
 const UserForm: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -18,22 +19,16 @@ const UserForm: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmittedData(formData); // Save entered data to state
-        setFormData({ name: "", email: "", age: "" }); // Reset form
+        setSubmittedData(formData);
+        setFormData({ name: "", email: "", age: "" });
     };
 
     const handleGoogleSuccess = async (credentialResponse: any) => {
         try {
             const idToken = credentialResponse.credential;
-
-            // Send idToken to backend
             const response = await axios.post("https://your-backend-url/api/auth/google-login", {
                 idToken: idToken,
             });
-
-            console.log("Login successful", response.data);
-
-            // Update form data with user info from backend response
             const user = response.data.user;
             setFormData({
                 name: user.name || "",
@@ -50,10 +45,10 @@ const UserForm: React.FC = () => {
     };
 
     return (
-        <div style={{ maxWidth: "400px", margin: "0 auto" }}>
+        <div className="user-form-container">
             <form onSubmit={handleSubmit}>
-                <h2>Nhập Dữ Liệu Người Dùng</h2>
-                <div style={{ marginBottom: "15px" }}>
+                <h2 className="user-form-title">Nhập Dữ Liệu Người Dùng</h2>
+                <div className="user-form-group">
                     <label htmlFor="name">Tên:</label>
                     <input
                         type="text"
@@ -62,10 +57,10 @@ const UserForm: React.FC = () => {
                         value={formData.name}
                         onChange={handleChange}
                         required
-                        style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+                        className="user-form-input"
                     />
                 </div>
-                <div style={{ marginBottom: "15px" }}>
+                <div className="user-form-group">
                     <label htmlFor="email">Email:</label>
                     <input
                         type="email"
@@ -74,10 +69,10 @@ const UserForm: React.FC = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+                        className="user-form-input"
                     />
                 </div>
-                <div style={{ marginBottom: "15px" }}>
+                <div className="user-form-group">
                     <label htmlFor="age">Tuổi:</label>
                     <input
                         type="number"
@@ -86,26 +81,16 @@ const UserForm: React.FC = () => {
                         value={formData.age}
                         onChange={handleChange}
                         required
-                        style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+                        className="user-form-input"
                     />
                 </div>
-                <button
-                    type="submit"
-                    style={{
-                        padding: "10px 20px",
-                        backgroundColor: "#007BFF",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                    }}
-                >
+                <button type="submit" className="user-form-button">
                     Gửi
                 </button>
             </form>
 
             <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
-                <div style={{ marginTop: "20px", textAlign: "center" }}>
+                <div className="user-form-google">
                     <GoogleLogin
                         onSuccess={handleGoogleSuccess}
                         onError={handleGoogleError}
@@ -114,7 +99,7 @@ const UserForm: React.FC = () => {
             </GoogleOAuthProvider>
 
             {submittedData && (
-                <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc" }}>
+                <div className="user-form-result">
                     <h3>Dữ Liệu Đã Nhập:</h3>
                     <p><strong>Tên:</strong> {submittedData.name}</p>
                     <p><strong>Email:</strong> {submittedData.email}</p>
