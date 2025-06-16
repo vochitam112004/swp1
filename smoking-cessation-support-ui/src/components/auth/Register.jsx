@@ -1,24 +1,23 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../api/axios";
-import { toast } from "react-toastify"; // Adjust the import path as necessary
+import api from "../../api/axios.js";
+import { toast } from "react-toastify";
 import {
   Box,
   Button,
   TextField,
   Typography,
   Paper,
-  Divider,
 } from "@mui/material";
 
 export default function Register() {
   const [form, setForm] = useState({
-    username: "",
+    userName: "",
     password: "",
     email: "",
-    phone: "",
+    phoneNumber: "",
     address: "",
-    fullName: "",
+    displayName: "",
   });
   const [message, setMessage] = useState(false);
   const navigate = useNavigate();
@@ -33,7 +32,7 @@ export default function Register() {
 
     try {
       console.log("Register payload:", form);
-      const response = await api.post("register", form);
+      const response = await api.post("Auth/register", form);
       console.log(response);
 
       toast.success("Successfully registered! Please log in.");
@@ -75,8 +74,8 @@ export default function Register() {
         <form onSubmit={handleSubmit}>
           <TextField
             label="Tên đăng nhập"
-            name="username"
-            value={form.username}
+            name="userName"
+            value={form.userName}
             onChange={handleChange}
             fullWidth
             margin="normal"
@@ -104,8 +103,8 @@ export default function Register() {
           />
            <TextField
             label="Số điện thoại"
-            name="phone"
-            value={form.phone}
+            name="phoneNumber"
+            value={form.phoneNumber}
             onChange={handleChange}
             fullWidth
             margin="normal"
@@ -121,8 +120,8 @@ export default function Register() {
           />
           <TextField
             label="Tên hiển thị"
-            name="fullName"
-            value={form.fullName}
+            name="displayName"
+            value={form.displayName}
             onChange={handleChange}
             fullWidth
             margin="normal"

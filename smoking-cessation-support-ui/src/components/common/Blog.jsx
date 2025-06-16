@@ -1,7 +1,7 @@
 import { Typography } from "@mui/material";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import api from "../../api/axios";
+import api from "../../api/axios.js";
 import "../../css/Blog.css"; // Adjust the path as necessary
 
 export default function Blog() {

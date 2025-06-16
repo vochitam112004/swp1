@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Button, TextField, Typography, Paper } from "@mui/material";
-import axios from "axios";
+import api from "../../api/axios.js";
 import GoogleLogin from "./GoogleLogin";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -17,8 +17,8 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await axios.post(
-        "/login",
+      const response = await api.post(
+        "Auth/login",
         {
           username: form.username,
           password: form.password,

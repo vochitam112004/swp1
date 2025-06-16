@@ -1,9 +1,8 @@
 import React from "react";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "../../api/axios";
+import api from "../../api/axios.js";
 import "../../css/About.css";
 const GoogleLoginComponent: React.FC = () => {
     const navigate = useNavigate();
@@ -15,7 +14,7 @@ const GoogleLoginComponent: React.FC = () => {
             return;
         }
         try {
-            const response = await axios.post("https://7d98-118-69-182-149.ngrok-free.app/api/Auth/google-login", {
+            const response = await api.post("/Auth/google-login", {
                 idToken: idToken,
             });
             console.log("Đăng nhập thành công", response.data);
