@@ -1,14 +1,43 @@
-import { Box, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import api from "../../api/axios";
+import "../../css/BXH.css";
 
 export default function BXH() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    // Gọi API lấy danh sách xếp hạng (ví dụ: /leaderboard)
+    api.get("leaderboard")
+      .then(res => setUsers(res.data))
+      .catch(() => setUsers([]));
+  }, []);
+
   return (
-    <Box sx={{ py: 8, textAlign: "center" }}>
-      <Typography variant="h3" fontWeight={700} color="primary" mb={2}>
-        Bảng xếp hạng
-      </Typography>
-      <Typography color="text.secondary">
-        Bảng xếp hạng thành viên sẽ hiển thị tại đây.
-      </Typography>
-    </Box>
+    <div className="bxh-container">
+      <h2>Bảng Xếp Hạng</h2>
+      <table className="bxh-table">
+        <thead>
+          <tr>
+            <th>Hạng</th>
+            <th>Tên</th>
+            <th>Điểm</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.length === 0 && (
+            <tr>
+              <td colSpan={3}>Chưa có dữ liệu xếp hạng.</td>
+            </tr>
+          )}
+          {users.map((user, idx) => (
+            <tr key={user.id || idx}>
+              <td>{idx + 1}</td>
+              <td>{user.fullName || user.username}</td>
+              <td>{user.score}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

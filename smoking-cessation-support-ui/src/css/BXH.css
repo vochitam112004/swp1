@@ -1,0 +1,25 @@
+.bxh-container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 32px 24px;
+  text-align: center;
+}
+.bxh-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+.bxh-table th, .bxh-table td {
+  border: 1px solid #e0e0e0;
+  padding: 10px;
+}
+.bxh-table th {
+  background: #1976d2;
+  color: #fff;
+}
+.bxh-table tr:nth-child(even) {
+  background: #f7fafd;
+}

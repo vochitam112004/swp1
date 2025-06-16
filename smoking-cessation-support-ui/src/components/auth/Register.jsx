@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../api/axios";
+import { toast } from "react-toastify"; // Adjust the import path as necessary
 import {
   Box,
   Button,
@@ -15,18 +18,36 @@ export default function Register() {
     email: "",
     phone: "",
     address: "",
-    nameDisplay: "",
+    fullName: "",
   });
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("Đăng ký thành công!");
-    console.log("Form Data:", form);
+    setMessage(true);
+
+    try {
+      console.log("Register payload:", form);
+      const response = await api.post("register", form);
+      console.log(response);
+
+      toast.success("Successfully registered! Please log in.");
+      navigate("/login");
+    } catch (err) {
+      console.error("Registration error:", err);
+      toast.error(
+        err.response?.data?.message ||
+          JSON.stringify(err.response?.data) ||
+          "Đăng ký thất bại!"
+      );
+    } finally {
+      setMessage(false);
+    }
   };
 
   return (
@@ -81,7 +102,7 @@ export default function Register() {
             margin="normal"
             required
           />
-          <TextField
+           <TextField
             label="Số điện thoại"
             name="phone"
             value={form.phone}
@@ -90,7 +111,7 @@ export default function Register() {
             margin="normal"
             required
           />
-          <TextField
+           <TextField
             label="Địa chỉ"
             name="address"
             value={form.address}
@@ -100,8 +121,8 @@ export default function Register() {
           />
           <TextField
             label="Tên hiển thị"
-            name="nameDisplay"
-            value={form.nameDisplay}
+            name="fullName"
+            value={form.fullName}
             onChange={handleChange}
             fullWidth
             margin="normal"

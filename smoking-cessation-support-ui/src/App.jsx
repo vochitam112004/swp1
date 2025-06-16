@@ -35,7 +35,6 @@ function App() {
               <Membership />
               <Testimonials />
               <CTASection />
-              <Register />
             </>
           }
         />

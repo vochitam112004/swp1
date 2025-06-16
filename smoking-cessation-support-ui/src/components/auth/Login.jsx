@@ -3,9 +3,11 @@ import { Box, Button, TextField, Typography, Paper } from "@mui/material";
 import axios from "axios"; // Thêm dòng này
 import GoogleLogin from "./GoogleLogin"; // Giả sử bạn đã tạo component GoogleLogin
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom"; // Thêm dòng này
 export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,9 +25,9 @@ export default function Login() {
         }
       );
       toast.success("Đăng nhập thành công!");
-      // Lưu token hoặc thông tin người dùng nếu cần
-      // localStorage.setItem("token", response.data.token);
       console.log("Login Data:", response.data);
+
+      navigate("/membership"); 
     } catch (error) {
       toast.error("Tên đăng nhập hoặc mật khẩu không đúng!");
       console.error("Login error:", error);
