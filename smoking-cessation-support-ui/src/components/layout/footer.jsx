@@ -69,7 +69,7 @@ const Footer = () => {
         </div>
         <div className="mt-5 border-top border-secondary pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
           <p className="mb-2 mb-md-0 text-secondary text-center text-md-start">
-            &copy; 2023 Breathe Free. All rights reserved.
+            &copy; 2025 Breathe Free. All rights reserved.
           </p>
           <div className="d-flex gap-4">
             <a href="#" className="text-secondary text-decoration-none">Chính sách bảo mật</a>
