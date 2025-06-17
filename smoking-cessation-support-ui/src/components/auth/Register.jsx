@@ -8,7 +8,10 @@ import {
   TextField,
   Typography,
   Paper,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -20,11 +23,14 @@ export default function Register() {
     displayName: "",
   });
   const [message, setMessage] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Thêm state này
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show); // Hàm đổi trạng thái ẩn/hiện
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -84,12 +90,25 @@ export default function Register() {
           <TextField
             label="Mật khẩu"
             name="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={form.password}
             onChange={handleChange}
             fullWidth
             margin="normal"
             required
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <TextField
             label="Email"
