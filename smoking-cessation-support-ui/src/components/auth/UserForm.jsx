@@ -3,27 +3,27 @@ import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import "../css/About.css";
 
-const UserForm: React.FC = () => {
+const UserForm = () => {
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         age: "",
     });
 
-    const [submittedData, setSubmittedData] = useState<any>(null);
+    const [submittedData, setSubmittedData] = useState(null);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         setSubmittedData(formData);
         setFormData({ name: "", email: "", age: "" });
     };
 
-    const handleGoogleSuccess = async (credentialResponse: any) => {
+    const handleGoogleSuccess = async (credentialResponse) => {
         try {
             const idToken = credentialResponse.credential;
             const response = await axios.post("https://your-backend-url/api/auth/google-login", {
@@ -108,6 +108,6 @@ const UserForm: React.FC = () => {
             )}
         </div>
     );
-};//
+};
 
 export default UserForm;

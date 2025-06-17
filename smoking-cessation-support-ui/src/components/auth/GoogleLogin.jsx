@@ -4,10 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../api/axios.js";
 import "../../css/About.css";
-const GoogleLoginComponent: React.FC = () => {
+
+const GoogleLoginComponent = () => {
     const navigate = useNavigate();
 
-    const handleGoogleSuccess = async (credentialResponse: any) => {
+    const handleGoogleSuccess = async (credentialResponse) => {
         const idToken = credentialResponse?.credential;
         if (!idToken) {
             console.error("Không nhận được ID Token từ Google");
@@ -21,7 +22,7 @@ const GoogleLoginComponent: React.FC = () => {
             toast.success("Đăng nhập thành công!");
             localStorage.setItem("authToken", response.data.token);
             navigate("/membership");
-        } catch (error: any) {
+        } catch (error) {
             console.error("Lỗi khi gửi ID Token đến backend:", error?.response?.data || error.message);
         }
     };
