@@ -39,5 +39,5 @@ export default function BXH() {
         </tbody>
       </table>
     </div>
-  );
+  );//
 }
