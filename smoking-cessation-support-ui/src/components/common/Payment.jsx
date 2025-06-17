@@ -1,20 +1,23 @@
 import React, { useState } from "react";
-import { Box, Typography, Tabs, Tab, Paper, Fade, Avatar } from "@mui/material";
+import { Box, Typography, Tabs, Tab, Paper, Fade, Avatar, Button, CircularProgress } from "@mui/material";
 import PaymentIcon from "@mui/icons-material/Payment";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
+import api from "../../api/axios";
 
 const qrImages = {
   momo: "/images/qr-momo.png",
   zalopay: "/images/qr-zalopay.png",
   bank: "/images/qr-bank.png",
+  vnpay: "/images/qr-vnpay.png", // Thêm ảnh QR cho VNPay
 };
 
 const tabIcons = {
   momo: <QrCodeIcon sx={{ color: "#a50064" }} />,
   zalopay: <PaymentIcon sx={{ color: "#008fe5" }} />,
   bank: <AccountBalanceIcon sx={{ color: "#2e7d32" }} />,
+  vnpay: <PaymentIcon sx={{ color: "#1a73e8" }} />, // Icon cho VNPay
 };
 
 const bankInfo = {
@@ -24,42 +27,32 @@ const bankInfo = {
   branch: "Chi nhánh Long An"
 };
 
-export default function Payment() {
+export default function Payment({ onPaymentSuccess }) {
   const [method, setMethod] = useState("momo");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  // Hàm xác nhận thanh toán tự động (giả lập)
+  const handleConfirmPayment = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      // Gọi API xác nhận thanh toán (thay endpoint phù hợp backend)
+      const res = await api.post("/payment/confirm", { method });
+      setSuccess(true);
+      if (onPaymentSuccess) onPaymentSuccess({ method, ...res.data });
+    } catch (err) {
+      setError("Xác nhận thanh toán thất bại. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <Box
-      sx={{
-        minHeight: "80vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #e3f2fd 0%, #fce4ec 100%)"
-      }}
-    >
-      <Box
-        sx={{
-          p: { xs: 2, sm: 5 },
-          borderRadius: 5,
-          minWidth: 350,
-          boxShadow: 6,
-          bgcolor: "#fff",
-          maxWidth: 400,
-          transition: "box-shadow 0.3s",
-          "&:hover": { boxShadow: 12 }
-        }}
-      >
-        <Typography
-          variant="h5"
-          fontWeight={800}
-          mb={2}
-          color="primary"
-          sx={{
-            textAlign: "center",
-            letterSpacing: 1.2,
-            textTransform: "uppercase"
-          }}
-        >
+    <Box sx={{ maxWidth: 420, mx: "auto", mt: 5, mb: 5 }}>
+      <Paper elevation={4} sx={{ p: 4, borderRadius: 4 }}>
+        <Typography variant="h5" fontWeight={700} color="primary" mb={2}>
           Thanh toán qua QR
         </Typography>
         <Tabs
@@ -88,6 +81,7 @@ export default function Payment() {
           <Tab icon={tabIcons.momo} label="Momo" value="momo" />
           <Tab icon={tabIcons.zalopay} label="ZaloPay" value="zalopay" />
           <Tab icon={tabIcons.bank} label="Ngân hàng" value="bank" />
+          <Tab icon={tabIcons.vnpay} label="VNPay" value="vnpay" /> {/* Thêm tab VNPay */}
         </Tabs>
         <Fade in>
           <Box sx={{ mt: 3, textAlign: "center" }}>
@@ -113,6 +107,8 @@ export default function Payment() {
                   ? "Momo"
                   : method === "zalopay"
                   ? "ZaloPay"
+                  : method === "vnpay"
+                  ? "VNPay"
                   : "Ngân hàng"}
               </span>{" "}
               để thanh toán.
@@ -149,9 +145,32 @@ export default function Payment() {
                 </Typography>
               </Paper>
             )}
+            {/* Nút xác nhận thanh toán */}
+            <Box sx={{ mt: 3 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleConfirmPayment}
+                disabled={loading || success}
+                fullWidth
+                sx={{ py: 1.2, fontWeight: 700, fontSize: 18 }}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : success ? "Đã thanh toán!" : "Xác nhận đã thanh toán"}
+              </Button>
+              {error && (
+                <Typography color="error" mt={2}>
+                  {error}
+                </Typography>
+              )}
+              {success && (
+                <Typography color="success.main" mt={2}>
+                  Thanh toán thành công! Cảm ơn bạn.
+                </Typography>
+              )}
+            </Box>
           </Box>
         </Fade>
-      </Box>
+      </Paper>
     </Box>
   );
 }
