@@ -12,6 +12,7 @@ import Login from "./components/auth/Login";
 import Footer from "./components/layout/footer";
 import Register from "./components/auth/Register";
 import Blog from "./components/common/Blog";
+import BlogDetail from "./components/common/BlogDetail";
 import BXH from "./components/dashboard/BXH";
 import About from "./components/common/About";
 // import ChatSupport from "./components/chat/ChatSupport";
@@ -39,6 +40,7 @@ function App() {
           }
         />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:id" element={<BlogDetail />} />
         <Route path="/bxh" element={<BXH />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
