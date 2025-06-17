@@ -37,7 +37,7 @@ const Navigation = () => {
       <Box sx={{ display: "flex", alignItems: "center" }}>
         <Link to="/" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 700, fontSize: 22 }}>
           <img
-            src="https://png.pngtree.com/png-clipart/20230508/original/pngtree-hand-drawn-world-no-tobacco-day-poster-with-illustration-of-cool-png-image_9151533.png"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxjt6B4heNP8Vr4OrU5XVpXCrwrK2mVdflSQ&s"
             alt="Logo"
             style={{ height: 36, marginRight: 8, verticalAlign: "middle" }}
           />
