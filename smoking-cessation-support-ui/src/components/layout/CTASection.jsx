@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const CTASection = () => (
   <div className="bg-primary text-white py-5">
     <div className="container">
@@ -12,7 +14,9 @@ const CTASection = () => (
         </div>
         <div className="col-md-4 text-md-end mt-4 mt-md-0">
           <button className="btn btn-light text-primary fw-medium px-4 py-2 shadow-sm">
-            Đăng ký ngay
+            <Link to="/register" className="text-decoration-none text-primary">
+              Đăng ký ngay
+            </Link>
             <i className="fas fa-arrow-right ms-2"></i>
           </button>
         </div>
