@@ -1,77 +1,105 @@
-import { Typography } from "@mui/material";
-import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
-import api from "../../api/axios.js";
-import "../../css/Blog.css"; // Adjust the path as necessary
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Grid,
+  Avatar,
+} from "@mui/material";
+
+const blogPosts = [
+  {
+    id: 1,
+    title: "5 Bước Đầu Tiên Để Cai Thuốc Lá Thành Công",
+    summary:
+      "Khám phá các bước cơ bản giúp bạn bắt đầu hành trình bỏ thuốc lá hiệu quả và bền vững.",
+    author: "Nguyễn Thành Lợi",
+    date: "2024-06-01",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+  },
+  {
+    id: 2,
+    title: "Lợi Ích Sức Khỏe Khi Ngừng Hút Thuốc",
+    summary:
+      "Tìm hiểu những thay đổi tích cực về sức khỏe mà bạn sẽ nhận được ngay sau khi bỏ thuốc.",
+    author: "Trần Đinh Phong",
+    date: "2024-05-20",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+  },
+  {
+    id: 3,
+    title: "Cách Vượt Qua Cơn Thèm Thuốc",
+    summary:
+      "Những mẹo thực tế giúp bạn kiểm soát và vượt qua các cơn thèm thuốc trong quá trình cai.",
+    author: "Võ Chí Tâm",
+    date: "2024-05-10",
+    avatar: "https://randomuser.me/api/portraits/men/75.jpg",
+  },
+];
 
 export default function Blog() {
-  const [form, setForm] = useState({
-    title: "",
-    content: "",
-  });
-  const [posts, setPosts] = useState([]);
-
-  useEffect(() => {
-    api.get("blog")
-      .then(res => setPosts(res.data))
-      .catch(() => setPosts([]));
-  }, []);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await api.post("blog", form);
-      toast.success("Bài viết đã được gửi thành công!");
-      setPosts([response.data, ...posts]);
-      setForm({
-        title: "",
-        content: "",
-      });
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Đã xảy ra lỗi khi gửi bài viết!");
-    }
-  };
-
   return (
-    <>
-    <h1 className="blog-title">Blog</h1>
-    <div className="blog-container">
-      <div className="blog-form">
-        <form onSubmit={handleSubmit}>
-          <h2>Đăng bài Blog mới</h2>
-          <input
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            placeholder="Tiêu đề bài viết"
-            required
-          />
-          <textarea
-            name="content"
-            value={form.content}
-            onChange={handleChange}
-            placeholder="Nội dung bài viết"
-            rows={8}
-            required
-          />
-          <button type="submit">Đăng bài</button>
-        </form>
-      </div>
-      <div className="blog-list">
-        <h6>Danh sách bài viết</h6>
-        {posts.length === 0 && <Typography>Chưa có bài viết nào.</Typography>}
-        {posts.map((post, idx) => (
-          <div className="blog-post" key={post.id || idx}>
-            <div className="blog-post-title">{post.title}</div>
-            <div className="blog-post-content">{post.content}</div>
-          </div>
+    <Box sx={{ py: 8, px: 2, maxWidth: 1100, mx: "auto" }}>
+      <Typography
+        variant="h3"
+        fontWeight={700}
+        color="primary"
+        mb={4}
+        textAlign="center"
+      >
+        Tin tức
+      </Typography>
+      <Grid container spacing={4}>
+        {blogPosts.map((post) => (
+          <Grid item xs={12} md={4} key={post.id}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                boxShadow: 3,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" fontWeight={700} gutterBottom>
+                  {post.title}
+                </Typography>
+                <Typography color="text.secondary" mb={2}>
+                  {post.summary}
+                </Typography>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={1}
+                  mb={1}
+                >
+                  <Avatar
+                    src={post.avatar}
+                    sx={{ width: 28, height: 28 }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {post.author} &nbsp;|&nbsp;{" "}
+                    {new Date(post.date).toLocaleDateString("vi-VN")}
+                  </Typography>
+                </Box>
+              </CardContent>
+              <CardActions>
+                <Button
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                  fullWidth
+                >
+                  Xem chi tiết
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
         ))}
-      </div>
-    </div>
-    </>
-  );//
+      </Grid>
+    </Box>
+  );
 }
