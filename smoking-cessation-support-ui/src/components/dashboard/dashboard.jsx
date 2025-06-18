@@ -151,6 +151,7 @@ const Dashboard = () => {
         </div>
 
         <div className="bg-white shadow rounded-4 overflow-hidden">
+
           {/* Tabs */}
           <ul className="nav nav-tabs px-3 pt-3">
             <li className="nav-item">
@@ -177,6 +178,7 @@ const Dashboard = () => {
           <div className="p-4">
             {activeTab === "overview" && (
               <div>
+
                 {/* Stats */}
                 <div className="row g-4 mb-4">
                   <div className="col-md-3">
@@ -219,6 +221,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
+
                 {/* Progress & Goal */}
                 <div className="row g-4">
                   <div className="col-md-8">
@@ -266,6 +269,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
+
                 {/* Recent Achievements */}
                 <div className="mt-5">
                   <h3 className="fs-5 fw-semibold mb-3">Thành tích gần đây</h3>
@@ -285,6 +289,7 @@ const Dashboard = () => {
                     ))}
                   </div>
                 </div>
+
                 {/* Bảng tin cộng đồng */}
                 <div className="mt-5">
                   <h4>Bảng tin cộng đồng</h4>
@@ -295,6 +300,7 @@ const Dashboard = () => {
                     </div>
                   ))}
                 </div>
+
                 {/* Motivation */}
                 <div className="mt-5 bg-light p-4 rounded-3 shadow-sm">
                   <div className="d-flex align-items-start">
@@ -308,6 +314,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
+
                 {/* Biểu đồ tiến trình */}
                 <div className="my-4">
                   <h4>Biểu đồ tiến trình</h4>
@@ -347,6 +354,7 @@ const Dashboard = () => {
                 <p className="text-secondary">
                   Ghi lại cảm xúc, khó khăn, thành công mỗi ngày để theo dõi tiến trình và nhận lời khuyên phù hợp.
                 </p>
+
                 {/* Form nhập nhật ký */}
                 <form onSubmit={handleJournalSubmit} className="mb-4">
                   <div className="mb-2">
@@ -373,6 +381,7 @@ const Dashboard = () => {
                     Lưu nhật ký
                   </button>
                 </form>
+
                 {/* Hiển thị danh sách nhật ký */}
                 <div>
                   <h5 className="mb-3">Lịch sử nhật ký</h5>
@@ -383,6 +392,7 @@ const Dashboard = () => {
                     </div>
                   ))}
                 </div>
+                
                 {/* Biểu đồ tiến trình theo nhật ký */}
                 <div className="my-4">
                   <h5>Biểu đồ tiến trình (theo nhật ký)</h5>
