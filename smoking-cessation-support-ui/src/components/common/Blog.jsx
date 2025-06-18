@@ -3,22 +3,31 @@ import { Link } from "react-router-dom";
 import BlogPosts from "../common/BlogPosts";
 import "../../css/Blog.css";
 
+// Hàm loại bỏ dấu tiếng Việt
+function removeVietnameseTones(str) {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+}
 export default function Blog() {
   const [search, setSearch] = useState("");
 
-  // Lọc bài viết theo từ khóa trong title hoặc content (không phân biệt hoa thường)
-  const filteredPosts = BlogPosts.filter(
-    (post) =>
-      post.title.toLowerCase().includes(search.toLowerCase()) ||
-      (post.content && post.content.toLowerCase().includes(search.toLowerCase()))
+  // Lọc bài viết chỉ theo title, không phân biệt dấu
+  const filteredPosts = BlogPosts.filter((post) =>
+    removeVietnameseTones(post.title.toLowerCase()).includes(
+      removeVietnameseTones(search.toLowerCase())
+    )
   );
+
 
   return (
     <div className="blog-container">
       <h1 className="blog-title">Danh sách bài viết Blog</h1>
       <input
         type="text"
-        placeholder="Tìm kiếm theo tiêu đề hoặc nội dung..."
+        placeholder="Tìm kiếm bài viết"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{
