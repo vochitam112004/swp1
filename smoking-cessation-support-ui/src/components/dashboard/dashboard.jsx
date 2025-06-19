@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { saveAs } from "file-saver"; // Thêm dòng này ở đầu file nếu chưa có
 
 ChartJS.register(
   CategoryScale,
@@ -178,6 +179,42 @@ const Dashboard = () => {
     toast.info(`Bạn đã chia sẻ huy hiệu "${badge.label}" lên cộng đồng!`);
   }
 
+  // Thêm các state và hàm xử lý động viên, bình luận
+  const [forceUpdate, setForceUpdate] = useState(0);
+  const [commentInputs, setCommentInputs] = useState({});
+
+  function handleEncourage(idx) {
+    const encourages = JSON.parse(localStorage.getItem("encourages") || "{}");
+    encourages[idx] = (encourages[idx] || 0) + 1;
+    localStorage.setItem("encourages", JSON.stringify(encourages));
+    toast.success("Bạn đã động viên thành công!");
+    setForceUpdate(f => f + 1);
+  }
+
+  function handleAddComment(idx, comment) {
+    const comments = JSON.parse(localStorage.getItem("badgeComments") || "{}");
+    if (!comments[idx]) comments[idx] = [];
+    comments[idx].push({ text: comment, time: new Date().toLocaleString() });
+    localStorage.setItem("badgeComments", JSON.stringify(comments));
+    setForceUpdate(f => f + 1);
+  }
+
+  const communityAvg = {
+    daysNoSmoke: 18,
+    moneySaved: 1260000,
+    health: 36,
+  };
+
+  function exportCSV() {
+    const rows = [
+      ["Ngày", "Nội dung nhật ký"],
+      ...journal.map(j => [j.date, j.content.replace(/\n/g, " ")]),
+    ];
+    const csv = rows.map(r => r.map(x => `"${x}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, "nhat-ky-cai-thuoc.csv");
+  }
+
   return (
     <div className="bg-white py-5">
       <div className="container">
@@ -187,9 +224,7 @@ const Dashboard = () => {
             Theo dõi tiến trình cai thuốc của bạn
           </p>
         </div>
-
         <div className="bg-white shadow rounded-4 overflow-hidden">
-
           {/* Tabs */}
           <ul className="nav nav-tabs px-3 pt-3">
             <li className="nav-item">
@@ -210,6 +245,11 @@ const Dashboard = () => {
             <li className="nav-item">
               <button className={`nav-link ${activeTab === "achievements" ? "active" : ""}`} onClick={() => setActiveTab("achievements")}>
                 <i className="fas fa-award me-2"></i>Thành tích
+              </button>
+            </li>
+            <li className="nav-item">
+              <button className={`nav-link ${activeTab === "report" ? "active" : ""}`} onClick={() => setActiveTab("report")}>
+                <i className="fas fa-chart-bar me-2"></i>Báo cáo nâng cao
               </button>
             </li>
           </ul>
@@ -358,12 +398,53 @@ const Dashboard = () => {
                 {/* Bảng tin cộng đồng */}
                 <div className="mt-5">
                   <h4>Bảng tin cộng đồng</h4>
-                  {(JSON.parse(localStorage.getItem("sharedBadges") || "[]")).reverse().map((item, idx) => (
-                    <div key={idx} className="border rounded p-2 mb-2 bg-light">
-                      <b>{item.user}</b> đã chia sẻ huy hiệu <span className="text-primary">{item.badge}</span> lúc {item.time}
-                      <button className="btn btn-sm btn-outline-success ms-2">Động viên</button>
-                    </div>
-                  ))}
+                  {(JSON.parse(localStorage.getItem("sharedBadges") || "[]")).reverse().map((item, idx) => {
+                    const encourages = JSON.parse(localStorage.getItem("encourages") || "{}");
+                    const comments = JSON.parse(localStorage.getItem("badgeComments") || "{}");
+                    return (
+                      <div key={idx} className="border rounded p-2 mb-2 bg-light">
+                        <b>{item.user}</b> đã chia sẻ huy hiệu <span className="text-primary">{item.badge}</span> lúc {item.time}
+                        <button
+                          className="btn btn-sm btn-outline-success ms-2"
+                          onClick={() => handleEncourage(idx)}
+                        >
+                          Động viên
+                        </button>
+                        <span className="ms-2 text-success">
+                          {encourages[idx] ? `${encourages[idx]} lượt động viên` : ""}
+                        </span>
+                        {/* Form bình luận */}
+                        <div className="mt-2">
+                          <input
+                            type="text"
+                            placeholder="Viết bình luận..."
+                            value={commentInputs[idx] || ""}
+                            onChange={e => setCommentInputs({ ...commentInputs, [idx]: e.target.value })}
+                            style={{ width: "70%", marginRight: 8 }}
+                          />
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => {
+                              if ((commentInputs[idx] || "").trim()) {
+                                handleAddComment(idx, commentInputs[idx]);
+                                setCommentInputs({ ...commentInputs, [idx]: "" });
+                              }
+                            }}
+                          >
+                            Gửi
+                          </button>
+                        </div>
+                        {/* Hiển thị bình luận */}
+                        <div className="mt-2">
+                          {(comments[idx] || []).map((c, i) => (
+                            <div key={i} style={{ fontSize: 14, marginBottom: 2 }}>
+                              <b>Thành viên:</b> {c.text} <span className="text-secondary" style={{ fontSize: 12 }}>({c.time})</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Motivation */}
@@ -494,6 +575,49 @@ const Dashboard = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+            {activeTab === "report" && (
+              <div>
+                <h3 className="fs-5 fw-semibold mb-3">Báo cáo nâng cao</h3>
+                <div className="row">
+                  <div className="col-md-6">
+                    <h5>Xu hướng tiến trình</h5>
+                    <Line
+                      data={{
+                        labels: chartLabels.length > 0 ? chartLabels : ["Ngày 1"],
+                        datasets: [
+                          {
+                            label: "Số ngày không hút (cộng dồn)",
+                            data: chartData.length > 0 ? chartData : [0],
+                            fill: false,
+                            borderColor: "#1976d2",
+                            tension: 0.1,
+                          },
+                          {
+                            label: "Trung bình cộng đồng",
+                            data: chartLabels.map(() => communityAvg.daysNoSmoke),
+                            borderDash: [5, 5],
+                            borderColor: "#aaa",
+                            fill: false,
+                          },
+                        ],
+                      }}
+                      height={120}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <h5>So sánh với cộng đồng</h5>
+                    <ul>
+                      <li>Số ngày không hút: <b>{progress.daysNoSmoke}</b> (Cộng đồng: {communityAvg.daysNoSmoke})</li>
+                      <li>Tiền tiết kiệm: <b>{progress.moneySaved.toLocaleString()}đ</b> (Cộng đồng: {communityAvg.moneySaved.toLocaleString()}đ)</li>
+                      <li>Cải thiện sức khỏe: <b>{progress.health}%</b> (Cộng đồng: {communityAvg.health}%)</li>
+                    </ul>
+                    <button className="btn btn-outline-primary mt-3" onClick={exportCSV}>
+                      <i className="fas fa-file-csv me-2"></i>Xuất nhật ký CSV
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

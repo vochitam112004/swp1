@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api/axios";
+import { TextField, Button, Avatar, Typography, Box, Paper } from "@mui/material";
+import { toast } from "react-toastify";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
-  const [frequency, setFrequency] = useState(() => localStorage.getItem("smokeFrequency") || "");
-  const [pricePerPack, setPricePerPack] = useState(() => localStorage.getItem("pricePerPack") || "");
+  const [edit, setEdit] = useState(false);
+  const [form, setForm] = useState({});
+  const [avatarFile, setAvatarFile] = useState(null);
   const [error, setError] = useState("");
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwords, setPasswords] = useState({ old: "", new1: "", new2: "" });
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
+    // Lấy thông tin hồ sơ
     const userStr = localStorage.getItem("user");
     if (!userStr) {
       setError("Bạn chưa đăng nhập.");
@@ -17,73 +24,188 @@ export default function Profile() {
     try {
       const user = JSON.parse(userStr);
       id = user.id;
-      if (id === undefined || id === null) throw new Error();
+      if (!id) throw new Error();
     } catch {
       setError("Không tìm thấy thông tin tài khoản.");
       return;
     }
     api.get(`/MemberProfile/${id}`)
-      .then(res => setProfile(res.data))
-      .catch(err => {
-        setError(
-          err?.response?.data?.message ||
-          "Không lấy được thông tin hồ sơ."
-        );
-      });
+      .then(res => {
+        setProfile(res.data);
+        setForm(res.data);
+      })
+      .catch(err => setError("Không lấy được thông tin hồ sơ."));
+    // Lấy lịch sử gói
+    api.get(`/Membership/history/${id}`)
+      .then(res => setHistory(res.data))
+      .catch(() => {});
   }, []);
 
-  const handleProfileUpdate = (e) => {
+  // Cập nhật thông tin cá nhân
+  const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    localStorage.setItem("smokeFrequency", frequency);
-    localStorage.setItem("pricePerPack", pricePerPack);
-    // Có thể thêm logic cập nhật lên server nếu cần
+    try {
+      await api.put("/MemberProfile/update", form);
+      toast.success("Cập nhật thành công!");
+      setEdit(false);
+      setProfile({ ...profile, ...form });
+    } catch {
+      toast.error("Cập nhật thất bại!");
+    }
+  };
+
+  // Đổi mật khẩu
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passwords.new1 !== passwords.new2) {
+      toast.error("Mật khẩu mới không khớp!");
+      return;
+    }
+    try {
+      await api.post("/Auth/change-password", {
+        userId: profile.userId,
+        oldPassword: passwords.old,
+        newPassword: passwords.new1,
+      });
+      toast.success("Đổi mật khẩu thành công!");
+      setShowPasswordForm(false);
+      setPasswords({ old: "", new1: "", new2: "" });
+    } catch {
+      toast.error("Đổi mật khẩu thất bại!");
+    }
+  };
+
+  // Đổi avatar
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAvatarFile(file);
+    const formData = new FormData();
+    formData.append("avatar", file);
+    formData.append("userId", profile.userId);
+    try {
+      const res = await api.post("/MemberProfile/upload-avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setProfile({ ...profile, avatar: res.data.avatar });
+      toast.success("Cập nhật ảnh đại diện thành công!");
+    } catch {
+      toast.error("Cập nhật ảnh đại diện thất bại!");
+    }
   };
 
   if (error) return <div style={{ color: "red" }}>{error}</div>;
   if (!profile) return <div>Đang tải...</div>;
 
   return (
-    <div>
-      <h2>Hồ sơ cá nhân</h2>
-      <p><b>Tên hiển thị:</b> {profile.displayName}</p>
-      <p><b>Email:</b> {profile.email}</p>
-      <p><b>Số điện thoại:</b> {profile.phoneNumber}</p>
-      <p><b>Mã thành viên:</b> {profile.memberId}</p>
-      <p><b>Mã người dùng:</b> {profile.userId}</p>
-      <p><b>Tình trạng hút thuốc:</b> {profile.smokingStatus}</p>
-      <p><b>Số lần cố gắng bỏ thuốc:</b> {profile.quitAttempts}</p>
-      <p><b>Cấp độ kinh nghiệm:</b> {profile.experience_level}</p>
-      <p><b>Lịch sử cố gắng trước đây:</b> {profile.previousAttempts}</p>
-      <form onSubmit={handleProfileUpdate}>
-        <div>
+    <Box sx={{ maxWidth: 500, mx: "auto", mt: 4 }}>
+      <Paper sx={{ p: 3 }}>
+        <Box display="flex" alignItems="center" gap={2} mb={2}>
+          <Avatar src={profile.avatar} sx={{ width: 64, height: 64 }} />
           <label>
-            Tần suất hút/ngày:&nbsp;
-            <input
-              type="number"
-              min="1"
-              value={frequency}
-              onChange={e => setFrequency(e.target.value)}
+            <input type="file" accept="image/*" hidden onChange={handleAvatarChange} />
+            <Button variant="outlined" component="span" size="small">Đổi ảnh</Button>
+          </label>
+        </Box>
+        {!edit ? (
+          <>
+            <Typography variant="h6">{profile.displayName}</Typography>
+            <Typography>Email: {profile.email}</Typography>
+            <Typography>SĐT: {profile.phoneNumber}</Typography>
+            <Typography>Địa chỉ: {profile.address}</Typography>
+            <Typography>Mã thành viên: {profile.memberId}</Typography>
+            <Typography>Tình trạng hút thuốc: {profile.smokingStatus}</Typography>
+            <Button sx={{ mt: 2 }} variant="contained" onClick={() => setEdit(true)}>Chỉnh sửa thông tin</Button>
+            <Button sx={{ mt: 2, ml: 2 }} variant="outlined" onClick={() => setShowPasswordForm(v => !v)}>Đổi mật khẩu</Button>
+          </>
+        ) : (
+          <form onSubmit={handleProfileUpdate}>
+            <TextField
+              label="Tên hiển thị"
+              name="displayName"
+              value={form.displayName || ""}
+              onChange={e => setForm({ ...form, displayName: e.target.value })}
+              fullWidth margin="normal"
+            />
+            <TextField
+              label="Email"
+              name="email"
+              value={form.email || ""}
+              onChange={e => setForm({ ...form, email: e.target.value })}
+              fullWidth margin="normal"
+            />
+            <TextField
+              label="Số điện thoại"
+              name="phoneNumber"
+              value={form.phoneNumber || ""}
+              onChange={e => setForm({ ...form, phoneNumber: e.target.value })}
+              fullWidth margin="normal"
+            />
+            <TextField
+              label="Địa chỉ"
+              name="address"
+              value={form.address || ""}
+              onChange={e => setForm({ ...form, address: e.target.value })}
+              fullWidth margin="normal"
+            />
+            <Box mt={2}>
+              <Button type="submit" variant="contained">Lưu</Button>
+              <Button sx={{ ml: 2 }} variant="outlined" onClick={() => setEdit(false)}>Hủy</Button>
+            </Box>
+          </form>
+        )}
+
+        {/* Đổi mật khẩu */}
+        {showPasswordForm && (
+          <form onSubmit={handleChangePassword} style={{ marginTop: 24 }}>
+            <Typography variant="subtitle1" mb={1}>Đổi mật khẩu</Typography>
+            <TextField
+              label="Mật khẩu cũ"
+              type="password"
+              value={passwords.old}
+              onChange={e => setPasswords({ ...passwords, old: e.target.value })}
+              fullWidth margin="dense"
               required
             />
-            &nbsp;điếu/ngày
-          </label>
-        </div>
-        <div>
-          <label>
-            Giá tiền/bao:&nbsp;
-            <input
-              type="number"
-              min="1000"
-              step="1000"
-              value={pricePerPack}
-              onChange={e => setPricePerPack(e.target.value)}
+            <TextField
+              label="Mật khẩu mới"
+              type="password"
+              value={passwords.new1}
+              onChange={e => setPasswords({ ...passwords, new1: e.target.value })}
+              fullWidth margin="dense"
               required
             />
-            &nbsp;VNĐ/bao
-          </label>
-        </div>
-        <button type="submit">Cập nhật</button>
-      </form>
-    </div>
+            <TextField
+              label="Nhập lại mật khẩu mới"
+              type="password"
+              value={passwords.new2}
+              onChange={e => setPasswords({ ...passwords, new2: e.target.value })}
+              fullWidth margin="dense"
+              required
+            />
+            <Box mt={2}>
+              <Button type="submit" variant="contained">Đổi mật khẩu</Button>
+              <Button sx={{ ml: 2 }} variant="outlined" onClick={() => setShowPasswordForm(false)}>Hủy</Button>
+            </Box>
+          </form>
+        )}
+
+        {/* Lịch sử gói thành viên */}
+        <Box mt={4}>
+          <Typography variant="h6" mb={1}>Lịch sử gói thành viên</Typography>
+          {history.length === 0 ? (
+            <Typography color="text.secondary">Chưa có lịch sử.</Typography>
+          ) : (
+            <ul>
+              {history.map((h, idx) => (
+                <li key={idx}>
+                  {h.planName} ({h.startDate} - {h.endDate || "Hiện tại"})
+                </li>
+              ))}
+            </ul>
+          )}
+        </Box>
+      </Paper>
+    </Box>
   );
 }

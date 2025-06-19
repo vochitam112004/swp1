@@ -18,6 +18,7 @@ import About from "./components/common/About";
 import Profile from "./components/profile/Profile";
 // import ChatSupport from "./components/chat/ChatSupport";
 import Payment from "./components/common/Payment";
+import FeedbackList from "./components/common/FeedbackList";
 
 function App() {
   // const [showChat, setShowChat] = useState(false);
@@ -50,6 +51,7 @@ function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/about" element={<About />} />
         <Route path="/profile" element={<Profile />} />
+         <Route path="/feedbacks" element={<FeedbackList />} />
         {/* Thêm các route khác nếu cần */}
       </Routes>
       <Footer />

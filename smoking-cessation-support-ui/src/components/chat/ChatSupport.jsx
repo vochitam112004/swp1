@@ -1,23 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../../api/axios";
+
+const getUserRole = () => {
+  // Lấy role từ localStorage hoặc context, ví dụ:
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  return user.role || "user"; // "coach" hoặc "user"
+};
 
 const ChatSupport = () => {
-  const [messages, setMessages] = useState([
-    { from: "support", text: "Xin chào! Tôi có thể giúp gì cho bạn?" },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const role = getUserRole();
 
-  const handleSend = (e) => {
+  // Lấy lịch sử chat khi load
+  useEffect(() => {
+    api.get("/chat/history")
+      .then(res => setMessages(res.data))
+      .catch(() => setMessages([
+        { from: "support", text: "Xin chào! Tôi có thể giúp gì cho bạn?" }
+      ]));
+  }, []);
+
+  // Gửi tin nhắn
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
-    setMessages([...messages, { from: "user", text: input }]);
+    const newMsg = { from: role, text: input };
+    setMessages(msgs => [...msgs, newMsg]);
     setInput("");
-    // Ở đây bạn có thể tích hợp API chat thực tế hoặc trả lời tự động
-    setTimeout(() => {
-      setMessages((msgs) => [
-        ...msgs,
-        { from: "support", text: "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm." },
-      ]);
-    }, 1000);
+    setLoading(true);
+    try {
+      // Gửi lên server, server sẽ trả về tin nhắn mới (có thể từ coach hoặc hệ thống)
+      const res = await api.post("/chat/send", newMsg);
+      if (res.data.reply) {
+        setMessages(msgs => [...msgs, { from: "coach", text: res.data.reply }]);
+      }
+    } catch {
+      setMessages(msgs => [...msgs, { from: "support", text: "Không gửi được tin nhắn. Vui lòng thử lại." }]);
+    }
+    setLoading(false);
   };
 
   return (
@@ -35,24 +57,24 @@ const ChatSupport = () => {
       flexDirection: "column"
     }}>
       <div style={{ background: "#1976d2", color: "#fff", padding: "12px 16px", fontWeight: 600 }}>
-        Hỗ trợ trực tuyến
+        {role === "coach" ? "Hộp thư huấn luyện viên" : "Hỗ trợ trực tuyến"}
       </div>
       <div style={{ flex: 1, padding: 16, maxHeight: 300, overflowY: "auto" }}>
         {messages.map((msg, idx) => (
           <div key={idx} style={{
-            textAlign: msg.from === "user" ? "right" : "left",
+            textAlign: msg.from === role ? "right" : "left",
             marginBottom: 8
           }}>
             <span style={{
               display: "inline-block",
-              background: msg.from === "user" ? "#e3f2fd" : "#f1f1f1",
+              background: msg.from === "user" ? "#e3f2fd" : msg.from === "coach" ? "#ffe082" : "#f1f1f1",
               color: "#222",
               borderRadius: 8,
               padding: "6px 12px",
               maxWidth: "80%",
               wordBreak: "break-word"
             }}>
-              {msg.text}
+              <b>{msg.from === "coach" ? "Huấn luyện viên" : msg.from === "user" ? "Bạn" : "Hệ thống"}:</b> {msg.text}
             </span>
           </div>
         ))}
@@ -62,16 +84,18 @@ const ChatSupport = () => {
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder="Nhập tin nhắn..."
+          placeholder={loading ? "Đang gửi..." : "Nhập tin nhắn..."}
           style={{ flex: 1, border: "none", padding: 12, outline: "none" }}
+          disabled={loading}
         />
         <button type="submit" style={{
           background: "#1976d2",
           color: "#fff",
           border: "none",
           padding: "0 16px",
-          cursor: "pointer"
-        }}>Gửi</button>
+          fontWeight: 600,
+          cursor: loading ? "not-allowed" : "pointer"
+        }} disabled={loading}>Gửi</button>
       </form>
     </div>
   );
