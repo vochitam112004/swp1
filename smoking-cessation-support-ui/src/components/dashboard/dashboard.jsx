@@ -37,6 +37,28 @@ function getAchievedBadges(progress) {
   return BADGES.filter(b => b.condition(progress));
 }
 
+function shouldSendReminder(lastSent, frequency) {
+  const now = new Date();
+  if (!lastSent) return true;
+  const last = new Date(lastSent);
+  if (frequency === "daily") {
+    return now.toDateString() !== last.toDateString();
+  }
+  if (frequency === "weekly") {
+    const getWeek = d => {
+      d = new Date(d);
+      d.setHours(0,0,0,0);
+      d.setDate(d.getDate() - d.getDay() + 1);
+      return d;
+    };
+    return getWeek(now).getTime() !== getWeek(last).getTime();
+  }
+  if (frequency === "monthly") {
+    return now.getMonth() !== last.getMonth() || now.getFullYear() !== last.getFullYear();
+  }
+  return false;
+}
+
 const Dashboard = () => {
   // Thêm state cho tiến trình
   const [progress, setProgress] = useState(() => {
@@ -58,10 +80,14 @@ const Dashboard = () => {
     // Mặc định là hôm nay
     return new Date().toISOString().slice(0, 10);
   });
+  const [frequency, setFrequency] = useState(() => localStorage.getItem("smokeFrequency") || "");
+  const [pricePerPack, setPricePerPack] = useState(() => localStorage.getItem("pricePerPack") || "");
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = (e) => {
     e.preventDefault();
+    localStorage.setItem("smokeFrequency", frequency);
+    localStorage.setItem("pricePerPack", pricePerPack);
     const now = new Date();
     let startDate = progress.startDate
       ? new Date(progress.startDate)
@@ -127,6 +153,19 @@ const Dashboard = () => {
     });
     localStorage.setItem("shownBadges", JSON.stringify(shown));
   }, [progress]);
+
+  // Thông báo động viên cá nhân
+  useEffect(() => {
+    // Lấy kế hoạch từ localStorage
+    const plan = JSON.parse(localStorage.getItem("quitPlan") || "{}");
+    const reason = plan.reason || "Hãy nhớ lý do bạn bắt đầu!";
+    const frequency = plan.reminderFrequency || "daily";
+    const lastNotify = localStorage.getItem("lastPersonalReasonNotify");
+    if (shouldSendReminder(lastNotify, frequency)) {
+      toast.info(`Động viên: ${reason}`);
+      localStorage.setItem("lastPersonalReasonNotify", new Date().toISOString());
+    }
+  }, []);
 
   // Chia sẻ huy hiệu
   function shareBadge(badge) {
@@ -249,7 +288,7 @@ const Dashboard = () => {
                         {showForm ? "Đóng" : "Cập nhật tiến trình"}
                       </button>
                       {showForm && (
-                        <form onSubmit={handleSubmitProgress} className="my-3">
+                        <form onSubmit={handleSubmitProgress}>
                           <label>
                             Số điếu thuốc hút hôm nay:
                             <input
@@ -261,6 +300,33 @@ const Dashboard = () => {
                               style={{ marginLeft: 8, width: 60 }}
                             />
                           </label>
+                          <div>
+                            <label>
+                              Tần suất hút/ngày:&nbsp;
+                              <input
+                                type="number"
+                                min="1"
+                                value={frequency}
+                                onChange={e => setFrequency(e.target.value)}
+                                required
+                              />
+                              &nbsp;điếu/ngày
+                            </label>
+                          </div>
+                          <div>
+                            <label>
+                              Giá tiền/bao:&nbsp;
+                              <input
+                                type="number"
+                                min="1000"
+                                step="1000"
+                                value={pricePerPack}
+                                onChange={e => setPricePerPack(e.target.value)}
+                                required
+                              />
+                              &nbsp;VNĐ/bao
+                            </label>
+                          </div>
                           <button type="submit" className="btn btn-success ms-3">
                             Ghi nhận
                           </button>
