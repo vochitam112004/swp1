@@ -24,6 +24,7 @@ export default function Register() {
   });
   const [message, setMessage] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // Thêm state này
+  const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -35,6 +36,30 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(true);
+    // Validate email
+    if (!/\S+@\S+\.\S+/.test(form.email)) {
+      toast.error("Email không hợp lệ!");
+      setMessage(false);
+      return;
+    }
+    // Validate password length
+    if (form.password.length < 6) {
+      toast.error("Mật khẩu phải từ 6 ký tự!");
+      setMessage(false);
+      return;
+    }
+    // Confirm password
+    if (form.password !== confirmPassword) {
+      toast.error("Mật khẩu xác nhận không khớp!");
+      setMessage(false);
+      return;
+    }
+    // Validate phone
+    if (!/^0\d{9,10}$/.test(form.phoneNumber)) {
+      toast.error("Số điện thoại không hợp lệ!");
+      setMessage(false);
+      return;
+    }
 
     try {
       console.log("Register payload:", form);
@@ -111,6 +136,16 @@ export default function Register() {
             }}
           />
           <TextField
+            label="Xác nhận mật khẩu"
+            name="confirmPassword"
+            type={showPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            fullWidth
+            margin="normal"
+            required
+          />
+          <TextField
             label="Email"
             name="email"
             type="email"
@@ -120,7 +155,7 @@ export default function Register() {
             margin="normal"
             required
           />
-           <TextField
+          <TextField
             label="Số điện thoại"
             name="phoneNumber"
             value={form.phoneNumber}
@@ -129,7 +164,7 @@ export default function Register() {
             margin="normal"
             required
           />
-           <TextField
+          <TextField
             label="Địa chỉ"
             name="address"
             value={form.address}

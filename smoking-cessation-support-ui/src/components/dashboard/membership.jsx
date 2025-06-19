@@ -1,7 +1,8 @@
 import { Card, CardContent, Typography, Button, Box, Grid, Chip } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import { useNavigate } from "react-router-dom"; // Thêm dòng này
+import { useNavigate } from "react-router-dom"; 
+import { toast } from "react-toastify";
 
 const plans = [
   {
@@ -49,7 +50,8 @@ const plans = [
 const Membership = () => {
   const navigate = useNavigate(); // Thêm dòng này
 
-  const handlePayment = (planName) => {
+  const handleSelect = (plan) => {
+    toast.success(`Bạn đã chọn gói "${plan.name}"!`);
     // Nếu muốn truyền tên gói sang trang payment, có thể dùng navigate("/payment?plan=Premium")
     navigate("/payment");
   };
@@ -147,7 +149,7 @@ const Membership = () => {
                       variant={plan.button.variant}
                       color={plan.button.color}
                       fullWidth
-                      onClick={() => handlePayment(plan.name)}
+                      onClick={() => handleSelect(plan)}
                     >
                       {plan.button.text}
                     </Button>

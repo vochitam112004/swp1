@@ -1,16 +1,25 @@
 import React, { useState } from "react";
 import { Rating, TextField, Button } from "@mui/material";
 import api from "../../api/axios";
+import { toast } from "react-toastify"; 
 
 export default function FeedbackForm({ planId }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await api.post("/feedback", { planId, rating, comment });
-    setComment("");
-    setRating(5);
-    alert("Cảm ơn bạn đã đánh giá!");
+    if (!comment.trim()) {
+      toast.error("Vui lòng nhập nhận xét!"); 
+      return;
+    }
+    try {
+      await api.post("/feedback", { planId, rating, comment });
+      setComment("");
+      setRating(5);
+      toast.success("Cảm ơn bạn đã đánh giá!"); 
+    } catch {
+      toast.error("Gửi đánh giá thất bại. Vui lòng thử lại!");
+    }
   };
   return (
     <form onSubmit={handleSubmit}>

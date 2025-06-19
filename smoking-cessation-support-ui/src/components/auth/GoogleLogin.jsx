@@ -24,6 +24,7 @@ const GoogleLoginComponent = () => {
             navigate("/membership");
         } catch (error) {
             console.error("Lỗi khi gửi ID Token đến backend:", error?.response?.data || error.message);
+            toast.error("Đăng nhập Google thất bại!"); // Thêm dòng này
         }
     };
 
@@ -33,7 +34,7 @@ const GoogleLoginComponent = () => {
                 <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={() => {
-                        console.error("Đăng nhập Google thất bại");
+                        toast.error("Đăng nhập Google thất bại!");
                     }}
                 />
             </div>

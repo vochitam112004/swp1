@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Footer = () => {
   const navigate = useNavigate();
@@ -47,9 +47,9 @@ const Footer = () => {
           <div className="col-6 col-md-3">
             <h3 className="text-uppercase fs-6 fw-semibold mb-3">Hỗ trợ</h3>
             <ul className="list-unstyled">
-              <li><a href="#" className="text-secondary text-decoration-none d-block mb-2">Trung tâm trợ giúp</a></li>
-              <li><a href="#" className="text-secondary text-decoration-none d-block mb-2">Liên hệ</a></li>
-              <li><a href="#" className="text-secondary text-decoration-none d-block">Tư vấn chuyên gia</a></li>
+              <li><Link to="/support" className="text-secondary text-decoration-none d-block mb-2">Trung tâm trợ giúp</Link></li>
+              <li><Link to="/contact" className="text-secondary text-decoration-none d-block mb-2">Liên hệ</Link></li>
+              <li><Link to="/consult" className="text-secondary text-decoration-none d-block">Tư vấn chuyên gia</Link></li>
             </ul>
           </div>
           <div className="col-6 col-md-3">

@@ -19,6 +19,7 @@ import Profile from "./components/profile/Profile";
 // import ChatSupport from "./components/chat/ChatSupport";
 import Payment from "./components/common/Payment";
 import FeedbackList from "./components/common/FeedbackList";
+import RequireAuth from "./components/auth/RequireAuth";
 
 function App() {
   // const [showChat, setShowChat] = useState(false);
@@ -45,12 +46,26 @@ function App() {
         <Route path="/blog/:id" element={<BlogDetail />} />
         <Route path="/bxh" element={<BXH />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <Dashboard />
+            </RequireAuth>
+          }
+        />
         <Route path="/membership" element={<Membership />} />
         <Route path="/register" element={<Register />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/about" element={<About />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <Profile />
+            </RequireAuth>
+          }
+        />
          <Route path="/feedbacks" element={<FeedbackList />} />
         {/* Thêm các route khác nếu cần */}
       </Routes>

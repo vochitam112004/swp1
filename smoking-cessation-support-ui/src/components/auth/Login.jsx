@@ -24,18 +24,20 @@ export default function Login() {
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-  // ...existing code...
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.username || !form.password) {
+      toast.error("Vui lòng nhập đầy đủ thông tin!");
+      return;
+    }
     try {
-      const response = await api.post(
-        "/Auth/login",
-        {
-          username: form.username,
-          password: form.password,
-        }
-      );
+      const response = await api.post("/Auth/login", {
+        username: form.username,
+        password: form.password,
+      });
       toast.success("Đăng nhập thành công!");
+      // Lưu token vào localStorage
+      localStorage.setItem("authToken", response.data.token);
       // Lưu cả id từ backend (nếu có)
       const userData = {
         id: response.data.id, // Thêm dòng này
@@ -52,7 +54,6 @@ export default function Login() {
       console.error("Login error:", error);
     }
   };
-  // ...existing code...
 
   const handleLogout = () => {
     setUser(null);

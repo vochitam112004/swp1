@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import BlogPosts from "../common/BlogPosts";
+import BlogPosts from "./BlogPosts";
 import "../../css/Blog.css";
 
 export default function BlogDetail() {

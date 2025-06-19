@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { saveAs } from "file-saver"; // Thêm dòng này ở đầu file nếu chưa có
+import { saveAs } from "file-saver"; 
 
 ChartJS.register(
   CategoryScale,
@@ -73,7 +73,6 @@ const Dashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [journal, setJournal] = useState(() => {
-    // Đọc nhật ký từ localStorage
     return JSON.parse(localStorage.getItem("quitJournal") || "[]");
   });
   const [journalEntry, setJournalEntry] = useState("");
@@ -83,6 +82,7 @@ const Dashboard = () => {
   });
   const [frequency, setFrequency] = useState(() => localStorage.getItem("smokeFrequency") || "");
   const [pricePerPack, setPricePerPack] = useState(() => localStorage.getItem("pricePerPack") || "");
+  const [comments, setComments] = useState(() => JSON.parse(localStorage.getItem("badgeComments") || "{}"));
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = (e) => {
@@ -182,6 +182,7 @@ const Dashboard = () => {
   // Thêm các state và hàm xử lý động viên, bình luận
   const [forceUpdate, setForceUpdate] = useState(0);
   const [commentInputs, setCommentInputs] = useState({});
+  const [encourages, setEncourages] = useState(() => JSON.parse(localStorage.getItem("encourages") || "{}"));
 
   function handleEncourage(idx) {
     const encourages = JSON.parse(localStorage.getItem("encourages") || "{}");
@@ -206,6 +207,10 @@ const Dashboard = () => {
   };
 
   function exportCSV() {
+     if (journal.length === 0) {
+      toast.info("Chưa có nhật ký để xuất!");
+      return;
+    }
     const rows = [
       ["Ngày", "Nội dung nhật ký"],
       ...journal.map(j => [j.date, j.content.replace(/\n/g, " ")]),
@@ -214,6 +219,22 @@ const Dashboard = () => {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     saveAs(blob, "nhat-ky-cai-thuoc.csv");
   }
+
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "quitProgress") {
+        setProgress(JSON.parse(e.newValue || '{"startDate":null,"daysNoSmoke":0,"moneySaved":0,"health":0}'));
+      }
+      if (e.key === "encourages") {
+        setEncourages(JSON.parse(e.newValue || "{}"));
+      }
+      if (e.key === "badgeComments") {
+        setComments(JSON.parse(e.newValue || "{}"));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   return (
     <div className="bg-white py-5">
@@ -424,6 +445,7 @@ const Dashboard = () => {
                           />
                           <button
                             className="btn btn-sm btn-primary"
+                            aria-label="Gửi bình luận"
                             onClick={() => {
                               if ((commentInputs[idx] || "").trim()) {
                                 handleAddComment(idx, commentInputs[idx]);

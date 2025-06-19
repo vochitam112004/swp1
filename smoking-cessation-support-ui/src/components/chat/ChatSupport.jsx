@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api/axios";
+import { toast } from "react-toastify";
 
 const getUserRole = () => {
   // Lấy role từ localStorage hoặc context, ví dụ:
@@ -31,13 +32,14 @@ const ChatSupport = () => {
     setInput("");
     setLoading(true);
     try {
-      // Gửi lên server, server sẽ trả về tin nhắn mới (có thể từ coach hoặc hệ thống)
       const res = await api.post("/chat/send", newMsg);
       if (res.data.reply) {
         setMessages(msgs => [...msgs, { from: "coach", text: res.data.reply }]);
+        toast.success("Đã gửi tin nhắn!");
       }
     } catch {
       setMessages(msgs => [...msgs, { from: "support", text: "Không gửi được tin nhắn. Vui lòng thử lại." }]);
+      toast.error("Không gửi được tin nhắn. Vui lòng thử lại!");
     }
     setLoading(false);
   };

@@ -34,16 +34,31 @@ export default function Profile() {
         setProfile(res.data);
         setForm(res.data);
       })
-      .catch(err => setError("Không lấy được thông tin hồ sơ."));
+      .catch(err => {
+        setError("Không lấy được thông tin hồ sơ.");
+        toast.error("Không lấy được thông tin hồ sơ!");
+      });
     // Lấy lịch sử gói
     api.get(`/Membership/history/${id}`)
       .then(res => setHistory(res.data))
-      .catch(() => {});
+      .catch(() => {
+        toast.error("Không lấy được lịch sử gói thành viên!");
+      });
   }, []);
 
   // Cập nhật thông tin cá nhân
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
+    // Validate email
+    if (!/\S+@\S+\.\S+/.test(form.email)) {
+      toast.error("Email không hợp lệ!");
+      return;
+    }
+    // Validate phone
+    if (form.phoneNumber && !/^0\d{9,10}$/.test(form.phoneNumber)) {
+      toast.error("Số điện thoại không hợp lệ!");
+      return;
+    }
     try {
       await api.put("/MemberProfile/update", form);
       toast.success("Cập nhật thành công!");
@@ -57,6 +72,10 @@ export default function Profile() {
   // Đổi mật khẩu
   const handleChangePassword = async (e) => {
     e.preventDefault();
+    if (passwords.new1.length < 6) {
+      toast.error("Mật khẩu mới phải từ 6 ký tự!");
+      return;
+    }
     if (passwords.new1 !== passwords.new2) {
       toast.error("Mật khẩu mới không khớp!");
       return;
@@ -79,6 +98,10 @@ export default function Profile() {
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh!");
+      return;
+    }
     setAvatarFile(file);
     const formData = new FormData();
     formData.append("avatar", file);

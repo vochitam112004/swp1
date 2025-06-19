@@ -131,6 +131,47 @@ body {
   }
 }
 
+/* Responsive cho dashboard, blog, form, container */
+@media (max-width: 768px) {
+  .dashboard-container,
+  .register-container,
+  .profile-container,
+  .blog-container {
+    padding: 8px !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  .dashboard-title,
+  .blog-title {
+    font-size: 1.3rem !important;
+  }
+  .dashboard-container .row,
+  .dashboard-container .col-md-4,
+  .dashboard-container .col-md-8 {
+    flex-direction: column !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .dashboard-container .bg-white,
+  .dashboard-container .bg-light {
+    padding: 1rem !important;
+  }
+  .blog-container input[type="text"],
+  .blog-container textarea {
+    font-size: 1rem !important;
+  }
+  .blog-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .blog-image {
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 12px !important;
+  }
+}
+
 /* --- Remove Tailwind directives if present --- */
 /* @tailwind base; */
 /* @tailwind components; */

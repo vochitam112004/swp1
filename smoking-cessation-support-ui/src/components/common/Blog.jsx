@@ -18,6 +18,9 @@ export default function Blog() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
+  // Lấy token để kiểm tra đăng nhập
+  const token = localStorage.getItem("authToken");
+
   // Lọc bài viết chỉ theo title, không phân biệt dấu
   const filteredPosts = BlogPosts.filter((post) =>
     removeVietnameseTones(post.title.toLowerCase()).includes(
@@ -43,6 +46,26 @@ export default function Blog() {
   return (
     <div className="blog-container">
       <h1 className="blog-title">Danh sách bài viết Blog</h1>
+      {/* Nút đăng bài chỉ hiện khi đã đăng nhập */}
+      {token && (
+        <div style={{ marginBottom: 16 }}>
+          <Link to="/blog/create">
+            <button
+              style={{
+                background: "#1976d2",
+                color: "#fff",
+                border: "none",
+                borderRadius: 6,
+                padding: "8px 20px",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              + Đăng bài mới
+            </button>
+          </Link>
+        </div>
+      )}
       <input
         type="text"
         placeholder="Tìm kiếm bài viết"
@@ -76,7 +99,8 @@ export default function Blog() {
                   <h2 className="blog-post-title">{post.title}</h2>
                 </Link>
                 <div className="blog-meta">
-                  <span className="blog-author">{post.author}</span> - <span className="blog-date">{post.date}</span>
+                  <span className="blog-author">{post.author}</span> -{" "}
+                  <span className="blog-date">{post.date}</span>
                 </div>
                 <div className="blog-summary">{post.summary}</div>
               </div>
@@ -86,7 +110,10 @@ export default function Blog() {
       </div>
       {/* Phân trang */}
       {totalPages > 1 && (
-        <div className="blog-pagination" style={{ marginTop: 24, textAlign: "center" }}>
+        <div
+          className="blog-pagination"
+          style={{ marginTop: 24, textAlign: "center" }}
+        >
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i + 1}
