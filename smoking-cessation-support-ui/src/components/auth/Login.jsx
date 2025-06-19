@@ -1,28 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { Box, Button, TextField, Typography, Paper, IconButton, InputAdornment, Avatar } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Paper,
+  IconButton,
+  InputAdornment,
+  Avatar,
+} from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import api from "../../api/axios.js";
-import GoogleLogin from "./GoogleLogin";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import api from "../../api/axios.js";
+import GoogleLogin from "./GoogleLogin";
+import { useAuth } from "./AuthContext.jsx";
 
 export default function Login() {
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ userName: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Lấy user từ localStorage nếu đã đăng nhập
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) setUser(JSON.parse(savedUser));
-  }, []);
+  const { user, login, logout } = useAuth(); // Sử dụng custom hook đúng cách
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const handleClickShowPassword = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,33 +38,30 @@ export default function Login() {
     }
     try {
       const response = await api.post("/Auth/login", {
-        username: form.username,
+        userName: form.username, // SỬA DÒNG NÀY
         password: form.password,
       });
-      toast.success("Đăng nhập thành công!");
-      // Lưu token vào localStorage
-      localStorage.setItem("authToken", response.data.token);
-      // Lưu cả id từ backend (nếu có)
+
+      if (!response.data || !response.data.token) {
+        toast.error("Đăng nhập thất bại. Vui lòng thử lại!");
+        return;
+      }
+
       const userData = {
-        id: response.data.id, // Thêm dòng này
+        id: response.data.id,
         username: response.data.username || form.username,
         avatar: response.data.avatar || null,
         token: response.data.token || null,
       };
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
+
+      localStorage.setItem("authToken", response.data.token);
+      login(userData);
+      toast.success("Đăng nhập thành công!");
       navigate("/membership");
-      window.location.reload();
     } catch (error) {
       toast.error("Tên đăng nhập hoặc mật khẩu không đúng!");
       console.error("Login error:", error);
     }
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    toast.info("Đã đăng xuất!");
   };
 
   if (user) {
@@ -71,20 +74,21 @@ export default function Login() {
           justifyContent: "center",
         }}
       >
-        <Paper elevation={4} sx={{ p: 4, borderRadius: 3, minWidth: 340, textAlign: "center" }}>
+        <Paper
+          elevation={4}
+          sx={{ p: 4, borderRadius: 3, minWidth: 340, textAlign: "center" }}
+        >
           <Avatar
-            src={user.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.username)}
+            src={
+              user.avatar ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`
+            }
             sx={{ width: 64, height: 64, margin: "0 auto", mb: 2 }}
           />
           <Typography variant="h6" fontWeight={700} mb={2}>
             Xin chào, {user.username}
           </Typography>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={handleLogout}
-            fullWidth
-          >
+          <Button variant="outlined" color="error" onClick={logout} fullWidth>
             Đăng xuất
           </Button>
         </Paper>
@@ -128,9 +132,9 @@ export default function Login() {
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
-                    aria-label="toggle password visibility"
                     onClick={handleClickShowPassword}
                     edge="end"
+                    aria-label="toggle password visibility"
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>

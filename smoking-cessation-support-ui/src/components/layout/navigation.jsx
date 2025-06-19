@@ -1,20 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import { useAuth } from "../auth/AuthContext"; // ✅ dùng context
 
 const Navigation = () => {
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth(); // ✅ context đã có user và logout
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) setUser(JSON.parse(savedUser));
-  }, []);
 
   const handleAvatarClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -24,11 +20,11 @@ const Navigation = () => {
 
   const handleProfile = () => {
     navigate("/profile");
-  }
+    handleMenuClose();
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
+    logout(); // ✅ gọi từ context
     handleMenuClose();
     navigate("/");
   };
@@ -62,6 +58,7 @@ const Navigation = () => {
           <Link to="/membership" style={{ textDecoration: "none", color: "#222", fontWeight: 500 }}>Gói thành viên</Link>
         </Box>
       </Box>
+
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
         {user ? (
           <>

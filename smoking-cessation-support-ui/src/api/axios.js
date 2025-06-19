@@ -1,7 +1,7 @@
 import axios from "axios";
  
 const api = axios.create({
-  baseURL: "https://1c6a-118-69-182-144.ngrok-free.app/api",
+  baseURL: "https://68529cda0594059b23ce588f.mockapi.io/username",
 });
  
 export default api;
