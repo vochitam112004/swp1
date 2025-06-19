@@ -140,7 +140,6 @@ const Dashboard = () => {
       localStorage.setItem("lastMotivationNotify", today);
     }
   }, []);
-
   // Thông báo khi đạt badge mới
   useEffect(() => {
     const achieved = getAchievedBadges(progress);

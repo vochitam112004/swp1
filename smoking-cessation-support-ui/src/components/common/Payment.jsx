@@ -42,7 +42,8 @@ export default function Payment({ onPaymentSuccess }) {
       const res = await api.post("/payment/confirm", { method });
       setSuccess(true);
       if (onPaymentSuccess) onPaymentSuccess({ method, ...res.data });
-    } catch (err) {
+    } catch (error) {
+      console.log(error)
       setError("Xác nhận thanh toán thất bại. Vui lòng thử lại.");
     } finally {
       setLoading(false);
@@ -58,6 +59,9 @@ export default function Payment({ onPaymentSuccess }) {
         <Tabs
           value={method}
           onChange={(_, v) => setMethod(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           centered
           sx={{
             mb: 2,

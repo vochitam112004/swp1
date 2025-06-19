@@ -3,24 +3,54 @@ import { Link } from "react-router-dom";
 import BlogPosts from "../common/BlogPosts";
 import "../../css/Blog.css";
 
+// Hàm loại bỏ dấu tiếng Việt
+function removeVietnameseTones(str) {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+}
+
+const POSTS_PER_PAGE = 5; // Số bài viết mỗi trang
+
 export default function Blog() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
-  // Lọc bài viết theo từ khóa trong title hoặc content (không phân biệt hoa thường)
-  const filteredPosts = BlogPosts.filter(
-    (post) =>
-      post.title.toLowerCase().includes(search.toLowerCase()) ||
-      (post.content && post.content.toLowerCase().includes(search.toLowerCase()))
+  // Lọc bài viết chỉ theo title, không phân biệt dấu
+  const filteredPosts = BlogPosts.filter((post) =>
+    removeVietnameseTones(post.title.toLowerCase()).includes(
+      removeVietnameseTones(search.toLowerCase())
+    )
   );
+
+  // Tính tổng số trang
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+
+  // Lấy bài viết cho trang hiện tại
+  const paginatedPosts = filteredPosts.slice(
+    (page - 1) * POSTS_PER_PAGE,
+    page * POSTS_PER_PAGE
+  );
+
+  // Chuyển trang
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo(0, 0); // Cuộn lên đầu trang khi chuyển trang
+  };
 
   return (
     <div className="blog-container">
       <h1 className="blog-title">Danh sách bài viết Blog</h1>
       <input
         type="text"
-        placeholder="Tìm kiếm theo tiêu đề hoặc nội dung..."
+        placeholder="Tìm kiếm bài viết"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1); // Reset về trang 1 khi tìm kiếm
+        }}
         style={{
           width: "100%",
           padding: "8px",
@@ -33,10 +63,10 @@ export default function Blog() {
       <div className="blog-list">
         {BlogPosts.length === 0 ? (
           <div>Chưa có bài viết nào.</div>
-        ) : filteredPosts.length === 0 ? (
+        ) : paginatedPosts.length === 0 ? (
           <div>Không tìm thấy bài viết phù hợp.</div>
         ) : (
-          filteredPosts.map((post) => (
+          paginatedPosts.map((post) => (
             <div className="blog-item" key={post.id}>
               <Link to={`/blog/${post.id}`}>
                 <img className="blog-image" src={post.image} alt={post.title} />
@@ -54,6 +84,30 @@ export default function Blog() {
           ))
         )}
       </div>
+      {/* Phân trang */}
+      {totalPages > 1 && (
+        <div className="blog-pagination" style={{ marginTop: 24, textAlign: "center" }}>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => handlePageChange(i + 1)}
+              className={page === i + 1 ? "active" : ""}
+              style={{
+                margin: "0 4px",
+                padding: "6px 12px",
+                borderRadius: "4px",
+                border: "1px solid #1976d2",
+                background: page === i + 1 ? "#1976d2" : "#fff",
+                color: page === i + 1 ? "#fff" : "#1976d2",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,25 +1,37 @@
-import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Avatar from "@mui/material/Avatar";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 
 const Navigation = () => {
+  const [user, setUser] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const mobileMenuButton = document.querySelector('button[aria-controls="mobile-menu"]');
-    const mobileMenu = document.getElementById('mobile-menu');
-    if (mobileMenuButton && mobileMenu) {
-      mobileMenuButton.addEventListener('click', function () {
-        const expanded = this.getAttribute('aria-expanded') === 'true';
-        this.setAttribute('aria-expanded', !expanded);
-        mobileMenu.classList.toggle('d-none');
-      });
-    }
-    return () => {
-      if (mobileMenuButton && mobileMenu) {
-        mobileMenuButton.removeEventListener('click', () => {});
-      }
-    };
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) setUser(JSON.parse(savedUser));
   }, []);
+
+  const handleAvatarClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => setAnchorEl(null);
+
+  const handleProfile = () => {
+    navigate("/profile");
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    handleMenuClose();
+    navigate("/");
+  };
 
   return (
     <Box
@@ -50,16 +62,37 @@ const Navigation = () => {
           <Link to="/membership" style={{ textDecoration: "none", color: "#222", fontWeight: 500 }}>Gói thành viên</Link>
         </Box>
       </Box>
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <Button component={Link} to="/login" variant="contained" color="primary">
-          Đăng nhập
-        </Button>
-        <Button component={Link} to="/register" variant="contained" color="success">
-          Đăng ký
-        </Button>
+      <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+        {user ? (
+          <>
+            <Avatar
+              src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`}
+              alt={user.username}
+              sx={{ cursor: "pointer" }}
+              onClick={handleAvatarClick}
+            />
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={handleProfile}>Xem hồ sơ</MenuItem>
+              <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
+            </Menu>
+          </>
+        ) : (
+          <>
+            <Button component={Link} to="/login" variant="contained" color="primary">
+              Đăng nhập
+            </Button>
+            <Button component={Link} to="/register" variant="contained" color="success">
+              Đăng ký
+            </Button>
+          </>
+        )}
       </Box>
     </Box>
   );
 };
-//....
+
 export default Navigation;
