@@ -15,6 +15,7 @@ import Blog from "./components/common/Blog";
 import BlogDetail from "./components/common/BlogDetail";
 import BXH from "./components/dashboard/BXH";
 import About from "./components/common/About";
+import Profile from "./components/profile/Profile";
 // import ChatSupport from "./components/chat/ChatSupport";
 import Payment from "./components/common/Payment";
 
@@ -48,6 +49,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/about" element={<About />} />
+        <Route path="/profile" element={<Profile />} />
         {/* Thêm các route khác nếu cần */}
       </Routes>
       <Footer />
