@@ -15,8 +15,7 @@ export default function BlogDetail() {
         className="alert alert-info"
         style={{ marginBottom: 20, borderRadius: 12, fontWeight: 500 }}
       >
-        Bạn đang xem chi tiết bài viết. Nhấn "<b>← Quay lại danh sách</b>" để
-        trở về trang blog.
+        🚀 <b>Bạn đã sẵn sàng thay đổi cuộc đời?</b> Hãy đọc câu chuyện này và tìm cảm hứng cho hành trình của chính bạn!
       </div>
       <Link to="/blog" className="blog-back-link">
         ← Quay lại danh sách
