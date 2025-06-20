@@ -17,7 +17,7 @@ import GoogleLogin from "./GoogleLogin";
 import { useAuth } from "./AuthContext.jsx";
 
 export default function Login() {
-  const [form, setForm] = useState({ userName: "", password: "" });
+  const [form, setForm] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { user, login, logout } = useAuth(); 
@@ -38,7 +38,7 @@ export default function Login() {
     }
     try {
       const response = await api.post("/Auth/login", {
-        userName: form.username, 
+        username: form.username, 
         password: form.password,
       });
 

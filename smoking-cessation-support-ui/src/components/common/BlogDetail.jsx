@@ -7,7 +7,14 @@ export default function BlogDetail() {
   const { id } = useParams();
   const post = BlogPosts.find((p) => String(p.id) === String(id));
 
-  if (!post) return <div>Bài viết không tồn tại.</div>;
+  if (!post)
+    return (
+      <div style={{ padding: 32 }}>
+        <h2>Chi tiết bài viết</h2>
+        <p>Bài viết không tồn tại.</p>
+        <Link to="/blog">← Quay lại danh sách</Link>
+      </div>
+    );
 
   return (
     <div className="blog-detail-container">
