@@ -62,7 +62,7 @@ const BlogPosts = [
   {
     id: "6",
     image:
-      "https://lh3.googleusercontent.com/proxy/Wz78cStCSgHxUmQ5NCDERjxUZvV7k-d7kOFJH35uuJQ_SpvPumtIjHJW3MZf9Jp3cXWUKG8zEBcPg4h--KNYNQevFPr2j-5aBCOHWc7NuchSXyf673cZtpyieg",
+      "https://img.vinanet.vn/zoom/500/Uploaded/ThuHai/Thuoc-La/a_YQRS.jpg",
     title: "Lợi ích của việc cai thuốc lá sớm",
     author: "Nguyễn Thành Lợi",
     date: "2025-06-15",
