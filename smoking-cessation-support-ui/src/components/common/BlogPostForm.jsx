@@ -39,7 +39,12 @@ export default function BlogPostForm() {
       setContent("");
       navigate("/blog");
     } catch (err) {
-      toast.error("Đăng bài thất bại!");
+      // Hiển thị chi tiết lỗi nếu có phản hồi từ server, nếu không thì hiển thị thông báo chung
+      if (err.response && err.response.data && err.response.data.message) {
+        toast.error(`Đăng bài thất bại: ${err.response.data.message}`);
+      } else {
+        toast.error("Đăng bài thất bại!");
+      }
     }
     setLoading(false);
   };
