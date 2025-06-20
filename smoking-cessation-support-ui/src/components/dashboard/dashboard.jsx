@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { saveAs } from "file-saver"; 
+import { saveAs } from "file-saver";
 
 ChartJS.register(
   CategoryScale,
@@ -48,7 +48,7 @@ function shouldSendReminder(lastSent, frequency) {
   if (frequency === "weekly") {
     const getWeek = d => {
       d = new Date(d);
-      d.setHours(0,0,0,0);
+      d.setHours(0, 0, 0, 0);
       d.setDate(d.getDate() - d.getDay() + 1);
       return d;
     };
@@ -82,25 +82,44 @@ const Dashboard = () => {
   });
   const [frequency, setFrequency] = useState(() => localStorage.getItem("smokeFrequency") || "");
   const [pricePerPack, setPricePerPack] = useState(() => localStorage.getItem("pricePerPack") || "");
-  const [comments, setComments] = useState(() => JSON.parse(localStorage.getItem("badgeComments") || "{}"));
+  const [, setComments] = useState(() => JSON.parse(localStorage.getItem("badgeComments") || "{}"));
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = (e) => {
     e.preventDefault();
     localStorage.setItem("smokeFrequency", frequency);
     localStorage.setItem("pricePerPack", pricePerPack);
+
     const now = new Date();
-    let startDate = progress.startDate
-      ? new Date(progress.startDate)
-      : now;
+    let startDate = progress.startDate ? new Date(progress.startDate) : now;
     if (!progress.startDate) startDate = now;
-    // Giả sử mỗi ngày không hút tiết kiệm 70.000đ, cải thiện 2% sức khỏe
-    const daysNoSmoke =
-      todayCigarettes === "0"
-        ? Math.floor((now - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1
-        : 0;
-    const moneySaved = daysNoSmoke * 70000;
+
+    let daysNoSmoke = progress.daysNoSmoke;
+    let lastUpdate = localStorage.getItem("lastProgressUpdate");
+    let todayStr = now.toISOString().slice(0, 10);
+
+    // Nếu đã ghi nhận hôm nay thì không tăng nữa
+    if (lastUpdate !== todayStr) {
+      if (todayCigarettes === "0") {
+        // Không hút hôm nay, tăng ngày
+        daysNoSmoke = daysNoSmoke + 1;
+        toast.success("Tuyệt vời! Bạn đã không hút thuốc hôm nay.");
+      } else {
+        // Có hút hôm nay, reset về 0 nhưng không reset startDate
+        daysNoSmoke = 0;
+        toast.info("Đừng nản lòng, hãy cố gắng lại từ ngày mai!");
+      }
+      localStorage.setItem("lastProgressUpdate", todayStr);
+    } else {
+      toast.info("Bạn đã ghi nhận tiến trình hôm nay rồi.");
+    }
+
+    // Tính tiền tiết kiệm dựa trên tần suất và giá tiền thực tế
+    const freq = Number(frequency) || 0;
+    const price = Number(pricePerPack) || 0;
+    const moneySaved = freq && price ? daysNoSmoke * freq * (price / 20) : daysNoSmoke * 70000;
     const health = Math.min(daysNoSmoke * 2, 100);
+
     const newProgress = {
       startDate: startDate.toISOString(),
       daysNoSmoke,
@@ -180,9 +199,9 @@ const Dashboard = () => {
   }
 
   // Thêm các state và hàm xử lý động viên, bình luận
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [, setForceUpdate] = useState(0);
   const [commentInputs, setCommentInputs] = useState({});
-  const [encourages, setEncourages] = useState(() => JSON.parse(localStorage.getItem("encourages") || "{}"));
+  const [, setEncourages] = useState(() => JSON.parse(localStorage.getItem("encourages") || "{}"));
 
   function handleEncourage(idx) {
     const encourages = JSON.parse(localStorage.getItem("encourages") || "{}");
@@ -207,7 +226,7 @@ const Dashboard = () => {
   };
 
   function exportCSV() {
-     if (journal.length === 0) {
+    if (journal.length === 0) {
       toast.info("Chưa có nhật ký để xuất!");
       return;
     }
@@ -326,15 +345,30 @@ const Dashboard = () => {
                   <div className="col-md-8">
                     <div className="bg-white p-4 rounded-3 shadow-sm border mb-4 mb-md-0">
                       <h3 className="fs-5 fw-semibold mb-3">Tiến trình cai thuốc</h3>
-                      <div className="d-flex align-items-center justify-content-center" style={{height: "250px", background: "#f5f6fa", borderRadius: "1rem"}}>
-                        <span className="text-secondary">Biểu đồ tiến trình sẽ hiển thị tại đây</span>
+                      <div className="d-flex align-items-center justify-content-center" style={{ height: "250px", background: "#f5f6fa", borderRadius: "1rem" }}>
+                        <Line
+                          key={chartLabels.join(",")}
+                          data={{
+                            labels: chartLabels.length > 0 ? chartLabels : ["Ngày 1"],
+                            datasets: [
+                              {
+                                label: "Số ngày ghi nhật ký",
+                                data: chartData.length > 0 ? chartData : [0],
+                                fill: false,
+                                borderColor: "#1976d2",
+                                tension: 0.1,
+                              },
+                            ],
+                          }}
+                          height={100}
+                        />
                       </div>
                     </div>
                   </div>
                   <div className="col-md-4">
                     <div className="bg-white p-4 rounded-3 shadow-sm border text-center">
                       <h3 className="fs-5 fw-semibold mb-3">Mục tiêu hiện tại</h3>
-                      <div className="position-relative mx-auto mb-3" style={{width: "160px", height: "160px"}}>
+                      <div className="position-relative mx-auto mb-3" style={{ width: "160px", height: "160px" }}>
                         <svg width="160" height="160" viewBox="0 0 100 100">
                           <circle stroke="#e9ecef" strokeWidth="10" fill="transparent" r="40" cx="50" cy="50" />
                           <circle stroke="#0d6efd" strokeWidth="10" strokeLinecap="round" fill="transparent" r="40" cx="50" cy="50" strokeDasharray="251.2" strokeDashoffset="100.48" />
@@ -400,10 +434,10 @@ const Dashboard = () => {
                 <div className="mt-5">
                   <h3 className="fs-5 fw-semibold mb-3">Thành tích gần đây</h3>
                   <div className="row g-3">
-                    {getAchievedBadges(progress).map((badge, idx) => (
+                    {getAchievedBadges(progress).map((badge) => (
                       <div className="col-6 col-sm-4 col-md-2" key={badge.key}>
                         <div className="bg-warning bg-opacity-10 p-3 rounded-3 shadow-sm text-center">
-                          <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{width: "48px", height: "48px"}}>
+                          <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: "48px", height: "48px" }}>
                             <i className={`${badge.icon} text-warning fs-4`}></i>
                           </div>
                           <div className="small fw-medium">{badge.label}</div>
@@ -472,7 +506,7 @@ const Dashboard = () => {
                 {/* Motivation */}
                 <div className="mt-5 bg-light p-4 rounded-3 shadow-sm">
                   <div className="d-flex align-items-start">
-                    <div className="bg-primary rounded-circle p-3 text-white me-3 d-flex align-items-center justify-content-center" style={{width: "48px", height: "48px"}}>
+                    <div className="bg-primary rounded-circle p-3 text-white me-3 d-flex align-items-center justify-content-center" style={{ width: "48px", height: "48px" }}>
                       <i className="fas fa-lightbulb fs-4"></i>
                     </div>
                     <div>
@@ -492,11 +526,18 @@ const Dashboard = () => {
                       labels: chartLabels.length > 0 ? chartLabels : ["Ngày 1"],
                       datasets: [
                         {
-                          label: "Số ngày không hút (theo nhật ký)",
+                          label: "Số ngày không hút (cộng dồn)",
                           data: chartData.length > 0 ? chartData : [0],
                           fill: false,
                           borderColor: "#1976d2",
                           tension: 0.1,
+                        },
+                        {
+                          label: "Trung bình cộng đồng",
+                          data: chartLabels.map(() => communityAvg.daysNoSmoke),
+                          borderDash: [5, 5],
+                          borderColor: "#aaa",
+                          fill: false,
                         },
                       ],
                     }}
@@ -560,7 +601,7 @@ const Dashboard = () => {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Biểu đồ tiến trình theo nhật ký */}
                 <div className="my-4">
                   <h5>Biểu đồ tiến trình (theo nhật ký)</h5>
@@ -587,10 +628,10 @@ const Dashboard = () => {
               <div>
                 <h3 className="fs-5 fw-semibold mb-3">Thành tích & Huy hiệu</h3>
                 <div className="row g-3">
-                  {getAchievedBadges(progress).map((badge, idx) => (
+                  {getAchievedBadges(progress).map((badge) => (
                     <div className="col-6 col-sm-4 col-md-2" key={badge.key}>
                       <div className="bg-warning bg-opacity-10 p-3 rounded-3 shadow-sm text-center">
-                        <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{width: "48px", height: "48px"}}>
+                        <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: "48px", height: "48px" }}>
                           <i className={`${badge.icon} text-warning fs-4`}></i>
                         </div>
                         <div className="small fw-medium">{badge.label}</div>
