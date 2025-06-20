@@ -20,7 +20,7 @@ export default function Login() {
   const [form, setForm] = useState({ userName: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { user, login, logout } = useAuth(); // Sử dụng custom hook đúng cách
+  const { user, login, logout } = useAuth(); 
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,7 +38,7 @@ export default function Login() {
     }
     try {
       const response = await api.post("/Auth/login", {
-        userName: form.username, // SỬA DÒNG NÀY
+        userName: form.username, 
         password: form.password,
       });
 
