@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -20,7 +20,7 @@ export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { user, login, logout } = useAuth(); 
+  const { user, login, logout } = useAuth();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,22 +38,28 @@ export default function Login() {
     }
     try {
       const response = await api.post("/Auth/login", {
-        username: form.username, 
+        username: form.username,
         password: form.password,
       });
 
-      console.log("Login API response:", response.data); 
-
-      if (!response.data || !response.data.token) {
+      if (!response.data || !response.data.token || !response.data.user) {
         toast.error("Đăng nhập thất bại. Vui lòng thử lại!");
         return;
       }
 
+      const u = response.data.user;
+
       const userData = {
-        id: response.data.id,
-        username: response.data.username || form.username,
-        avatar: response.data.avatar || null,
-        token: response.data.token || null,
+        id: u.userId,
+        username: u.username,
+        email: u.email,
+        displayName: u.displayName,
+        avatar: u.avatarUrl,
+        userType: u.userType,
+        isActive: u.isActive,
+        createdAt: u.createdAt,
+        updatedAt: u.updatedAt,
+        token: response.data.token,
       };
 
       localStorage.setItem("authToken", response.data.token);
@@ -65,46 +71,6 @@ export default function Login() {
       console.error("Login error:", error);
     }
   };
-
-  // Cập nhật thông tin
-  const handleUpdateProfile = async () => {
-    try {
-      await api.put("/MemberProfile/update", form);
-      toast.success("Cập nhật thông tin thành công!");
-    } catch (error) {
-      toast.error("Cập nhật thông tin thất bại!");
-      console.error("Update profile error:", error);
-    }
-  };
-
-  // Đổi mật khẩu
-  const handleChangePassword = async (userId, oldPassword, newPassword) => {
-    try {
-      await api.post("/Auth/change-password", { userId, oldPassword, newPassword });
-      toast.success("Đổi mật khẩu thành công!");
-    } catch (error) {
-      toast.error("Đổi mật khẩu thất bại!");
-      console.error("Change password error:", error);
-    }
-  };
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const response = await api.get(`/Membership/history/${user.id}`);
-        setForm({
-          username: response.data.username || "",
-          password: "",
-        });
-      } catch (error) {
-        console.error("Fetch user profile error:", error);
-      }
-    };
-
-    if (user && user.id) {
-      fetchUserProfile();
-    }
-  }, [user]);
 
   if (user) {
     return (

@@ -1,20 +1,21 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://9286-123-20-245-109.ngrok-free.app/api", // Thay bằng base URL backend của bạn
+  baseURL: "https://6f08-123-20-245-109.ngrok-free.app/api", // Thay bằng base URL backend của bạn
 });
 
 // Interceptor để tự gắn token vào header
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("authToken"); // Đổi từ 'token' sang 'authToken'
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+    console.log("🔐 Token attached:", token); // DEBUG
+  } else {
+    console.warn("⚠️ No token found");
+  }
+  
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => response,
