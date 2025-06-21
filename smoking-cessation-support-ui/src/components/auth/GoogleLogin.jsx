@@ -4,9 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../api/axios.js";
 import "../../css/About.css";
+import { useAuth } from "./AuthContext.jsx";
 
 const GoogleLoginComponent = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleGoogleSuccess = async (credentialResponse) => {
         const idToken = credentialResponse?.credential;
@@ -18,13 +20,24 @@ const GoogleLoginComponent = () => {
             const response = await api.post("/Auth/google-login", {
                 idToken: idToken,
             });
-            console.log("Đăng nhập thành công", response.data);
-            toast.success("Đăng nhập thành công!");
+
+            const userData = {
+                id: response.data.id,
+                userId: response.data.userId || response.data.id,
+                username: response.data.username || "Google User",
+                avatar: response.data.avatar || null,
+                token: response.data.token || null,
+            };
+
             localStorage.setItem("authToken", response.data.token);
+            localStorage.setItem("user", JSON.stringify(userData));
+            login(userData); // <<< Thêm dòng này
+
+            toast.success("Đăng nhập thành công!");
             navigate("/membership");
         } catch (error) {
             console.error("Lỗi khi gửi ID Token đến backend:", error?.response?.data || error.message);
-            toast.error("Đăng nhập Google thất bại!"); // Thêm dòng này
+            toast.error("Đăng nhập Google thất bại!");
         }
     };
 
