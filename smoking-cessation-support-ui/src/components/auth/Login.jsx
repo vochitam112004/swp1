@@ -56,11 +56,14 @@ export default function Login() {
         displayName: u.displayName,
         avatar: u.avatarUrl,
         userType: u.userType,
+        phoneNumber: u.phoneNumber,
+        address: u.address,
         isActive: u.isActive,
         createdAt: u.createdAt,
         updatedAt: u.updatedAt,
         token: response.data.token,
       };
+
 
       localStorage.setItem("authToken", response.data.token);
       login(userData);

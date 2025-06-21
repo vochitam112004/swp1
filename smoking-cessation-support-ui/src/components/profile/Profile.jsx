@@ -3,6 +3,7 @@ import api from "../../api/axios";
 import { TextField, Button, Avatar, Typography, Box, Paper } from "@mui/material";
 import { toast } from "react-toastify";
 import { useAuth } from "../auth/AuthContext";
+import "../../css/Profile.css";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -50,7 +51,7 @@ export default function Profile() {
     }
 
     try {
-      const res = await api.put("/user/update", form);
+      const res = await api.put("/User", form);
       toast.success("Cập nhật thông tin thành công!");
       setProfile({ ...profile, ...form });
       setEdit(false);
@@ -60,32 +61,49 @@ export default function Profile() {
     }
   };
 
-  const handleChangePassword = async (e) => {
+  const handleChangeUsernameAndPassword = async (e) => {
     e.preventDefault();
 
-    if (passwords.new1.length < 6) {
-      toast.error("Mật khẩu mới phải từ 6 ký tự!");
-      return;
+    // Nếu đổi username nhưng không đổi mật khẩu
+    if (form.username && form.username !== user.username) {
+      try {
+        await api.put("/User", {
+          id: user.id,
+          username: form.username,
+        });
+        toast.success("Cập nhật tên đăng nhập thành công!");
+        setProfile({ ...profile, username: form.username });
+      } catch {
+        toast.error("Cập nhật tên đăng nhập thất bại!");
+        return;
+      }
     }
 
-    if (passwords.new1 !== passwords.new2) {
-      toast.error("Mật khẩu mới không khớp!");
-      return;
-    }
-
-    try {
-      await api.post("/Auth/change-password", {
-        userId: user.id,
-        oldPassword: passwords.old,
-        newPassword: passwords.new1,
-      });
-      toast.success("Đổi mật khẩu thành công!");
-      setShowPasswordForm(false);
-      setPasswords({ old: "", new1: "", new2: "" });
-    } catch {
-      toast.error("Đổi mật khẩu thất bại!");
+    // Nếu có nhập mật khẩu mới thì đổi mật khẩu
+    if (passwords.new1 || passwords.new2 || passwords.old) {
+      if (passwords.new1.length < 6) {
+        toast.error("Mật khẩu mới phải từ 6 ký tự!");
+        return;
+      }
+      if (passwords.new1 !== passwords.new2) {
+        toast.error("Mật khẩu mới không khớp!");
+        return;
+      }
+      try {
+        await api.post("/Auth/change-password", {
+          userId: user.id,
+          oldPassword: passwords.old,
+          newPassword: passwords.new1,
+        });
+        toast.success("Đổi mật khẩu thành công!");
+        setPasswords({ old: "", new1: "", new2: "" });
+        setShowPasswordForm(false);
+      } catch {
+        toast.error("Đổi mật khẩu thất bại!");
+      }
     }
   };
+
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -99,10 +117,10 @@ export default function Profile() {
     formData.append("avatar", file);
 
     try {
-      const res = await api.post("/user/upload-avatar", formData, {
+      const res = await api.put("/User", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setProfile({ ...profile, avatar: res.data.avatar });
+      setProfile({ ...profile, avatarUrl: res.data.avatar });
       toast.success("Cập nhật ảnh đại diện thành công!");
     } catch {
       toast.error("Cập nhật ảnh đại diện thất bại!");
@@ -112,97 +130,149 @@ export default function Profile() {
   if (!profile) return <div>Đang tải...</div>;
 
   return (
-    <Box sx={{ maxWidth: 500, mx: "auto", mt: 4 }}>
-      <Paper sx={{ p: 3 }}>
-        <Box display="flex" alignItems="center" gap={2} mb={2}>
-          <Avatar src={profile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username)}`} sx={{ width: 64, height: 64 }} />
+    <Box className="profile-container">
+      <Paper className="profile-paper" elevation={6}>
+        <Box className="profile-avatar-container">
+          <Avatar
+            src={profile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username)}`}
+            className="profile-avatar"
+          />
           <label>
             <input type="file" accept="image/*" hidden onChange={handleAvatarChange} />
-            <Button variant="outlined" component="span" size="small">Đổi ảnh</Button>
+            <Button variant="outlined" component="span" size="medium" sx={{ textTransform: "none" }}>
+              Đổi ảnh
+            </Button>
           </label>
         </Box>
 
-        {!edit ? (
-          <>
-            <Typography variant="h6">{profile.displayName}</Typography>
-            <Typography>Email: {profile.email}</Typography>
-            <Typography>Tên đăng nhập: {profile.username}</Typography>
-            <Typography>Loại người dùng: {profile.userType}</Typography>
-            <Typography>Ngày tạo: {new Date(profile.createdAt).toLocaleDateString("vi-VN")}</Typography>
-            <Button sx={{ mt: 2 }} variant="contained" onClick={() => setEdit(true)}>Chỉnh sửa thông tin</Button>
-            <Button sx={{ mt: 2, ml: 2 }} variant="outlined" onClick={() => setShowPasswordForm(v => !v)}>Đổi mật khẩu</Button>
-          </>
-        ) : (
-          <form onSubmit={handleProfileUpdate}>
+        {/* Luôn hiện phần thông tin này */}
+        <Typography className="profile-name">{profile.displayName}</Typography>
+        <Typography className="profile-info"><strong>Email:</strong> {profile.email}</Typography>
+        <Typography className="profile-info"><strong>Tên đăng nhập:</strong> {profile.username}</Typography>
+        <Typography className="profile-info"><strong>Loại người dùng:</strong> {profile.userType}</Typography>
+        <Typography className="profile-info"><strong>Số điện thoại:</strong> {profile.phoneNumber || "Chưa cập nhật"}</Typography>
+        <Typography className="profile-info"><strong>Địa chỉ:</strong> {profile.address || "Chưa cập nhật"}</Typography>
+        <Typography className="profile-createdAt">
+          Ngày tạo: {new Date(profile.createdAt).toLocaleDateString("vi-VN")}
+        </Typography>
+
+        {/* Nút bật/tắt form */}
+        <Box className="buttons-group">
+          <Button
+            variant="contained"
+            onClick={() => {
+              setEdit(prev => {
+                if (!prev) setShowPasswordForm(false);
+                return !prev;
+              });
+            }}
+          >
+            Chỉnh sửa thông tin
+          </Button>
+
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setShowPasswordForm(prev => {
+                if (!prev) setEdit(false);
+                return !prev;
+              });
+            }}
+          >
+            Đổi tên đăng nhập và mật khẩu
+          </Button>
+        </Box>
+
+
+        {/* Form chỉnh sửa thông tin - hiện bên dưới */}
+        {edit && (
+          <form onSubmit={handleProfileUpdate} className="edit-form" style={{ marginTop: 24 }}>
             <TextField
               label="Tên hiển thị"
               name="displayName"
               value={form.displayName || ""}
               onChange={e => setForm({ ...form, displayName: e.target.value })}
-              fullWidth margin="normal"
+              fullWidth
+              autoFocus
             />
             <TextField
               label="Email"
               name="email"
+              type="email"
               value={form.email || ""}
               onChange={e => setForm({ ...form, email: e.target.value })}
-              fullWidth margin="normal"
+              fullWidth
             />
-            <Box mt={2}>
+            <TextField
+              label="Số điện thoại"
+              name="phoneNumber"
+              value={form.phoneNumber || ""}
+              onChange={e => setForm({ ...form, phoneNumber: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Địa chỉ"
+              name="address"
+              value={form.address || ""}
+              onChange={e => setForm({ ...form, address: e.target.value })}
+              fullWidth
+            />
+            <Box className="edit-form-buttons" sx={{ mt: 2 }}>
               <Button type="submit" variant="contained">Lưu</Button>
-              <Button sx={{ ml: 2 }} variant="outlined" onClick={() => setEdit(false)}>Hủy</Button>
+              <Button variant="outlined" onClick={() => setEdit(false)} sx={{ ml: 2 }}>Hủy</Button>
             </Box>
           </form>
         )}
 
+        {/* Form đổi tên đăng nhập và mật khẩu - hiện bên dưới */}
         {showPasswordForm && (
-          <form onSubmit={handleChangePassword} style={{ marginTop: 24 }}>
-            <Typography variant="subtitle1" mb={1}>Đổi mật khẩu</Typography>
+          <Box component="form" onSubmit={handleChangeUsernameAndPassword} className="password-form" sx={{ mt: 4 }}>
+            <TextField
+              label="Tên đăng nhập mới"
+              value={form.username || ""}
+              onChange={e => setForm({ ...form, username: e.target.value })}
+              fullWidth
+            />
             <TextField
               label="Mật khẩu cũ"
               type="password"
               value={passwords.old}
               onChange={e => setPasswords({ ...passwords, old: e.target.value })}
-              fullWidth margin="dense"
-              required
+              fullWidth
+              sx={{ mt: 2 }}
             />
             <TextField
               label="Mật khẩu mới"
               type="password"
               value={passwords.new1}
               onChange={e => setPasswords({ ...passwords, new1: e.target.value })}
-              fullWidth margin="dense"
-              required
+              fullWidth
+              sx={{ mt: 2 }}
             />
             <TextField
               label="Nhập lại mật khẩu mới"
               type="password"
               value={passwords.new2}
               onChange={e => setPasswords({ ...passwords, new2: e.target.value })}
-              fullWidth margin="dense"
-              required
+              fullWidth
+              sx={{ mt: 2 }}
             />
-            <Box mt={2}>
-              {profile.userType !== "google" && (
-                <Button
-                  sx={{ mt: 2, ml: 2 }}
-                  variant="outlined"
-                  onClick={() => setShowPasswordForm(v => !v)}
-                >
-                  Đổi mật khẩu
-                </Button>
-              )}
-              <Button sx={{ ml: 2 }} variant="outlined" onClick={() => setShowPasswordForm(false)}>Hủy</Button>
+            <Box className="password-form-buttons" sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
+              <Button type="submit" variant="contained">Lưu thay đổi</Button>
+              <Button variant="outlined" onClick={() => setShowPasswordForm(false)} sx={{ ml: 2 }}>Hủy</Button>
             </Box>
-          </form>
+          </Box>
         )}
 
-        <Box mt={4}>
-          <Typography variant="h6" mb={1}>Lịch sử gói thành viên</Typography>
+        {/* Lịch sử gói thành viên */}
+        <Box className="membership-history" sx={{ mt: 6 }}>
+          <Typography className="membership-history-title">
+            Lịch sử gói thành viên
+          </Typography>
           {history.length === 0 ? (
-            <Typography color="text.secondary">Chưa có lịch sử.</Typography>
+            <Typography className="membership-history-empty">Chưa có lịch sử.</Typography>
           ) : (
-            <ul>
+            <ul className="membership-history-list">
               {history.map((h, idx) => (
                 <li key={idx}>
                   {h.planName} ({new Date(h.startDate).toLocaleDateString("vi-VN")} - {h.endDate ? new Date(h.endDate).toLocaleDateString("vi-VN") : "Hiện tại"})
@@ -214,4 +284,5 @@ export default function Profile() {
       </Paper>
     </Box>
   );
+
 }

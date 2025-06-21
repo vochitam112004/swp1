@@ -1,0 +1,117 @@
+.profile-container {
+  max-width: 600px;
+  margin: 40px auto 40px auto;
+  padding: 0 16px;
+}
+
+.profile-paper {
+  padding: 32px;
+  border-radius: 16px;
+  background-color: #f9f9f9;
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profile-avatar {
+  width: 80px !important;
+  height: 80px !important;
+  border: 2px solid #1976d2;
+}
+
+.profile-avatar-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.profile-name {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 1.5rem;
+}
+
+.profile-info {
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.profile-info strong {
+  font-weight: 600;
+}
+
+.profile-createdAt {
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 0.875rem;
+}
+
+.buttons-group {
+  margin-top: 0;
+}
+
+.buttons-group > button {
+  margin-right: 16px;
+}
+
+.edit-form .MuiTextField-root {
+  margin-bottom: 16px !important;
+}
+
+.edit-form-buttons {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.edit-form-buttons button {
+  margin-left: 16px;
+}
+
+.password-form {
+  margin-top: 32px;
+}
+
+.password-form .MuiTextField-root {
+  margin-bottom: 16px !important;
+}
+
+.password-form-buttons {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.password-form-buttons button {
+  margin-left: 16px;
+}
+
+.membership-history {
+  margin-top: 48px;
+}
+
+.membership-history-title {
+  font-weight: 600;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #1976d2;
+  padding-bottom: 8px;
+  font-size: 1.25rem;
+}
+
+.membership-history-empty {
+  font-style: italic;
+  color: #888;
+}
+
+.membership-history-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-left: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.membership-history-list li {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 8px 0;
+  font-size: 1rem;
+}
