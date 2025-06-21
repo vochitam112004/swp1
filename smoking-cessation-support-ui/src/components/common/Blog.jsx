@@ -92,7 +92,10 @@ export default function Blog() {
           paginatedPosts.map((post) => (
             <div className="blog-item" key={post.id}>
               <Link to={`/blog/${post.id}`}>
-                <img className="blog-image" src={post.image} alt={post.title} />
+                {/* Hiển thị ảnh đại diện nếu có */}
+                {post.image && (
+                  <img className="blog-image" src={post.image} alt={post.title} />
+                )}
               </Link>
               <div className="blog-content">
                 <Link to={`/blog/${post.id}`} className="blog-title-link">

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -42,6 +42,8 @@ export default function Login() {
         password: form.password,
       });
 
+      console.log("Login API response:", response.data); 
+
       if (!response.data || !response.data.token) {
         toast.error("Đăng nhập thất bại. Vui lòng thử lại!");
         return;
@@ -63,6 +65,46 @@ export default function Login() {
       console.error("Login error:", error);
     }
   };
+
+  // Cập nhật thông tin
+  const handleUpdateProfile = async () => {
+    try {
+      await api.put("/MemberProfile/update", form);
+      toast.success("Cập nhật thông tin thành công!");
+    } catch (error) {
+      toast.error("Cập nhật thông tin thất bại!");
+      console.error("Update profile error:", error);
+    }
+  };
+
+  // Đổi mật khẩu
+  const handleChangePassword = async (userId, oldPassword, newPassword) => {
+    try {
+      await api.post("/Auth/change-password", { userId, oldPassword, newPassword });
+      toast.success("Đổi mật khẩu thành công!");
+    } catch (error) {
+      toast.error("Đổi mật khẩu thất bại!");
+      console.error("Change password error:", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await api.get(`/Membership/history/${user.id}`);
+        setForm({
+          username: response.data.username || "",
+          password: "",
+        });
+      } catch (error) {
+        console.error("Fetch user profile error:", error);
+      }
+    };
+
+    if (user && user.id) {
+      fetchUserProfile();
+    }
+  }, [user]);
 
   if (user) {
     return (
