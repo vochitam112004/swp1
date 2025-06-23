@@ -153,6 +153,16 @@ export default function Login() {
               ),
             }}
           />
+          <Box textAlign="right" mt={1} mb={1}>
+            <Typography
+              variant="body2"
+              color="primary"
+              sx={{ cursor: "pointer", textDecoration: "underline" }}
+              onClick={() => navigate("/forgot-password")}
+            >
+              Quên mật khẩu?
+            </Typography>
+          </Box>
           <Button
             type="submit"
             variant="contained"
