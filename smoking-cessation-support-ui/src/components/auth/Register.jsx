@@ -10,8 +10,61 @@ import {
   Paper,
   InputAdornment,
   IconButton,
+  Avatar,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import GoogleLogin from "./GoogleLogin";
+
+// Modern CSS for the register page
+const styles = {
+  authBg: {
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  registerContainer: {
+    background: "#fff",
+    padding: "40px 32px",
+    borderRadius: "18px",
+    boxShadow: "0 8px 32px rgba(44, 62, 80, 0.18)",
+    width: "370px",
+    maxWidth: "95vw",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  registerTitle: {
+    fontSize: "2rem",
+    fontWeight: 700,
+    color: "#2193b0",
+    marginBottom: "18px",
+    letterSpacing: "1px",
+    textAlign: "center",
+  },
+  registerBtn: {
+    width: "100%",
+    padding: "12px",
+    background: "linear-gradient(90deg, #74ebd5 0%, #2193b0 100%)",
+    border: "none",
+    borderRadius: "8px",
+    color: "#fff",
+    fontSize: "18px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    marginTop: "18px",
+    marginBottom: "8px",
+    transition: "background 0.2s",
+    boxShadow: "0 2px 8px rgba(33,147,176,0.08)",
+  },
+  googleBtnWrapper: {
+    width: "100%",
+    margin: "12px 0",
+    display: "flex",
+    justifyContent: "center",
+  },
+};
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -23,53 +76,33 @@ export default function Register() {
     displayName: "",
   });
   const [message, setMessage] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // Thêm state này
+  const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const handleClickShowPassword = () => setShowPassword((show) => !show); // Hàm đổi trạng thái ẩn/hiện
+  const handleClickShowPassword = () => setShowPassword((v) => !v);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(true);
-    // Validate email
-    if (!/\S+@\S+\.\S+/.test(form.email)) {
-      toast.error("Email không hợp lệ!");
-      setMessage(false);
-      return;
-    }
-    // Validate password length
-    if (form.password.length < 6) {
-      toast.error("Mật khẩu phải từ 6 ký tự!");
-      setMessage(false);
-      return;
-    }
-    // Confirm password
-    if (form.password !== confirmPassword) {
-      toast.error("Mật khẩu xác nhận không khớp!");
-      setMessage(false);
-      return;
-    }
-    // Validate phone
-    if (!/^0\d{9,10}$/.test(form.phoneNumber)) {
-      toast.error("Số điện thoại không hợp lệ!");
-      setMessage(false);
-      return;
-    }
+
+    if (!/\S+@\S+\.\S+/.test(form.email))
+      return toast.error("Email không hợp lệ!"), setMessage(false);
+    if (form.password.length < 6)
+      return toast.error("Mật khẩu phải từ 6 ký tự!"), setMessage(false);
+    if (form.password !== confirmPassword)
+      return toast.error("Mật khẩu xác nhận không khớp!"), setMessage(false);
+    if (!/^0\d{9,10}$/.test(form.phoneNumber))
+      return toast.error("Số điện thoại không hợp lệ!"), setMessage(false);
 
     try {
-      console.log("Register payload:", form);
-      const response = await api.post("Auth/register", form);
-      console.log(response);
-
-      toast.success("Successfully registered! Please log in.");
+      await api.post("Auth/register", form);
+      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
       navigate("/login");
     } catch (err) {
-      console.error("Registration error:", err);
       toast.error(
         err.response?.data?.message ||
           JSON.stringify(err.response?.data) ||
@@ -81,36 +114,29 @@ export default function Register() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%)",
-      }}
-    >
-      <Paper
-        elevation={8}
-        sx={{
-          p: { xs: 3, sm: 5 },
-          borderRadius: 5,
-          maxWidth: 400,
-          width: "100%",
-        }}
-      >
-        <Typography variant="h5" fontWeight={700} color="primary" mb={2}>
-          Đăng ký
-        </Typography>
-        <form onSubmit={handleSubmit}>
+    <div style={styles.authBg}>
+      <div style={styles.registerContainer}>
+        <Avatar
+          src="/logo192.png"
+          sx={{ width: 64, height: 64, mb: 2, bgcolor: "#2193b0", boxShadow: "0 2px 8px #2193b033" }}
+        />
+        <div style={styles.registerTitle}>Đăng ký tài khoản</div>
+        <form onSubmit={handleSubmit} style={{ width: "100%" }}>
           <TextField
             label="Tên đăng nhập"
             name="userName"
             value={form.userName}
             onChange={handleChange}
             fullWidth
-            margin="normal"
+            margin="dense"
             required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <i className="fas fa-user" style={{ color: "#2193b0" }} />
+                </InputAdornment>
+              ),
+            }}
           />
           <TextField
             label="Mật khẩu"
@@ -119,15 +145,21 @@ export default function Register() {
             value={form.password}
             onChange={handleChange}
             fullWidth
-            margin="normal"
+            margin="dense"
             required
             InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <i className="fas fa-lock" style={{ color: "#2193b0" }} />
+                </InputAdornment>
+              ),
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
                     aria-label="toggle password visibility"
                     onClick={handleClickShowPassword}
                     edge="end"
+                    size="small"
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
@@ -142,8 +174,15 @@ export default function Register() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             fullWidth
-            margin="normal"
+            margin="dense"
             required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <i className="fas fa-lock" style={{ color: "#2193b0" }} />
+                </InputAdornment>
+              ),
+            }}
           />
           <TextField
             label="Email"
@@ -152,8 +191,15 @@ export default function Register() {
             value={form.email}
             onChange={handleChange}
             fullWidth
-            margin="normal"
+            margin="dense"
             required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <i className="fas fa-envelope" style={{ color: "#2193b0" }} />
+                </InputAdornment>
+              ),
+            }}
           />
           <TextField
             label="Số điện thoại"
@@ -161,8 +207,15 @@ export default function Register() {
             value={form.phoneNumber}
             onChange={handleChange}
             fullWidth
-            margin="normal"
+            margin="dense"
             required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <i className="fas fa-phone" style={{ color: "#2193b0" }} />
+                </InputAdornment>
+              ),
+            }}
           />
           <TextField
             label="Địa chỉ"
@@ -170,7 +223,14 @@ export default function Register() {
             value={form.address}
             onChange={handleChange}
             fullWidth
-            margin="normal"
+            margin="dense"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <i className="fas fa-map-marker-alt" style={{ color: "#2193b0" }} />
+                </InputAdornment>
+              ),
+            }}
           />
           <TextField
             label="Tên hiển thị"
@@ -178,24 +238,38 @@ export default function Register() {
             value={form.displayName}
             onChange={handleChange}
             fullWidth
-            margin="normal"
+            margin="dense"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <i className="fas fa-id-card" style={{ color: "#2193b0" }} />
+                </InputAdornment>
+              ),
+            }}
           />
-          <Button
+          <button
             type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            sx={{ mt: 2 }}
+            style={styles.registerBtn}
+            disabled={message}
           >
             Đăng ký
-          </Button>
+          </button>
         </form>
-        {message && (
-          <Typography color="success.main" mt={2}>
-            {message}
+        <div style={styles.googleBtnWrapper}>
+          <GoogleLogin />
+        </div>
+        <Box mt={2} textAlign="center">
+          <Typography variant="body2">
+            Đã có tài khoản?{" "}
+            <span
+              style={{ color: "#2193b0", cursor: "pointer", fontWeight: 600 }}
+              onClick={() => navigate("/login")}
+            >
+              Đăng nhập
+            </span>
           </Typography>
-        )}
-      </Paper>
-    </Box>
+        </Box>
+      </div>
+    </div>
   );
 }

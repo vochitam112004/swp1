@@ -36,6 +36,7 @@ export default function Login() {
       toast.error("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
+
     try {
       const response = await api.post("/Auth/login", {
         username: form.username,
@@ -48,7 +49,6 @@ export default function Login() {
       }
 
       const u = response.data.user;
-
       const userData = {
         id: u.userId,
         username: u.username,
@@ -64,7 +64,6 @@ export default function Login() {
         token: response.data.token,
       };
 
-
       localStorage.setItem("authToken", response.data.token);
       login(userData);
       toast.success("Đăng nhập thành công!");
@@ -77,18 +76,8 @@ export default function Login() {
 
   if (user) {
     return (
-      <Box
-        sx={{
-          minHeight: "80vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Paper
-          elevation={4}
-          sx={{ p: 4, borderRadius: 3, minWidth: 340, textAlign: "center" }}
-        >
+      <div className="auth-bg">
+        <div className="register-container" style={{ minWidth: 340, textAlign: "center" }}>
           <Avatar
             src={
               user.avatar ||
@@ -102,81 +91,89 @@ export default function Login() {
           <Button variant="outlined" color="error" onClick={logout} fullWidth>
             Đăng xuất
           </Button>
-        </Paper>
-      </Box>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: "80vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Paper elevation={4} sx={{ p: 4, borderRadius: 3, minWidth: 340 }}>
-        <Typography variant="h5" fontWeight={700} mb={2} color="primary">
-          Đăng nhập
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="Tên đăng nhập"
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <TextField
-            label="Mật khẩu"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            value={form.password}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={handleClickShowPassword}
-                    edge="end"
-                    aria-label="toggle password visibility"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Box textAlign="right" mt={1} mb={1}>
-            <Typography
-              variant="body2"
-              color="primary"
-              sx={{ cursor: "pointer", textDecoration: "underline" }}
-              onClick={() => navigate("/forgot-password")}
-            >
-              Quên mật khẩu?
-            </Typography>
-          </Box>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            sx={{ mt: 2 }}
+    <div className="auth-split">
+      <div className="auth-split-left">
+        <div className="auth-split-logo">
+          <img src="/logo192.png" alt="Logo" />
+        </div>
+        <div className="auth-split-title">
+          SMOKING<br />SUPPORT
+        </div>
+      </div>
+      <div className="auth-split-right">
+        <div className="register-container">
+          <div className="register-title">
+            Log in
+          </div>
+          <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+            <TextField
+              label="Email address"
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+              InputProps={{
+                style: { background: "#fff", borderRadius: 8 }
+              }}
+            />
+            <TextField
+              label="Password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={form.password}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+              InputProps={{
+                style: { background: "#fff", borderRadius: 8 },
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleClickShowPassword}
+                      edge="end"
+                      aria-label="toggle password visibility"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Box textAlign="right" mt={1} mb={2}>
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                sx={{ cursor: "pointer", textDecoration: "underline" }}
+                onClick={() => navigate("/forgot-password")}
+              >
+                Forgot password?
+              </Typography>
+            </Box>
+            <button className="register-btn" type="submit">
+              Log in
+            </button>
+          </form>
+          <div style={{ margin: "32px 0 0 0", fontWeight: 700, fontSize: "1.2rem", color: "#222", width: "100%", textAlign: "left" }}>
+            Register
+          </div>
+          <button
+            className="register-btn create-account-btn"
+            type="button"
+            onClick={() => navigate("/register")}
           >
-            Đăng nhập
-          </Button>
-        </form>
-        <Box mt={2}>
-          <GoogleLogin />
-        </Box>
-      </Paper>
-    </Box>
+            Create an account
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
