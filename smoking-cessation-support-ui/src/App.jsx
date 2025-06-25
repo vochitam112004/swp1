@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Unauthorized from "./components/auth/Unauthorized";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 // import React, { useState } from "react";
 import Navigation from "./components/layout/navigation";
 import HeroSection from "./components/layout/heroSection";
@@ -22,6 +24,8 @@ import Payment from "./components/common/Payment";
 import FeedbackList from "./components/common/FeedbackList";
 import RequireAuth from "./components/auth/RequireAuth";
 import ForgotPassword from "./components/auth/ForgotPassword";
+import CoachPage from "./components/auth/CoachPage";
+import AdminPage from "./components/auth/AdminPage";
 
 function App() {
   // const [showChat, setShowChat] = useState(false);
@@ -57,6 +61,7 @@ function App() {
             </RequireAuth>
           }
         />
+        <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/membership" element={<Membership />} />
         <Route path="/register" element={<Register />} />
         <Route path="/payment" element={<Payment />} />
@@ -71,6 +76,22 @@ function App() {
         />
         <Route path="/feedbacks" element={<FeedbackList />} />
         <Route path="/forgot-password" element={<ForgotPassword />}/>
+         <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coach"
+          element={
+            <ProtectedRoute allowedRoles={["coach", "admin"]}>
+              <CoachPage />
+            </ProtectedRoute>
+          }
+        />
         {/* Thêm các route khác nếu cần */}
       </Routes>
       <Footer />

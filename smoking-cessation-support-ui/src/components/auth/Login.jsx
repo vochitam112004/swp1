@@ -68,7 +68,17 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(userData));
       login(userData);
       toast.success("Đăng nhập thành công!");
-      navigate("/membership");
+      switch (u.userType) {
+        case "admin":
+          navigate("/admin");
+          break;
+        case "coach":
+          navigate("/coach");
+          break;
+        default:
+          navigate("/user");
+          break;
+      }
     } catch (error) {
       toast.error("Tên đăng nhập hoặc mật khẩu không đúng!");
       console.error("Login error:", error);
@@ -162,7 +172,7 @@ export default function Login() {
             <button className="register-btn" type="submit">
               Log in
             </button>
-            <GoogleLogin/>
+            <GoogleLogin />
           </form>
           <div style={{ margin: "32px 0 0 0", fontWeight: 700, fontSize: "1.2rem", color: "#222", width: "100%", textAlign: "left" }}>
             Register
