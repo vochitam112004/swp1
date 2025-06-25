@@ -65,6 +65,7 @@ export default function Login() {
       };
 
       localStorage.setItem("authToken", response.data.token);
+      localStorage.setItem("user", JSON.stringify(userData));
       login(userData);
       toast.success("Đăng nhập thành công!");
       navigate("/membership");
@@ -113,7 +114,7 @@ export default function Login() {
           </div>
           <form onSubmit={handleSubmit} style={{ width: "100%" }}>
             <TextField
-              label="Email address"
+              label="username"
               name="username"
               value={form.username}
               onChange={handleChange}
@@ -125,7 +126,7 @@ export default function Login() {
               }}
             />
             <TextField
-              label="Password"
+              label="password"
               name="password"
               type={showPassword ? "text" : "password"}
               value={form.password}
@@ -161,6 +162,7 @@ export default function Login() {
             <button className="register-btn" type="submit">
               Log in
             </button>
+            <GoogleLogin/>
           </form>
           <div style={{ margin: "32px 0 0 0", fontWeight: 700, fontSize: "1.2rem", color: "#222", width: "100%", textAlign: "left" }}>
             Register

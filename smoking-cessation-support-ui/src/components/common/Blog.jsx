@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import BlogPosts from "../common/BlogPosts";
+import api from "../../api/axios";
 import "../../css/Blog.css";
 
 // Hàm loại bỏ dấu tiếng Việt
@@ -12,41 +12,51 @@ function removeVietnameseTones(str) {
     .replace(/Đ/g, "D");
 }
 
-const POSTS_PER_PAGE = 5; // Số bài viết mỗi trang
+const POSTS_PER_PAGE = 5;
 
 export default function Blog() {
+  const [posts, setPosts] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-  // Lấy token để kiểm tra đăng nhập
   const token = localStorage.getItem("authToken");
 
-  // Lọc bài viết chỉ theo title, không phân biệt dấu
-  const filteredPosts = BlogPosts.filter((post) =>
-    removeVietnameseTones(post.title.toLowerCase()).includes(
-      removeVietnameseTones(search.toLowerCase())
-    )
-  );
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await api.get("/CommunityPost");
+        setPosts(res.data);
+      } catch (error) {
+        console.error("Lỗi khi tải bài viết:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Tính tổng số trang
+    fetchPosts();
+  }, []);
+
+  // Lọc bài viết hợp lệ và theo từ khóa tìm kiếm
+  const filteredPosts = posts
+    .filter((post) => post.Title && removeVietnameseTones(post.Title.toLowerCase()).includes(removeVietnameseTones(search.toLowerCase())))
+    .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt)); // Sắp xếp mới nhất trước
+
   const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
-
-  // Lấy bài viết cho trang hiện tại
   const paginatedPosts = filteredPosts.slice(
     (page - 1) * POSTS_PER_PAGE,
     page * POSTS_PER_PAGE
   );
 
-  // Chuyển trang
   const handlePageChange = (newPage) => {
     setPage(newPage);
-    window.scrollTo(0, 0); // Cuộn lên đầu trang khi chuyển trang
+    window.scrollTo(0, 0);
   };
 
   return (
     <div className="blog-container">
       <h1 className="blog-title">Danh sách bài viết Blog</h1>
-      {/* Nút đăng bài chỉ hiện khi đã đăng nhập */}
+
       {token && (
         <div style={{ marginBottom: 16 }}>
           <Link to="/blog/create">
@@ -66,13 +76,14 @@ export default function Blog() {
           </Link>
         </div>
       )}
+
       <input
         type="text"
         placeholder="Tìm kiếm bài viết"
         value={search}
         onChange={(e) => {
           setSearch(e.target.value);
-          setPage(1); // Reset về trang 1 khi tìm kiếm
+          setPage(1);
         }}
         style={{
           width: "100%",
@@ -83,40 +94,34 @@ export default function Blog() {
           fontSize: "16px",
         }}
       />
-      <div className="blog-list">
-        {BlogPosts.length === 0 ? (
-          <div>Chưa có bài viết nào.</div>
-        ) : paginatedPosts.length === 0 ? (
-          <div>Không tìm thấy bài viết phù hợp.</div>
-        ) : (
-          paginatedPosts.map((post) => (
-            <div className="blog-item" key={post.id}>
-              <Link to={`/blog/${post.id}`}>
-                {/* Hiển thị ảnh đại diện nếu có */}
-                {post.image && (
-                  <img className="blog-image" src={post.image} alt={post.title} />
-                )}
-              </Link>
-              <div className="blog-content">
-                <Link to={`/blog/${post.id}`} className="blog-title-link">
-                  <h2 className="blog-post-title">{post.title}</h2>
-                </Link>
-                <div className="blog-meta">
-                  <span className="blog-author">{post.author}</span> -{" "}
-                  <span className="blog-date">{post.date}</span>
+
+      {loading ? (
+        <div>Đang tải bài viết...</div>
+      ) : (
+        <div className="blog-list">
+          {posts.length === 0 ? (
+            <div>Chưa có bài viết nào.</div>
+          ) : paginatedPosts.length === 0 ? (
+            <div>Không tìm thấy bài viết phù hợp.</div>
+          ) : (
+            paginatedPosts.map((post, index) => (
+              <div className="blog-item" key={index}>
+                <div className="blog-content">
+                  <h2 className="blog-post-title">{post.Title || "(Không có tiêu đề)"}</h2>
+                  <div className="blog-meta">
+                    <span className="blog-author">{post.DisplayName || "Ẩn danh"}</span>{" "}
+                    - <span className="blog-date">{new Date(post.CreatedAt).toLocaleDateString()}</span>
+                  </div>
+                  <p className="blog-summary">{post.Content.slice(0, 150)}...</p>
                 </div>
-                <div className="blog-summary">{post.summary}</div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
-      {/* Phân trang */}
+            ))
+          )}
+        </div>
+      )}
+
       {totalPages > 1 && (
-        <div
-          className="blog-pagination"
-          style={{ marginTop: 24, textAlign: "center" }}
-        >
+        <div className="blog-pagination" style={{ marginTop: 24, textAlign: "center" }}>
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i + 1}
