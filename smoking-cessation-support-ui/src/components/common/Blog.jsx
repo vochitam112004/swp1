@@ -25,16 +25,10 @@ export default function Blog() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await api.get("/CommunityPost", {
-          validateStatus: () => true, // để luôn lấy response dù lỗi
-        });
-
-        const contentType = res.headers["content-type"];
-        if (!contentType?.includes("application/json")) {
-          throw new Error("Ngrok trả về HTML hoặc định dạng không hợp lệ (có thể đã hết hạn).");
-        }
-
+        const res = await api.get("/CommunityPost");
+        console.log("🔍 Content-Type:", res.headers['content-type']);
         const data = res.data;
+        console.log("📦 Response data:", data);
         if (!Array.isArray(data)) {
           throw new Error("Phản hồi không phải là mảng bài viết.");
         }

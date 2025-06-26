@@ -69,10 +69,10 @@ export default function Login() {
       login(userData);
       toast.success("Đăng nhập thành công!");
       switch (u.userType) {
-        case "admin":
+        case "Admin":
           navigate("/admin");
           break;
-        case "coach":
+        case "Coach":
           navigate("/coach");
           break;
         default:
