@@ -19,16 +19,30 @@ export default function Blog() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-
+  const [error, setError] = useState("");
   const token = localStorage.getItem("authToken");
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await api.get("/CommunityPost");
-        setPosts(res.data);
-      } catch (error) {
-        console.error("Lỗi khi tải bài viết:", error);
+        const res = await api.get("/CommunityPost", {
+          validateStatus: () => true, // để luôn lấy response dù lỗi
+        });
+
+        const contentType = res.headers["content-type"];
+        if (!contentType?.includes("application/json")) {
+          throw new Error("Ngrok trả về HTML hoặc định dạng không hợp lệ (có thể đã hết hạn).");
+        }
+
+        const data = res.data;
+        if (!Array.isArray(data)) {
+          throw new Error("Phản hồi không phải là mảng bài viết.");
+        }
+
+        setPosts(data);
+      } catch (err) {
+        setError(err.message || "Không thể tải bài viết.");
+        setPosts([]);
       } finally {
         setLoading(false);
       }
@@ -37,10 +51,14 @@ export default function Blog() {
     fetchPosts();
   }, []);
 
-  // Lọc bài viết hợp lệ và theo từ khóa tìm kiếm
+  // Lọc và phân trang
   const filteredPosts = posts
-    .filter((post) => post.Title && removeVietnameseTones(post.Title.toLowerCase()).includes(removeVietnameseTones(search.toLowerCase())))
-    .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt)); // Sắp xếp mới nhất trước
+    .filter((post) =>
+      removeVietnameseTones(post.title?.toLowerCase() || "").includes(
+        removeVietnameseTones(search.toLowerCase())
+      )
+    )
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
   const paginatedPosts = filteredPosts.slice(
@@ -60,19 +78,7 @@ export default function Blog() {
       {token && (
         <div style={{ marginBottom: 16 }}>
           <Link to="/blog/create">
-            <button
-              style={{
-                background: "#1976d2",
-                color: "#fff",
-                border: "none",
-                borderRadius: 6,
-                padding: "8px 20px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              + Đăng bài mới
-            </button>
+            <button className="blog-button">+ Đăng bài mới</button>
           </Link>
         </div>
       )}
@@ -85,58 +91,43 @@ export default function Blog() {
           setSearch(e.target.value);
           setPage(1);
         }}
-        style={{
-          width: "100%",
-          padding: "8px",
-          marginBottom: "20px",
-          borderRadius: "6px",
-          border: "1px solid #ccc",
-          fontSize: "16px",
-        }}
+        className="blog-search"
       />
 
       {loading ? (
         <div>Đang tải bài viết...</div>
+      ) : error ? (
+        <div style={{ color: "red" }}>❌ {error}</div>
+      ) : filteredPosts.length === 0 ? (
+        <div>{search ? "Không tìm thấy bài viết phù hợp." : "Chưa có bài viết nào."}</div>
       ) : (
         <div className="blog-list">
-          {posts.length === 0 ? (
-            <div>Chưa có bài viết nào.</div>
-          ) : paginatedPosts.length === 0 ? (
-            <div>Không tìm thấy bài viết phù hợp.</div>
-          ) : (
-            paginatedPosts.map((post, index) => (
-              <div className="blog-item" key={index}>
-                <div className="blog-content">
-                  <h2 className="blog-post-title">{post.Title || "(Không có tiêu đề)"}</h2>
-                  <div className="blog-meta">
-                    <span className="blog-author">{post.DisplayName || "Ẩn danh"}</span>{" "}
-                    - <span className="blog-date">{new Date(post.CreatedAt).toLocaleDateString()}</span>
-                  </div>
-                  <p className="blog-summary">{post.Content.slice(0, 150)}...</p>
+          {paginatedPosts.map((post, index) => (
+            <div className="blog-item" key={index}>
+              <div className="blog-content">
+                <h2 className="blog-post-title">{post.title || "(Không có tiêu đề)"}</h2>
+                <div className="blog-meta">
+                  <span className="blog-author">{post.displayName || "Ẩn danh"}</span> -{" "}
+                  <span className="blog-date">
+                    {new Date(post.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
+                <p className="blog-summary">
+                  {post.content?.slice(0, 150) || "(Không có nội dung)"}...
+                </p>
               </div>
-            ))
-          )}
+            </div>
+          ))}
         </div>
       )}
 
       {totalPages > 1 && (
-        <div className="blog-pagination" style={{ marginTop: 24, textAlign: "center" }}>
+        <div className="blog-pagination">
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i + 1}
               onClick={() => handlePageChange(i + 1)}
               className={page === i + 1 ? "active" : ""}
-              style={{
-                margin: "0 4px",
-                padding: "6px 12px",
-                borderRadius: "4px",
-                border: "1px solid #1976d2",
-                background: page === i + 1 ? "#1976d2" : "#fff",
-                color: page === i + 1 ? "#fff" : "#1976d2",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
             >
               {i + 1}
             </button>
