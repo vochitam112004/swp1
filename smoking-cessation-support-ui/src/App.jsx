@@ -1,7 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+
 import Unauthorized from "./components/auth/Unauthorized";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-// import React, { useState } from "react";
 import Navigation from "./components/layout/navigation";
 import HeroSection from "./components/layout/heroSection";
 import StatsSection from "./components/dashboard/statsSection";
@@ -19,7 +20,6 @@ import BlogDetail from "./components/common/BlogDetail";
 import BXH from "./components/dashboard/BXH";
 import About from "./components/common/About";
 import Profile from "./components/profile/Profile";
-// import ChatSupport from "./components/chat/ChatSupport";
 import Payment from "./components/common/Payment";
 import FeedbackList from "./components/common/FeedbackList";
 import RequireAuth from "./components/auth/RequireAuth";
@@ -27,12 +27,14 @@ import ForgotPassword from "./components/auth/ForgotPassword";
 import CoachPage from "./components/coach/CoachPage";
 import AdminPage from "./components/admin/AdminPage";
 
-function App() {
-  // const [showChat, setShowChat] = useState(false);
+function AppContent() {
+  const location = useLocation();
+  const isSpecialRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/coach");
 
   return (
-    <Router>
-      <Navigation />
+    <>
+      {!isSpecialRoute && <Navigation />}
+
       <Routes>
         <Route
           path="/"
@@ -75,8 +77,8 @@ function App() {
           }
         />
         <Route path="/feedbacks" element={<FeedbackList />} />
-        <Route path="/forgot-password" element={<ForgotPassword />}/>
-         <Route
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route
           path="/admin"
           element={
             <ProtectedRoute allowedRoles={["Admin"]}>
@@ -92,12 +94,19 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Thêm các route khác nếu cần */}
       </Routes>
-      <Footer />
-      {/* Nút ẩn/hiện chat */}
+
+      {!isSpecialRoute && <Footer />}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
-//
+
 export default App;
