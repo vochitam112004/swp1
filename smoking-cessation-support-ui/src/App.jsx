@@ -24,8 +24,8 @@ import Payment from "./components/common/Payment";
 import FeedbackList from "./components/common/FeedbackList";
 import RequireAuth from "./components/auth/RequireAuth";
 import ForgotPassword from "./components/auth/ForgotPassword";
-import CoachPage from "./components/auth/CoachPage";
-import AdminPage from "./components/auth/AdminPage";
+import CoachPage from "./components/coach/CoachPage";
+import AdminPage from "./components/admin/AdminPage";
 
 function App() {
   // const [showChat, setShowChat] = useState(false);
