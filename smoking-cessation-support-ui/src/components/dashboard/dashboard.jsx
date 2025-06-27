@@ -60,21 +60,35 @@ function shouldSendReminder(lastSent, frequency) {
   return false;
 }
 
+function requestNotificationPermission() {
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+}
+function sendBrowserNotification(title, body) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, { body });
+  }
+}
+
 const Dashboard = () => {
+  const safeParse = (key, fallback) => {
+    try {
+      const val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
   // Thêm state cho tiến trình
-  const [progress, setProgress] = useState(() => {
-    // Lấy từ localStorage nếu có
-    const saved = localStorage.getItem("quitProgress");
-    return saved
-      ? JSON.parse(saved)
-      : { startDate: null, daysNoSmoke: 0, moneySaved: 0, health: 0 };
-  });
+  const [progress, setProgress] = useState(() => safeParse("quitProgress", { startDate: null, daysNoSmoke: 0, moneySaved: 0, health: 0 }));
+  // Thêm state cho lịch sử tiến trình và số lần tái nghiện
+  const [quitHistory, setQuitHistory] = useState(() => safeParse("quitHistory", []));
   const [todayCigarettes, setTodayCigarettes] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [journal, setJournal] = useState(() => {
-    return JSON.parse(localStorage.getItem("quitJournal") || "[]");
-  });
+  const [journal, setJournal] = useState(() => safeParse("quitJournal", []));
   const [journalEntry, setJournalEntry] = useState("");
   const [journalDate, setJournalDate] = useState(() => {
     // Mặc định là hôm nay
@@ -82,11 +96,18 @@ const Dashboard = () => {
   });
   const [frequency, setFrequency] = useState(() => localStorage.getItem("smokeFrequency") || "");
   const [pricePerPack, setPricePerPack] = useState(() => localStorage.getItem("pricePerPack") || "");
-  const [comments, setComments] = useState(() => JSON.parse(localStorage.getItem("badgeComments") || "{}"));
+  const [comments, setComments] = useState(() => safeParse("badgeComments", {}));
+  const [editIdx, setEditIdx] = useState(null);
+  const [editContent, setEditContent] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = (e) => {
     e.preventDefault();
+    if (isNaN(todayCigarettes) || todayCigarettes === "" || todayCigarettes < 0) {
+      toast.error("Số điếu thuốc không hợp lệ!");
+      return;
+    }
     localStorage.setItem("smokeFrequency", frequency);
     localStorage.setItem("pricePerPack", pricePerPack);
     const now = new Date();
@@ -94,6 +115,37 @@ const Dashboard = () => {
       ? new Date(progress.startDate)
       : now;
     if (!progress.startDate) startDate = now;
+
+    if (parseInt(todayCigarettes, 10) > 0) {
+      // Lưu chuỗi cũ vào lịch sử nếu có tiến trình
+      if (progress.daysNoSmoke > 0) {
+        const history = JSON.parse(localStorage.getItem("quitHistory") || "[]");
+        history.push({
+          daysNoSmoke: progress.daysNoSmoke,
+          moneySaved: progress.moneySaved,
+          startDate: progress.startDate,
+          endDate: now.toISOString(),
+        });
+        localStorage.setItem("quitHistory", JSON.stringify(history));
+        setQuitHistory(history);
+      }
+      // Xác nhận trước khi reset tiến trình
+      if (window.confirm("Bạn đã hút lại thuốc. Tiến trình sẽ bị đặt lại từ đầu. Bạn có chắc chắn không?")) {
+        const newProgress = {
+          startDate: now.toISOString(),
+          daysNoSmoke: 0,
+          moneySaved: 0,
+          health: 0,
+        };
+        setProgress(newProgress);
+        localStorage.setItem("quitProgress", JSON.stringify(newProgress));
+        toast.error("Tiến trình đã được đặt lại. Đừng nản lòng, hãy bắt đầu lại!");
+        setShowForm(false);
+        setTodayCigarettes("");
+      }
+      return;
+    }
+
     // Giả sử mỗi ngày không hút tiết kiệm 70.000đ, cải thiện 2% sức khỏe
     const daysNoSmoke =
       todayCigarettes === "0"
@@ -134,10 +186,12 @@ const Dashboard = () => {
 
   // Thông báo mỗi ngày 1 lần
   useEffect(() => {
+    requestNotificationPermission(); // Thêm dòng này
     const lastNotify = localStorage.getItem("lastMotivationNotify");
     const today = new Date().toISOString().slice(0, 10);
     if (lastNotify !== today) {
       toast.info("Hãy nhớ lý do bạn bắt đầu! Mỗi ngày không thuốc lá là một chiến thắng mới 💪");
+      sendBrowserNotification("Động viên cai thuốc", "Hãy nhớ lý do bạn bắt đầu! Mỗi ngày không thuốc lá là một chiến thắng mới 💪"); // Thêm dòng này
       localStorage.setItem("lastMotivationNotify", today);
     }
   }, []);
@@ -148,6 +202,7 @@ const Dashboard = () => {
     achieved.forEach(badge => {
       if (!shown.includes(badge.key)) {
         toast.success(`Chúc mừng! Bạn vừa đạt huy hiệu: ${badge.label}`);
+        sendBrowserNotification("Chúc mừng!", `Bạn vừa đạt huy hiệu: ${badge.label}`); // Thêm dòng này
         shown.push(badge.key);
       }
     });
@@ -163,6 +218,7 @@ const Dashboard = () => {
     const lastNotify = localStorage.getItem("lastPersonalReasonNotify");
     if (shouldSendReminder(lastNotify, frequency)) {
       toast.info(`Động viên: ${reason}`);
+      sendBrowserNotification("Động viên cai thuốc", reason); // Thêm dòng này
       localStorage.setItem("lastPersonalReasonNotify", new Date().toISOString());
     }
   }, []);
@@ -182,7 +238,6 @@ const Dashboard = () => {
   // Thêm các state và hàm xử lý động viên, bình luận
   const [forceUpdate, setForceUpdate] = useState(0);
   const [commentInputs, setCommentInputs] = useState({});
-  const [encourages, setEncourages] = useState(() => JSON.parse(localStorage.getItem("encourages") || "{}"));
 
   function handleEncourage(idx) {
     const encouragesObj = JSON.parse(localStorage.getItem("encourages") || "{}");
@@ -237,6 +292,38 @@ const Dashboard = () => {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  // Lấy goalDays từ kế hoạch (quitPlan) hoặc mặc định 60
+  const plan = JSON.parse(localStorage.getItem("quitPlan") || "{}");
+  const goalDays = plan.goalDays || 60;
+
+  // Tính phần trăm hoàn thành mục tiêu
+  const percent = Math.min(
+    Math.round((progress.daysNoSmoke / goalDays) * 100),
+    100
+  );
+
+  // Tính strokeDashoffset cho vòng tròn SVG
+  const circleLength = 2 * Math.PI * 40; // r=40
+  const offset = circleLength * (1 - percent / 100);
+
+  // Tính toán thống kê nâng cao
+  const allStreaks = [...quitHistory.map(h => h.daysNoSmoke), progress.daysNoSmoke];
+  const maxStreak = Math.max(...allStreaks, 0);
+  const relapseCount = quitHistory.length;
+  const totalMoneySaved = quitHistory.reduce((sum, h) => sum + (h.moneySaved || 0), 0) + progress.moneySaved;
+
+  // Thêm danh sách bài viết mẫu
+  const TIPS = [
+    { minDay: 0, maxDay: 3, title: "Vượt qua 3 ngày đầu", content: "3 ngày đầu là khó khăn nhất. Hãy uống nhiều nước và tránh môi trường có khói thuốc." },
+    { minDay: 4, maxDay: 7, title: "Giữ vững quyết tâm", content: "Bạn đã vượt qua giai đoạn khó nhất. Hãy chia sẻ với bạn bè để được động viên." },
+    { minDay: 8, maxDay: 30, title: "Tạo thói quen mới", content: "Hãy thử tập thể dục hoặc học kỹ năng mới để quên đi cảm giác thèm thuốc." },
+    { minDay: 31, maxDay: 1000, title: "Duy trì thành quả", content: "Tiếp tục duy trì lối sống lành mạnh và tự thưởng cho bản thân." },
+  ];
+
+  function getPersonalizedTips(daysNoSmoke) {
+    return TIPS.filter(tip => daysNoSmoke >= tip.minDay && daysNoSmoke <= tip.maxDay);
+  }
 
   return (
     <div className="bg-white py-5">
@@ -339,13 +426,26 @@ const Dashboard = () => {
                       <div className="position-relative mx-auto mb-3" style={{width: "160px", height: "160px"}}>
                         <svg width="160" height="160" viewBox="0 0 100 100">
                           <circle stroke="#e9ecef" strokeWidth="10" fill="transparent" r="40" cx="50" cy="50" />
-                          <circle stroke="#0d6efd" strokeWidth="10" strokeLinecap="round" fill="transparent" r="40" cx="50" cy="50" strokeDasharray="251.2" strokeDashoffset="100.48" />
+                          <circle
+                            stroke="#0d6efd"
+                            strokeWidth="10"
+                            strokeLinecap="round"
+                            fill="transparent"
+                            r="40"
+                            cx="50"
+                            cy="50"
+                            strokeDasharray={circleLength}
+                            strokeDashoffset={offset}
+                            style={{ transition: "stroke-dashoffset 0.5s" }}
+                          />
                         </svg>
                         <div className="position-absolute top-50 start-50 translate-middle">
-                          <span className="h3 fw-bold text-primary">60%</span>
+                          <span className="h3 fw-bold text-primary">{percent}%</span>
                         </div>
                       </div>
-                      <p className="text-secondary">Bạn đã hoàn thành 60% mục tiêu 60 ngày không thuốc lá</p>
+                      <p className="text-secondary">
+                        Bạn đã hoàn thành {percent}% mục tiêu {goalDays} ngày không thuốc lá
+                      </p>
                       <button className="btn btn-primary mt-3" onClick={() => setShowForm(!showForm)}>
                         {showForm ? "Đóng" : "Cập nhật tiến trình"}
                       </button>
@@ -418,6 +518,16 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {/* Gợi ý bài viết cá nhân hóa */}
+                <div className="mt-5">
+                  <h4>Gợi ý cho bạn</h4>
+                  {getPersonalizedTips(progress.daysNoSmoke).map((tip, idx) => (
+                    <div key={idx} className="alert alert-info">
+                      <b>{tip.title}</b>: {tip.content}
+                    </div>
+                  ))}
+                </div>
+
                 {/* Bảng tin cộng đồng */}
                 <div className="mt-5">
                   <h4>Bảng tin cộng đồng</h4>
@@ -451,21 +561,23 @@ const Dashboard = () => {
                             onClick={() => {
                               if ((commentInputs[idx] || "").trim()) {
                                 handleAddComment(idx, commentInputs[idx]);
-                                setCommentInputs({ ...commentInputs, [idx]: "" });
+                                setCommentInputs({ ...commentInputs, [idx]: "" }); // Xóa input sau khi gửi
                               }
                             }}
                           >
                             Gửi
                           </button>
                         </div>
-                        {/* Hiển thị bình luận */}
-                        <div className="mt-2">
-                          {(comments[idx] || []).map((c, i) => (
-                            <div key={i} style={{ fontSize: 14, marginBottom: 2 }}>
-                              <b>Thành viên:</b> {c.text} <span className="text-secondary" style={{ fontSize: 12 }}>({c.time})</span>
-                            </div>
-                          ))}
-                        </div>
+                        {/* Danh sách bình luận */}
+                        {comments[idx] && comments[idx].length > 0 && (
+                          <div className="mt-2">
+                            {comments[idx].map((c, cIdx) => (
+                              <div key={cIdx} className="small text-secondary">
+                                {c.text} <span className="text-muted">({c.time})</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -505,19 +617,101 @@ const Dashboard = () => {
                     height={120}
                   />
                 </div>
+
+                {/* Thống kê nâng cao */}
+                <div className="row g-4 mt-4">
+                  <div className="col-md-4">
+                    <div className="bg-light p-3 rounded-3 shadow-sm text-center">
+                      <div className="fw-semibold">Chuỗi ngày không hút dài nhất</div>
+                      <div className="display-6 text-success">{maxStreak} ngày</div>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="bg-light p-3 rounded-3 shadow-sm text-center">
+                      <div className="fw-semibold">Số lần tái nghiện</div>
+                      <div className="display-6 text-danger">{relapseCount}</div>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="bg-light p-3 rounded-3 shadow-sm text-center">
+                      <div className="fw-semibold">Tổng tiền tiết kiệm được</div>
+                      <div className="display-6 text-primary">{totalMoneySaved.toLocaleString()}đ</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
+
             {activeTab === "plan" && (
               <div>
                 <h3 className="fs-5 fw-semibold mb-3">Kế hoạch cai thuốc</h3>
-                <ul>
-                  <li>Đặt mục tiêu số ngày không hút thuốc</li>
-                  <li>Chia nhỏ mục tiêu thành các giai đoạn (1 ngày, 1 tuần, 1 tháng...)</li>
-                  <li>Nhận nhắc nhở và động viên tự động</li>
-                </ul>
-                <p className="text-secondary">Bạn có thể cập nhật mục tiêu mới bất cứ lúc nào.</p>
+                {/* Hiển thị kế hoạch hiện tại */}
+                <div className="mb-4">
+                  <h5>Chi tiết kế hoạch hiện tại:</h5>
+                  <ul>
+                    <li><b>Mục tiêu số ngày không hút:</b> {plan.goalDays || "Chưa đặt"} ngày</li>
+                    <li><b>Lý do bỏ thuốc:</b> {plan.reason || "Chưa nhập"}</li>
+                    <li><b>Tần suất nhắc nhở:</b> {plan.reminderFrequency || "Chưa chọn"}</li>
+                  </ul>
+                </div>
+                {/* Form chỉnh sửa kế hoạch */}
+                <form
+                  onSubmit={e => {
+                    e.preventDefault();
+                    const newPlan = {
+                      goalDays: e.target.goalDays.value,
+                      reason: e.target.reason.value,
+                      reminderFrequency: e.target.reminderFrequency.value,
+                    };
+                    localStorage.setItem("quitPlan", JSON.stringify(newPlan));
+                    toast.success("Đã cập nhật kế hoạch!");
+                    window.location.reload(); // reload để cập nhật ngay
+                  }}
+                  className="border rounded p-3 bg-light"
+                  style={{ maxWidth: 400 }}
+                >
+                  <h6>Cập nhật kế hoạch</h6>
+                  <div className="mb-2">
+                    <label>Mục tiêu số ngày:&nbsp;
+                      <input
+                        type="number"
+                        name="goalDays"
+                        min="1"
+                        defaultValue={plan.goalDays || 60}
+                        required
+                        className="form-control"
+                      />
+                    </label>
+                  </div>
+                  <div className="mb-2">
+                    <label>Lý do bỏ thuốc:&nbsp;
+                      <input
+                        type="text"
+                        name="reason"
+                        defaultValue={plan.reason || ""}
+                        required
+                        className="form-control"
+                      />
+                    </label>
+                  </div>
+                  <div className="mb-2">
+                    <label>Tần suất nhắc nhở:&nbsp;
+                      <select
+                        name="reminderFrequency"
+                        defaultValue={plan.reminderFrequency || "daily"}
+                        className="form-control"
+                      >
+                        <option value="daily">Hàng ngày</option>
+                        <option value="weekly">Hàng tuần</option>
+                        <option value="monthly">Hàng tháng</option>
+                      </select>
+                    </label>
+                  </div>
+                  <button type="submit" className="btn btn-primary mt-2">Lưu kế hoạch</button>
+                </form>
               </div>
             )}
+            
             {activeTab === "journal" && (
               <div>
                 <h3 className="fs-5 fw-semibold mb-3">Nhật ký cai thuốc</h3>
@@ -552,17 +746,66 @@ const Dashboard = () => {
                   </button>
                 </form>
 
+                {/* Bộ lọc theo tháng */}
+                <div className="mb-3">
+                  <label>
+                    Lọc theo tháng:&nbsp;
+                    <input
+                      type="month"
+                      value={filterMonth}
+                      onChange={e => setFilterMonth(e.target.value)}
+                      style={{ borderRadius: 6, border: "1px solid #ccc", padding: "4px 8px" }}
+                    />
+                  </label>
+                </div>
+
                 {/* Hiển thị danh sách nhật ký */}
                 <div>
                   <h5 className="mb-3">Lịch sử nhật ký</h5>
                   {journal.length === 0 && <div className="text-secondary">Chưa có nhật ký nào.</div>}
-                  {journal.slice().reverse().map((entry, idx) => (
+                  {journal
+                    .filter(entry => !filterMonth || entry.date.startsWith(filterMonth))
+                    .slice().reverse().map((entry, idx) => (
                     <div key={idx} className="border rounded p-2 mb-2 bg-light">
-                      <b>{entry.date}</b>: {entry.content}
+                      <b>{entry.date}</b>:&nbsp;
+                      {editIdx === idx ? (
+                        <>
+                          <input
+                            value={editContent}
+                            onChange={e => setEditContent(e.target.value)}
+                            style={{ width: "60%" }}
+                          />
+                          <button className="btn btn-sm btn-success ms-2" onClick={() => {
+                            const updated = [...journal];
+                            updated[journal.length - 1 - idx].content = editContent;
+                            setJournal(updated);
+                            localStorage.setItem("quitJournal", JSON.stringify(updated));
+                            setEditIdx(null);
+                            toast.success("Đã cập nhật nhật ký!");
+                          }}>Lưu</button>
+                          <button className="btn btn-sm btn-secondary ms-1" onClick={() => setEditIdx(null)}>Hủy</button>
+                        </>
+                      ) : (
+                        <>
+                          {entry.content}
+                          <button className="btn btn-sm btn-outline-primary ms-2" onClick={() => {
+                            setEditIdx(idx);
+                            setEditContent(entry.content);
+                          }}>Sửa</button>
+                          <button className="btn btn-sm btn-outline-danger ms-1" onClick={() => {
+                            if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
+                              const updated = journal.filter((_, i) => i !== journal.length - 1 - idx);
+                              setJournal(updated);
+                              localStorage.setItem("quitJournal", JSON.stringify(updated));
+                              toast.success("Đã xóa nhật ký!");
+                            }
+                          }}>Xóa</button>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Biểu đồ tiến trình theo nhật ký */}
                 <div className="my-4">
                   <h5>Biểu đồ tiến trình (theo nhật ký)</h5>
@@ -643,6 +886,21 @@ const Dashboard = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Lịch sử các chuỗi cai thuốc */}
+                <div className="mt-4">
+      <h5>Lịch sử các chuỗi cai thuốc</h5>
+      {quitHistory.length === 0 && <div className="text-secondary">Chưa có chuỗi nào.</div>}
+      {quitHistory.slice().reverse().map((item, idx) => (
+        <div key={idx} className="border rounded p-2 mb-2 bg-light">
+          <div><b>Chuỗi #{quitHistory.length - idx}</b></div>
+          <div>Ngày bắt đầu: <b>{item.startDate ? new Date(item.startDate).toLocaleDateString() : "?"}</b></div>
+          <div>Ngày kết thúc: <b>{item.endDate ? new Date(item.endDate).toLocaleDateString() : "?"}</b></div>
+          <div>Số ngày không hút: <b>{item.daysNoSmoke}</b></div>
+          <div>Tiền tiết kiệm: <b>{item.moneySaved.toLocaleString()}đ</b></div>
+        </div>
+      ))}
+    </div>
               </div>
             )}
           </div>
