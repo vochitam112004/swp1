@@ -95,7 +95,6 @@ function AppContent() {
           }
         />
       </Routes>
-
       {!isSpecialRoute && <Footer />}
     </>
   );
@@ -108,5 +107,4 @@ function App() {
     </Router>
   );
 }
-
 export default App;
