@@ -1,0 +1,26 @@
+.admin-container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.admin-title {
+  font-weight: bold;
+  text-align: center;
+  color: #1976d2;
+  margin-bottom: 16px;
+}
+
+.logout-button {
+  background-color: #e53935;
+  color: white;
+  border-radius: 8px;
+  padding: 6px 16px;
+  width: fit-content;
+  margin-left: auto;
+  margin-bottom: 16px;
+}
+
+.logout-button:hover {
+  background-color: #c62828;
+}
