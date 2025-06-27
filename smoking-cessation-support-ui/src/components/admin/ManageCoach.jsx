@@ -16,6 +16,8 @@ export default function ManageCoach() {
     password: "",
     email: "",
     displayName: "",
+    phoneNumber: "",
+    address:""
   });
   const [coaches, setCoaches] = useState([]);
 
@@ -40,7 +42,7 @@ export default function ManageCoach() {
     try {
       await api.post("/Auth/register", { ...form, userType: "coach" });
       toast.success("Tạo coach thành công!");
-      setForm({ username: "", password: "", email: "", displayName: "" });
+      setForm({ username: "", password: "", email: "", displayName: "", phoneNumber: "", address: "" });
       fetchCoaches();
     } catch {
       toast.error("Lỗi khi tạo coach");
@@ -56,7 +58,7 @@ export default function ManageCoach() {
       <Typography variant="h6" mb={2}>Tạo tài khoản Coach</Typography>
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2}>
-          {["username", "password", "email", "displayName"].map((field) => (
+          {["username", "password", "email", "displayName", "phoneNumber", "address"].map((field) => (
             <Grid item xs={12} sm={6} key={field}>
               <TextField
                 label={field}
