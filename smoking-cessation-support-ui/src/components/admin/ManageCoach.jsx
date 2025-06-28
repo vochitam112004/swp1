@@ -6,10 +6,11 @@ import {
   Paper,
   Typography,
   Box,
+  Stack,
 } from "@mui/material";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
-import '../../css/Admin.css' // 👉 import file CSS
+import '../../css/Admin.css'; // 👉 import file CSS
 
 export default function ManageCoach() {
   const [form, setForm] = useState({
@@ -31,7 +32,7 @@ export default function ManageCoach() {
       const res = await api.get("/Admin/coach-list");
       setCoaches(res.data);
     } catch (err) {
-      console.log(err)
+      console.error(err);
       toast.error("Không thể lấy danh sách coach");
     }
   };
@@ -55,6 +56,19 @@ export default function ManageCoach() {
       fetchCoaches();
     } catch {
       toast.error("Lỗi khi tạo coach");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm("Bạn có chắc muốn xóa coach này?");
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/Admin/delete-coach/${id}`);
+      toast.success("Đã xóa coach thành công");
+      fetchCoaches();
+    } catch {
+      toast.error("Xóa coach thất bại");
     }
   };
 
@@ -103,7 +117,19 @@ export default function ManageCoach() {
       <ul className="manage-coach__list">
         {coaches.map((coach) => (
           <li key={coach.userId} className="manage-coach__item">
-            <strong>{coach.displayName}</strong> ({coach.username}) - {coach.email}
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <span>
+                <strong>{coach.displayName}</strong> ({coach.username}) - {coach.email}
+              </span>
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={() => handleDelete(coach.userId)}
+              >
+                Xóa
+              </Button>
+            </Box>
           </li>
         ))}
       </ul>

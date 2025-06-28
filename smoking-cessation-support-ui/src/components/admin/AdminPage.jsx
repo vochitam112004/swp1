@@ -14,7 +14,6 @@ import FeedbackManager from "./FeedbackManager";
 import DashboardOverview from "./DashboardOverview";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import '../../css/Admin.css';
 
 export default function AdminPage() {
   const [tab, setTab] = useState(0);
@@ -35,18 +34,53 @@ export default function AdminPage() {
   };
 
   return (
-    <Box className="admin-container">
-      <Typography variant="h4" className="admin-title">
+    <Box
+      sx={{
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+        p: 3,
+      }}
+    >
+      <Typography
+        variant="h4"
+        sx={{
+          fontWeight: "bold",
+          textAlign: "center",
+          color: "#1976d2",
+          mb: 2,
+        }}
+      >
         Bảng điều khiển quản trị viên
       </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-        <button onClick={handleLogout} className="logout-button">
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        <MenuItem
+          onClick={handleLogout}
+          sx={{
+            backgroundColor: "#e53935",
+            color: "white",
+            borderRadius: "8px",
+            px: 2,
+            py: 1,
+            width: "fit-content",
+            fontWeight: "bold",
+            "&:hover": {
+              backgroundColor: "#c62828",
+            },
+          }}
+        >
           Đăng xuất
-        </button>
+        </MenuItem>
       </Box>
 
-      <Paper elevation={3} sx={{ mb: 2, borderRadius: 2, bgcolor: "#ffffff" }}>
+      <Paper
+        elevation={3}
+        sx={{
+          mb: 2,
+          borderRadius: 2,
+          bgcolor: "#ffffff",
+        }}
+      >
         <Tabs
           value={tab}
           onChange={handleTabChange}

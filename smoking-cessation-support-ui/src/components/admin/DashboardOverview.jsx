@@ -20,7 +20,7 @@ export default function DashboardOverview() {
         <Grid item xs={6}><Paper sx={{ p: 2 }}>Tổng user: {stats.totalUsers}</Paper></Grid>
         <Grid item xs={6}><Paper sx={{ p: 2 }}>Doanh thu: {stats.totalRevenue} VNĐ</Paper></Grid>
         <Grid item xs={6}><Paper sx={{ p: 2 }}>Tỷ lệ thành công: {stats.successRate}%</Paper></Grid>
-        <Grid item xs={6}><Paper sx={{ p: 2 }}>Coach: {stats.totalCoaches}</Paper></Grid>
+        <Grid item xs={6}><Paper sx={{ p: 2 }}>Tổng coach: {stats.totalCoaches}</Paper></Grid>
       </Grid>
     </Box>
   );

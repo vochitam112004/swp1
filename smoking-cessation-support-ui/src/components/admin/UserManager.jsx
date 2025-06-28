@@ -19,21 +19,58 @@ export default function UserManager() {
     fetchUsers();
   };
 
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm("Bạn có chắc chắn muốn xóa người dùng này?");
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/Admin/delete-user/${id}`);
+      fetchUsers();
+    } catch {
+      console.error("Xóa người dùng thất bại");
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  return (
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+   return (
     <Box>
-      <Typography variant="h6" mb={2}>Quản lý người dùng</Typography>
+      <Typography variant="h6" mb={2}>
+        Quản lý người dùng
+      </Typography>
       <List>
-        {users.map(user => (
-          <ListItem key={user.userId} secondaryAction={
-            <Button variant="outlined" color="error" onClick={() => handleBan(user.userId)}>
-              Ban
-            </Button>
-          }>
-            <ListItemText primary={user.displayName} secondary={user.email} />
+        {users.map((user) => (
+          <ListItem
+            key={user.userId}
+            secondaryAction={
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => handleBan(user.userId)}
+                >
+                  Ban
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  onClick={() => handleDelete(user.userId)}
+                >
+                  Xóa
+                </Button>
+              </Stack>
+            }
+          >
+            <ListItemText
+              primary={user.displayName}
+              secondary={user.email}
+            />
           </ListItem>
         ))}
       </List>

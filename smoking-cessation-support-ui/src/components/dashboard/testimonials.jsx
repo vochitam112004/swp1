@@ -108,7 +108,6 @@ const Testimonials = () => (
         </div>
       </div>
       <div className="mt-5">
-        <h4>Đánh giá từ người dùng</h4>
         <FeedbackForm />
         <FeedbackList />
       </div>
