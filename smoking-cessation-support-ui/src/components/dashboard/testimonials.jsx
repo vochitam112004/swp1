@@ -1,3 +1,6 @@
+import FeedbackForm from "../common/FeedbackForm";
+import FeedbackList from "../common/FeedbackList";
+
 const Testimonials = () => (
   <div className="bg-white py-5">
     <div className="container">
@@ -104,8 +107,12 @@ const Testimonials = () => (
           </div>
         </div>
       </div>
+      <div className="mt-5">
+        <h4>Đánh giá từ người dùng</h4>
+        <FeedbackForm />
+        <FeedbackList />
+      </div>
     </div>
   </div>
 );
-//.
 export default Testimonials;

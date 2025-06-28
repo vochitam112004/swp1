@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../../api/axios.js";
 import { toast } from "react-toastify";
 import {
@@ -13,54 +13,65 @@ import {
   Avatar,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import GoogleLogin from "./GoogleLogin";
+import EmailIcon from "@mui/icons-material/Email";
+import PersonIcon from "@mui/icons-material/Person";
+import LockIcon from "@mui/icons-material/Lock";
 
 // Modern CSS for the register page
 const styles = {
   authBg: {
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%)",
+    width: "100vw",
     display: "flex",
-    alignItems: "center",
+    alignItems: "stretch", 
     justifyContent: "center",
+    background: "linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%)",
+    padding: 0,
+    margin: 0,
+    overflow: "hidden",
   },
   registerContainer: {
-    background: "#fff",
-    padding: "40px 32px",
-    borderRadius: "18px",
+    width: 400,
+    maxWidth: "100vw",
+    padding: "32px 28px 24px 28px",
+    borderRadius: "20px",
     boxShadow: "0 8px 32px rgba(44, 62, 80, 0.18)",
-    width: "370px",
-    maxWidth: "95vw",
+    background: "#fff",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
+    gap: "10px",
+    margin: 0,
+    minHeight: "100vh", 
+    justifyContent: "center", 
   },
   registerTitle: {
-    fontSize: "2rem",
-    fontWeight: 700,
+    fontSize: "2.2rem",
+    fontWeight: 800,
     color: "#2193b0",
-    marginBottom: "18px",
-    letterSpacing: "1px",
+    marginBottom: "10px",
+    letterSpacing: "1.5px",
     textAlign: "center",
+    marginTop: 0,
   },
   registerBtn: {
     width: "100%",
     padding: "12px",
-    background: "linear-gradient(90deg, #74ebd5 0%, #2193b0 100%)",
+    background: "linear-gradient(90deg, #42a5f5 60%, #1976d2 100%)",
     border: "none",
-    borderRadius: "8px",
+    borderRadius: "10px",
     color: "#fff",
     fontSize: "18px",
     fontWeight: "bold",
     cursor: "pointer",
-    marginTop: "18px",
-    marginBottom: "8px",
+    marginTop: "12px",
+    marginBottom: "6px",
     transition: "background 0.2s",
-    boxShadow: "0 2px 8px rgba(33,147,176,0.08)",
+    boxShadow: "0 2px 8px rgba(33,147,176,0.10)",
   },
   googleBtnWrapper: {
     width: "100%",
-    margin: "12px 0",
+    margin: "8px 0",
     display: "flex",
     justifyContent: "center",
   },
@@ -118,24 +129,65 @@ export default function Register() {
       <div style={styles.registerContainer}>
         <Avatar
           src="/logo192.png"
-          sx={{ width: 64, height: 64, mb: 2, bgcolor: "#2193b0", boxShadow: "0 2px 8px #2193b033" }}
+          sx={{
+            width: 64,
+            height: 64,
+            mb: 1,
+            bgcolor: "#2193b0",
+            boxShadow: "0 2px 8px #2193b033",
+          }}
         />
         <div style={styles.registerTitle}>Đăng ký tài khoản</div>
-        <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            width: "100%",
+            margin: 0,
+            padding: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+          }}
+        >
+          <TextField
+            label="Email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            fullWidth
+            margin="none"
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailIcon color="primary" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              background: "#f7fafc",
+              borderRadius: 2,
+            }}
+          />
           <TextField
             label="Tên đăng nhập"
             name="userName"
             value={form.userName}
             onChange={handleChange}
             fullWidth
-            margin="dense"
+            margin="none"
             required
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <i className="fas fa-user" style={{ color: "#2193b0" }} />
+                  <PersonIcon color="primary" />
                 </InputAdornment>
               ),
+            }}
+            sx={{
+              background: "#f7fafc",
+              borderRadius: 2,
             }}
           />
           <TextField
@@ -145,12 +197,12 @@ export default function Register() {
             value={form.password}
             onChange={handleChange}
             fullWidth
-            margin="dense"
+            margin="none"
             required
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <i className="fas fa-lock" style={{ color: "#2193b0" }} />
+                  <LockIcon color="primary" />
                 </InputAdornment>
               ),
               endAdornment: (
@@ -166,39 +218,30 @@ export default function Register() {
                 </InputAdornment>
               ),
             }}
+            sx={{
+              background: "#f7fafc",
+              borderRadius: 2,
+            }}
           />
           <TextField
-            label="Xác nhận mật khẩu"
+            label="Nhập lại mật khẩu"
             name="confirmPassword"
             type={showPassword ? "text" : "password"}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             fullWidth
-            margin="dense"
+            margin="none"
             required
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <i className="fas fa-lock" style={{ color: "#2193b0" }} />
+                  <LockIcon color="primary" />
                 </InputAdornment>
               ),
             }}
-          />
-          <TextField
-            label="Email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            fullWidth
-            margin="dense"
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <i className="fas fa-envelope" style={{ color: "#2193b0" }} />
-                </InputAdornment>
-              ),
+            sx={{
+              background: "#f7fafc",
+              borderRadius: 2,
             }}
           />
           <TextField
@@ -207,7 +250,7 @@ export default function Register() {
             value={form.phoneNumber}
             onChange={handleChange}
             fullWidth
-            margin="dense"
+            margin="none"
             required
             InputProps={{
               startAdornment: (
@@ -216,6 +259,10 @@ export default function Register() {
                 </InputAdornment>
               ),
             }}
+            sx={{
+              background: "#f7fafc",
+              borderRadius: 2,
+            }}
           />
           <TextField
             label="Địa chỉ"
@@ -223,13 +270,17 @@ export default function Register() {
             value={form.address}
             onChange={handleChange}
             fullWidth
-            margin="dense"
+            margin="none"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <i className="fas fa-map-marker-alt" style={{ color: "#2193b0" }} />
                 </InputAdornment>
               ),
+            }}
+            sx={{
+              background: "#f7fafc",
+              borderRadius: 2,
             }}
           />
           <TextField
@@ -238,7 +289,7 @@ export default function Register() {
             value={form.displayName}
             onChange={handleChange}
             fullWidth
-            margin="dense"
+            margin="none"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -246,27 +297,46 @@ export default function Register() {
                 </InputAdornment>
               ),
             }}
+            sx={{
+              background: "#f7fafc",
+              borderRadius: 2,
+            }}
           />
-          <button
+          <Button
             type="submit"
-            style={styles.registerBtn}
+            variant="contained"
+            sx={{
+              mt: 1,
+              borderRadius: 3,
+              fontWeight: 700,
+              fontSize: "1rem",
+              background: "linear-gradient(90deg, #42a5f5 60%, #1976d2 100%)",
+              boxShadow: 2,
+              py: 1.2,
+              "&:hover": {
+                background: "linear-gradient(90deg, #1976d2 60%, #1565c0 100%)",
+              },
+            }}
             disabled={message}
+            fullWidth
           >
             Đăng ký
-          </button>
+          </Button>
         </form>
-        <div style={styles.googleBtnWrapper}>
-          <GoogleLogin />
-        </div>
-        <Box mt={2} textAlign="center">
+        <Box mt={2} textAlign="center" width="100%">
           <Typography variant="body2">
             Đã có tài khoản?{" "}
-            <span
-              style={{ color: "#2193b0", cursor: "pointer", fontWeight: 600 }}
-              onClick={() => navigate("/login")}
+            <Link
+              to="/login"
+              style={{
+                color: "#2193b0",
+                cursor: "pointer",
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
             >
               Đăng nhập
-            </span>
+            </Link>
           </Typography>
         </Box>
       </div>

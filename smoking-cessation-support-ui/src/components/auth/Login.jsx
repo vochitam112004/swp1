@@ -11,10 +11,12 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../../api/axios.js";
 import GoogleLogin from "./GoogleLogin";
 import { useAuth } from "./AuthContext.jsx";
+import PersonIcon from '@mui/icons-material/Person';
+import LockIcon from '@mui/icons-material/Lock';
 
 export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
@@ -108,84 +110,122 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-split">
-      <div className="auth-split-left">
-        <div className="auth-split-logo">
-          <img src="/logo192.png" alt="Logo" />
-        </div>
-        <div className="auth-split-title">
-          SMOKING<br />SUPPORT
-        </div>
-      </div>
-      <div className="auth-split-right">
-        <div className="register-container">
-          <div className="register-title">
-            Log in
-          </div>
-          <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-            <TextField
-              label="username"
-              name="username"
-              value={form.username}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-              required
-              InputProps={{
-                style: { background: "#fff", borderRadius: 8 }
-              }}
-            />
-            <TextField
-              label="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              value={form.password}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-              required
-              InputProps={{
-                style: { background: "#fff", borderRadius: 8 },
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={handleClickShowPassword}
-                      edge="end"
-                      aria-label="toggle password visibility"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Box textAlign="right" mt={1} mb={2}>
-              <Typography
-                variant="body2"
-                color="textSecondary"
-                sx={{ cursor: "pointer", textDecoration: "underline" }}
-                onClick={() => navigate("/forgot-password")}
-              >
-                Forgot password?
-              </Typography>
-            </Box>
-            <button className="register-btn" type="submit">
-              Log in
-            </button>
-            <GoogleLogin />
-          </form>
-          <div style={{ margin: "32px 0 0 0", fontWeight: 700, fontSize: "1.2rem", color: "#222", width: "100%", textAlign: "left" }}>
-            Register
-          </div>
-          <button
-            className="register-btn create-account-btn"
-            type="button"
-            onClick={() => navigate("/register")}
+    <Box
+      className="auth-bg"
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%)',
+      }}
+    >
+      <Box
+        className="register-container"
+        sx={{
+          width: 350,
+          p: 2, // giảm padding
+          borderRadius: 4,
+          boxShadow: 3,
+          background: '#fff',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 0, // loại bỏ gap
+        }}
+      >
+   
+  
+
+        <Avatar sx={{ bgcolor: '#1976d2', width: 48, height: 48, mb: 1 }} />
+        <Typography variant="h5" fontWeight={700} mb={1}>
+          Đăng nhập
+        </Typography>
+        <form onSubmit={handleSubmit} style={{ width: "100%", margin: 0, padding: 0 }}>
+          <TextField
+            fullWidth
+            margin="dense"
+            label="Tên đăng nhập"
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            required
+            InputProps={{
+              style: { background: "#fff", borderRadius: 8 },
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonIcon color="primary" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 1 }}
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            label="Mật khẩu"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={form.password}
+            onChange={handleChange}
+            required
+            InputProps={{
+              style: { background: "#fff", borderRadius: 8 },
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon color="primary" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handleClickShowPassword}
+                    edge="end"
+                    aria-label="toggle password visibility"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 1 }}
+          />
+          <Box textAlign="right" mt={0} mb={1}>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              sx={{ cursor: "pointer", textDecoration: "underline" }}
+              onClick={() => navigate("/forgot-password")}
+            >
+              Forgot password?
+            </Typography>
+          </Box>
+          <Button
+            fullWidth
+            variant="contained"
+            sx={{
+              mt: 1,
+              borderRadius: 2,
+              fontWeight: 600,
+              background: 'linear-gradient(90deg, #1976d2 60%, #42a5f5 100%)',
+              boxShadow: 2,
+              '&:hover': { background: 'linear-gradient(90deg, #1565c0 60%, #1976d2 100%)' },
+            }}
+            type="submit"
           >
-            Create an account
-          </button>
-        </div>
-      </div>
-    </div>
+            Đăng nhập
+          </Button>
+          <div style={{ width: "100%", marginTop: 8, display: "flex", justifyContent: "center" }}>
+            <GoogleLogin />
+          </div>
+        </form>
+        <Typography mt={1} fontSize={14}>
+          Chưa có tài khoản?{' '}
+          <Link to="/register" style={{ color: '#1976d2', fontWeight: 600 }}>
+            Đăng ký
+          </Link>
+        </Typography>
+      </Box>
+    </Box>
   );
 }

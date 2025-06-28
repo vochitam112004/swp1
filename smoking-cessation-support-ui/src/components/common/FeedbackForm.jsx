@@ -1,38 +1,58 @@
 import React, { useState } from "react";
-import { Rating, TextField, Button } from "@mui/material";
+import { Box, Rating, TextField, Button, Typography } from "@mui/material";
 import api from "../../api/axios";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 
-export default function FeedbackForm({ planId }) {
+export default function FeedbackForm({ planId, coachId, onSubmitted }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!comment.trim()) {
-      toast.error("Vui lòng nhập nhận xét!"); 
+      toast.error("Vui lòng nhập nhận xét!");
       return;
     }
+    setLoading(true);
     try {
-      await api.post("/feedback", { planId, rating, comment });
+      await api.post("/feedback", { planId, coachId, rating, comment }); // thêm coachId
       setComment("");
       setRating(5);
-      toast.success("Cảm ơn bạn đã đánh giá!"); 
+      toast.success("Cảm ơn bạn đã đánh giá!");
+      if (onSubmitted) onSubmitted();
     } catch {
       toast.error("Gửi đánh giá thất bại. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
-    <form onSubmit={handleSubmit}>
-      <Rating value={rating} onChange={(_, v) => setRating(v)} />
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{ maxWidth: 500, mx: "auto", my: 2 }}
+    >
+      <Typography variant="h6" mb={1}>
+        Đánh giá & Nhận xét
+      </Typography>
+      <Box display="flex" alignItems="center" mb={2}>
+        <Typography mr={2}>Đánh giá:</Typography>
+        <Rating value={rating} onChange={(_, v) => setRating(v)} />
+      </Box>
       <TextField
         label="Nhận xét"
         value={comment}
-        onChange={e => setComment(e.target.value)}
+        onChange={(e) => setComment(e.target.value)}
         fullWidth
         multiline
-        sx={{ my: 2 }}
+        minRows={3}
+        sx={{ mb: 2 }}
       />
-      <Button type="submit" variant="contained">Gửi đánh giá</Button>
-    </form>
+      <Button type="submit" variant="contained" disabled={loading}>
+        {loading ? "Đang gửi..." : "Gửi đánh giá"}
+      </Button>
+    </Box>
   );
 }
