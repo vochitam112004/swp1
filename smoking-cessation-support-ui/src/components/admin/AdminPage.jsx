@@ -14,11 +14,11 @@ import FeedbackManager from "./FeedbackManager";
 import DashboardOverview from "./DashboardOverview";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import '../../css/Admin.css'
+import '../../css/Admin.css';
 
 export default function AdminPage() {
   const [tab, setTab] = useState(0);
-  const { logout } = useAuth(); // ✅ context đã có user và logout
+  const { logout } = useAuth();
   const [setAnchorEl] = useState(null);
   const navigate = useNavigate();
 
@@ -29,47 +29,24 @@ export default function AdminPage() {
   const handleMenuClose = () => setAnchorEl(null);
 
   const handleLogout = () => {
-    logout(); // ✅ gọi từ context
+    logout();
     handleMenuClose();
     navigate("/");
   };
 
   return (
-    <Box p={3} sx={{ backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
-      <Typography
-        variant="h4"
-        mb={2}
-        color="primary"
-        sx={{ fontWeight: "bold", textAlign: "center" }}
-      >
+    <Box className="admin-container">
+      <Typography variant="h4" className="admin-title">
         Bảng điều khiển quản trị viên
       </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-        <MenuItem
-          onClick={handleLogout}
-          sx={{
-            bgcolor: "#e53935",
-            color: "#fff",
-            borderRadius: "8px",
-            px: 2,
-            ":hover": {
-              bgcolor: "#c62828",
-            },
-          }}
-        >
+      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+        <button onClick={handleLogout} className="logout-button">
           Đăng xuất
-        </MenuItem>
+        </button>
       </Box>
 
-      <Paper
-        elevation={3}
-        sx={{
-          mb: 2,
-          borderRadius: 2,
-          bgcolor: "#ffffff",
-        }}
-      >
+      <Paper elevation={3} sx={{ mb: 2, borderRadius: 2, bgcolor: "#ffffff" }}>
         <Tabs
           value={tab}
           onChange={handleTabChange}
@@ -94,7 +71,6 @@ export default function AdminPage() {
           <Tab label="Thống kê hệ thống" />
         </Tabs>
       </Paper>
-
 
       {tab === 0 && <ManageCoach />}
       {tab === 1 && <UserManager />}

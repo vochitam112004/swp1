@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext'
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleStartClick = (e) => {
     e.preventDefault();
@@ -28,13 +30,15 @@ const HeroSection = () => {
             Breathe Free - Nền tảng hỗ trợ cai thuốc lá hiệu quả với cộng đồng mạnh mẽ, kế hoạch cá nhân hóa và theo dõi tiến trình chi tiết.
           </p>
           <div className="mt-4">
-            <button
-              className="btn btn-light text-primary fw-semibold px-4 py-2 shadow-sm"
-              onClick={handleStartClick}
-            >
-              Bắt đầu hành trình
-              <i className="fas fa-arrow-right ms-2"></i>
-            </button>
+            {!user && (
+              <button
+                className="btn btn-light text-primary fw-semibold px-4 py-2 shadow-sm"
+                onClick={handleStartClick}
+              >
+                Bắt đầu hành trình
+                <i className="fas fa-arrow-right ms-2"></i>
+              </button>
+            )}
           </div>
         </div>
       </div>
