@@ -110,7 +110,7 @@ export default function Login() {
   }
 
   return (
-    <Box
+       <Box
       className="auth-bg"
       sx={{
         minHeight: '100vh',
@@ -217,8 +217,8 @@ export default function Login() {
           </Button>
           <div style={{ width: "100%", marginTop: 8, display: "flex", justifyContent: "center" }}>
             <GoogleLogin />
-          </div>
-        </form>
+             </div>
+               </form>
         <Typography mt={1} fontSize={14}>
           Chưa có tài khoản?{' '}
           <Link to="/register" style={{ color: '#1976d2', fontWeight: 600 }}>
