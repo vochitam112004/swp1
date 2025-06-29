@@ -6,11 +6,15 @@ import {
   Paper,
   Typography,
   Box,
-  Stack,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
 } from "@mui/material";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
-import '../../css/Admin.css'; // 👉 import file CSS
+import DeleteIcon from "@mui/icons-material/Delete";
+import "../../css/Admin.css";
 
 export default function ManageCoach() {
   const [form, setForm] = useState({
@@ -21,6 +25,7 @@ export default function ManageCoach() {
     phoneNumber: "",
     address: "",
   });
+
   const [coaches, setCoaches] = useState([]);
 
   const handleChange = (e) => {
@@ -29,8 +34,13 @@ export default function ManageCoach() {
 
   const fetchCoaches = async () => {
     try {
-      const res = await api.get("/Admin/coach-list");
-      setCoaches(res.data);
+      const res = await api.get("/Coach");
+      console.log("👉 Response from /Coach:", res.data);
+      if (Array.isArray(res.data)) {
+        setCoaches(res.data);
+      } else {
+        setCoaches([]);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Không thể lấy danh sách coach");
@@ -43,7 +53,10 @@ export default function ManageCoach() {
       return;
     }
     try {
-      await api.post("/Auth/register", { ...form, userType: "coach" });
+      await api.post("/Coach/create-coach-by-Admin", {
+        ...form,
+        userType: "Coach",
+      });
       toast.success("Tạo coach thành công!");
       setForm({
         username: "",
@@ -59,12 +72,12 @@ export default function ManageCoach() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (username) => {
     const confirmed = window.confirm("Bạn có chắc muốn xóa coach này?");
     if (!confirmed) return;
 
     try {
-      await api.delete(`/Admin/delete-coach/${id}`);
+      await api.delete(`/Admin/delete-coach-by-username/${username}`);
       toast.success("Đã xóa coach thành công");
       fetchCoaches();
     } catch {
@@ -84,21 +97,26 @@ export default function ManageCoach() {
 
       <Paper className="manage-coach__form" elevation={3}>
         <Grid container spacing={2}>
-          {["username", "password", "email", "displayName", "phoneNumber", "address"].map(
-            (field) => (
-              <Grid item xs={12} sm={6} key={field}>
-                <TextField
-                  label={field}
-                  name={field}
-                  type={field === "password" ? "password" : "text"}
-                  fullWidth
-                  value={form[field]}
-                  onChange={handleChange}
-                  className="manage-coach__input"
-                />
-              </Grid>
-            )
-          )}
+          {[
+            "username",
+            "password",
+            "email",
+            "displayName",
+            "phoneNumber",
+            "address",
+          ].map((field) => (
+            <Grid item xs={12} sm={6} key={field}>
+              <TextField
+                label={field}
+                name={field}
+                type={field === "password" ? "password" : "text"}
+                fullWidth
+                value={form[field]}
+                onChange={handleChange}
+                className="manage-coach__input"
+              />
+            </Grid>
+          ))}
           <Grid item xs={12}>
             <Button
               variant="contained"
@@ -111,28 +129,35 @@ export default function ManageCoach() {
         </Grid>
       </Paper>
 
-      <Typography variant="h6" mb={1} className="manage-coach__title">
+      <Typography variant="h6" mt={4} mb={1} className="manage-coach__title">
         Danh sách Coach
       </Typography>
-      <ul className="manage-coach__list">
-        {coaches.map((coach) => (
-          <li key={coach.userId} className="manage-coach__item">
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <span>
-                <strong>{coach.displayName}</strong> ({coach.username}) - {coach.email}
-              </span>
-              <Button
-                variant="outlined"
-                color="error"
-                size="small"
-                onClick={() => handleDelete(coach.userId)}
-              >
-                Xóa
-              </Button>
-            </Box>
-          </li>
-        ))}
-      </ul>
+
+      {Array.isArray(coaches) && coaches.length > 0 ? (
+        <List>
+          {coaches.map((coach) => (
+            <ListItem
+              key={coach.username}
+              secondaryAction={
+                <IconButton
+                  edge="end"
+                  aria-label="delete"
+                  onClick={() => handleDelete(coach.username)}
+                >
+                  <DeleteIcon color="error" />
+                </IconButton>
+              }
+            >
+              <ListItemText
+                primary={`${coach.displayName} (${coach.username})`}
+                secondary={coach.email}
+              />
+            </ListItem>
+          ))}
+        </List>
+      ) : (
+        <Typography color="text.secondary">Chưa có coach nào.</Typography>
+      )}
     </Box>
   );
 }

@@ -1,11 +1,12 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://9ebb-113-173-227-8.ngrok-free.app/api",// Thay bằng base URL backend của bạn
+  baseURL: "https://40b7-113-173-227-8.ngrok-free.app/api",// Thay bằng base URL backend của bạn
 });
 
 // Interceptor để tự gắn token vào header
 api.interceptors.request.use((config) => {
+  config.headers["ngrok-skip-browser-warning"] = "true";
   const token = localStorage.getItem("authToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

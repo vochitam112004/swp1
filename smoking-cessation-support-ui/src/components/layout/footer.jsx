@@ -9,7 +9,6 @@ const Footer = () => {
   const handleFAQClick = () => navigate("/faq");
   const handleResearchClick = () => navigate("/research");
   const handleMethodologyClick = () => navigate("/methodology");
-  const handleTeamClick = () => navigate("/team");
   const handleContactClick = () => navigate("/contact");
 
   return (
@@ -25,14 +24,6 @@ const Footer = () => {
                   className="btn btn-link text-secondary text-decoration-none d-block mb-2 p-0"
                 >
                   Giới thiệu
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={handleTeamClick}
-                  className="btn btn-link text-secondary text-decoration-none d-block mb-2 p-0"
-                >
-                  Đội ngũ
                 </button>
               </li>
               <li>

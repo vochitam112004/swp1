@@ -16,7 +16,6 @@ import Footer from "./components/layout/footer";
 import Register from "./components/auth/Register";
 import Blog from "./components/common/Blog";
 import BlogPostForm from "./components/common/BlogPostForm";
-import BlogDetail from "./components/common/BlogDetail";
 import BXH from "./components/dashboard/BXH";
 import About from "./components/common/About";
 import Profile from "./components/profile/Profile";
@@ -28,7 +27,6 @@ import CoachPage from "./components/coach/CoachPage";
 import AdminPage from "./components/admin/AdminPage";
 import Contact from "./components/common/Contact";
 import Methodology from "./components/common/Methodology";
-import Team from "./components/common/Team";
 import Research from "./components/common/Research";
 import FAQ from "./components/common/FAQ";
 
@@ -37,76 +35,77 @@ function AppContent() {
   const isSpecialRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/coach");
 
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       {!isSpecialRoute && <Navigation />}
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <>
-              <HeroSection />
-              <StatsSection />
-              <FeaturesSection />
-              <Dashboard />
-              <Membership />
-              <Testimonials />
-              <CTASection />
-            </>
-          }
-        />
-        <Route path="/contact" element={<Contact/>}/>
-        <Route path="/team" element={<Team/>}/>
-        <Route path="/methodology" element={<Methodology/>}/>
-        <Route path="/research" element={<Research/>}/>
-        <Route path="/faq" element={<FAQ/>}/>
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/create" element={<BlogPostForm />} />
-        <Route path="/blog/:id" element={<BlogDetail />} />
-        <Route path="/bxh" element={<BXH />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/dashboard"
-          element={
-            <RequireAuth>
-              <Dashboard />
-            </RequireAuth>
-          }
-        />
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/membership" element={<Membership />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/payment" element={<Payment />} />
-        <Route path="/about" element={<About />} />
-        <Route
-          path="/profile"
-          element={
-            <RequireAuth>
-              <Profile />
-            </RequireAuth>
-          }
-        />
-        <Route path="/feedbacks" element={<FeedbackList />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
-              <AdminPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/coach"
-          element={
-            <ProtectedRoute allowedRoles={["Coach", "Admin"]}>
-              <CoachPage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+      <div style={{ flex: 1 }}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <HeroSection />
+                <StatsSection />
+                <FeaturesSection />
+                <Dashboard />
+                <Membership />
+                <Testimonials />
+                <CTASection />
+              </>
+            }
+          />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/methodology" element={<Methodology />} />
+          <Route path="/research" element={<Research />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/create" element={<BlogPostForm />} />
+          <Route path="/bxh" element={<BXH />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAuth>
+                <Dashboard />
+              </RequireAuth>
+            }
+          />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/membership" element={<Membership />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/about" element={<About />} />
+          <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <Profile />
+              </RequireAuth>
+            }
+          />
+          <Route path="/feedbacks" element={<FeedbackList />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["Admin"]}>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/coach"
+            element={
+              <ProtectedRoute allowedRoles={["Coach", "Admin"]}>
+                <CoachPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </div>
+
       {!isSpecialRoute && <Footer />}
-    </>
+    </div>
   );
 }
 

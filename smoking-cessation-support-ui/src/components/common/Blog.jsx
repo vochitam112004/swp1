@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import BlogDetailModal from "./BlogDetail";
+import { toast } from "react-toastify";
 import "../../css/Blog.css";
 
-// Hàm loại bỏ dấu tiếng Việt
 function removeVietnameseTones(str) {
   return str
     .normalize("NFD")
@@ -20,32 +21,41 @@ export default function Blog() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [detail, setDetail] = useState(null);
   const token = localStorage.getItem("authToken");
 
+  const fetchPosts = async () => {
+    try {
+      const res = await api.get("/CommunityPost");
+      const data = res.data;
+      if (!Array.isArray(data)) throw new Error("Dữ liệu không hợp lệ");
+      setPosts(data);
+    } catch (err) {
+      setError(err.message || "Không thể tải bài viết.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const res = await api.get("/CommunityPost");
-        console.log("🔍 Content-Type:", res.headers['content-type']);
-        const data = res.data;
-        console.log("📦 Response data:", data);
-        if (!Array.isArray(data)) {
-          throw new Error("Phản hồi không phải là mảng bài viết.");
-        }
-
-        setPosts(data);
-      } catch (err) {
-        setError(err.message || "Không thể tải bài viết.");
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPosts();
   }, []);
 
-  // Lọc và phân trang
+  const handleDelete = async (postId) => {
+    if (!window.confirm("Bạn chắc chắn muốn xóa bài viết này?")) return;
+    try {
+      await api.delete(`/CommunityPost/${postId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Đã xóa bài viết");
+      fetchPosts();
+      setDetail(null); // đóng modal nếu đang mở bài bị xóa
+    } catch (err) {
+      console.log(err)
+      toast.error("Xóa thất bại");
+    }
+  };
+
   const filteredPosts = posts
     .filter((post) =>
       removeVietnameseTones(post.title?.toLowerCase() || "").includes(
@@ -59,11 +69,6 @@ export default function Blog() {
     (page - 1) * POSTS_PER_PAGE,
     page * POSTS_PER_PAGE
   );
-
-  const handlePageChange = (newPage) => {
-    setPage(newPage);
-    window.scrollTo(0, 0);
-  };
 
   return (
     <div className="blog-container">
@@ -93,15 +98,23 @@ export default function Blog() {
       ) : error ? (
         <div style={{ color: "red" }}>❌ {error}</div>
       ) : filteredPosts.length === 0 ? (
-        <div>{search ? "Không tìm thấy bài viết phù hợp." : "Chưa có bài viết nào."}</div>
+        <div>
+          {search ? "Không tìm thấy bài viết phù hợp." : "Chưa có bài viết nào."}
+        </div>
       ) : (
         <div className="blog-list">
           {paginatedPosts.map((post, index) => (
             <div className="blog-item" key={index}>
               <div className="blog-content">
-                <h2 className="blog-post-title">{post.title || "(Không có tiêu đề)"}</h2>
+                <h2
+                  className="blog-post-title clickable"
+                  onClick={() => setDetail(post)}
+                >
+                  {post.title || "(Không có tiêu đề)"}
+                </h2>
                 <div className="blog-meta">
-                  <span className="blog-author">{post.displayName || "Ẩn danh"}</span> -{" "}
+                  <span className="blog-author">{post.displayName || "Ẩn danh"}</span>{" "}
+                  -{" "}
                   <span className="blog-date">
                     {new Date(post.createdAt).toLocaleDateString()}
                   </span>
@@ -109,6 +122,14 @@ export default function Blog() {
                 <p className="blog-summary">
                   {post.content?.slice(0, 150) || "(Không có nội dung)"}...
                 </p>
+                {token && (
+                  <button
+                    className="blog-delete-button"
+                    onClick={() => handleDelete(post.postId)}
+                  >
+                    Xóa
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -120,13 +141,20 @@ export default function Blog() {
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
+              onClick={() => setPage(i + 1)}
               className={page === i + 1 ? "active" : ""}
             >
               {i + 1}
             </button>
           ))}
         </div>
+      )}
+
+      {detail && (
+        <BlogDetailModal
+          post={detail}
+          onClose={() => setDetail(null)}
+        />
       )}
     </div>
   );

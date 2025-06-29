@@ -78,7 +78,7 @@ export default function Login() {
           navigate("/coach");
           break;
         default:
-          navigate("/user");
+          navigate("/dashboard");
           break;
       }
     } catch (error) {
