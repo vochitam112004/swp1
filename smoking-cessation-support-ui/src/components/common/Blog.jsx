@@ -104,11 +104,10 @@ export default function Blog() {
       ) : (
         <div className="blog-list">
           {paginatedPosts.map((post, index) => (
-            <div className="blog-item" key={index}>
+            <div className="blog-item" key={index} onClick={() => setDetail(post)}>
               <div className="blog-content">
                 <h2
                   className="blog-post-title clickable"
-                  onClick={() => setDetail(post)}
                 >
                   {post.title || "(Không có tiêu đề)"}
                 </h2>
