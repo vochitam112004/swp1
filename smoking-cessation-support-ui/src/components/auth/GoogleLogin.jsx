@@ -3,7 +3,7 @@ import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../api/axios.js";
-import "../../css/About.css";
+import "../../css/Footer.css";
 import { useAuth } from "./AuthContext.jsx";
 
 const GoogleLoginComponent = () => {

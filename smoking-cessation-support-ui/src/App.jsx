@@ -26,6 +26,11 @@ import RequireAuth from "./components/auth/RequireAuth";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import CoachPage from "./components/coach/CoachPage";
 import AdminPage from "./components/admin/AdminPage";
+import Contact from "./components/common/Contact";
+import Methodology from "./components/common/Methodology";
+import Team from "./components/common/Team";
+import Research from "./components/common/Research";
+import FAQ from "./components/common/FAQ";
 
 function AppContent() {
   const location = useLocation();
@@ -50,6 +55,11 @@ function AppContent() {
             </>
           }
         />
+        <Route path="/contact" element={<Contact/>}/>
+        <Route path="/team" element={<Team/>}/>
+        <Route path="/methodology" element={<Methodology/>}/>
+        <Route path="/research" element={<Research/>}/>
+        <Route path="/faq" element={<FAQ/>}/>
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/create" element={<BlogPostForm />} />
         <Route path="/blog/:id" element={<BlogDetail />} />

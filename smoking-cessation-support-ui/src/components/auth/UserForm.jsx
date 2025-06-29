@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
-import "../css/About.css";
+import "../../css/Footer.css";
 
 const UserForm = () => {
     const [formData, setFormData] = useState({
