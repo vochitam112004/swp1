@@ -56,6 +56,7 @@ const Navigation = () => {
           <Link to="/blog" style={{ textDecoration: "none", color: "#222", fontWeight: 500 }}>Blog</Link>
           <Link to="/bxh" style={{ textDecoration: "none", color: "#222", fontWeight: 500 }}>Bảng xếp hạng</Link>
           <Link to="/membership" style={{ textDecoration: "none", color: "#222", fontWeight: 500 }}>Gói thành viên</Link>
+          <Link to="/dashboard" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 600 }}>Dữ liệu cá nhân</Link>
         </Box>
       </Box>
 
