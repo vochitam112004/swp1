@@ -21,7 +21,7 @@ const GoogleLoginComponent = () => {
       const loginRes = await api.post("/Auth/google-login", { idToken });
       const token = loginRes.data.token;
       const userFromLogin = loginRes.data.user;
-
+    
       if (!token || !userFromLogin) {
         toast.error("Đăng nhập thất bại!");
         return;
