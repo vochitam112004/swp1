@@ -23,7 +23,7 @@ const styles = {
     minHeight: "100vh",
     width: "100vw",
     display: "flex",
-    alignItems: "stretch", 
+    alignItems: "center", // căn giữa theo chiều dọc
     justifyContent: "center",
     background: "linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%)",
     padding: 0,
@@ -41,9 +41,8 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     gap: "10px",
-    margin: 0,
-    minHeight: "100vh", 
-    justifyContent: "center", 
+    margin: "40px 0", // cách trên dưới
+    // Bỏ minHeight và justifyContent ở đây
   },
   registerTitle: {
     fontSize: "2.2rem",
