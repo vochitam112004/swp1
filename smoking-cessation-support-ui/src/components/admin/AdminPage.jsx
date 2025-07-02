@@ -59,26 +59,6 @@ export default function AdminPage() {
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
         <MenuItem
-          onClick={handleCoach}
-          sx={{
-            backgroundColor: "#333",
-            color: "white",
-            borderRadius: "8px",
-            px: 2,
-            py: 1,
-            width: "fit-content",
-            fontWeight: "bold",
-            "&:hover": {
-              backgroundColor: "#ccc",
-            },
-          }}
-        >
-          Trang của coach
-        </MenuItem>
-      </Box>
-
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-        <MenuItem
           onClick={handleLogout}
           sx={{
             backgroundColor: "#e53935",

@@ -250,7 +250,6 @@ export default function ManageCoach() {
           )}
         </Box>
       </Modal>
-
     </Box>
   );
 }

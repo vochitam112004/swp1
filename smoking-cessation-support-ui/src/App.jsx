@@ -96,7 +96,7 @@ function AppContent() {
           <Route
             path="/coach"
             element={
-              <ProtectedRoute allowedRoles={["Coach", "Admin"]}>
+              <ProtectedRoute allowedRoles={["Coach"]}>
                 <CoachPage />
               </ProtectedRoute>
             }
