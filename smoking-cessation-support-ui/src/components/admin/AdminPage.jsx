@@ -33,6 +33,10 @@ export default function AdminPage() {
     navigate("/");
   };
 
+  const handleCoach = () => {
+    navigate("/coach");
+  }
+
   return (
     <Box
       sx={{
@@ -52,6 +56,26 @@ export default function AdminPage() {
       >
         Bảng điều khiển quản trị viên
       </Typography>
+
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        <MenuItem
+          onClick={handleCoach}
+          sx={{
+            backgroundColor: "#333",
+            color: "white",
+            borderRadius: "8px",
+            px: 2,
+            py: 1,
+            width: "fit-content",
+            fontWeight: "bold",
+            "&:hover": {
+              backgroundColor: "#ccc",
+            },
+          }}
+        >
+          Trang của coach
+        </MenuItem>
+      </Box>
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
         <MenuItem
