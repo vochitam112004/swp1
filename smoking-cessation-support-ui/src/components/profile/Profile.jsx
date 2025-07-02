@@ -26,7 +26,7 @@ export default function Profile() {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
+    if (user.userType != "Member") return;
     api.get("/membership/history")
       .then(res => setHistory(Array.isArray(res.data) ? res.data : []))
       .catch(() => toast.error("Không lấy được lịch sử gói thành viên!"));
@@ -43,7 +43,7 @@ export default function Profile() {
       return;
     }
     try {
-      await api.put("/User", form);
+      await api.put("/User/My-Update", form);
       toast.success("Cập nhật thông tin thành công!");
       setProfile({ ...profile, ...form });
       setEdit(false);
@@ -97,7 +97,7 @@ export default function Profile() {
     const formData = new FormData();
     formData.append("avatar", file);
     try {
-      const res = await api.put("/User", formData, {
+      const res = await api.put("/User/My-Update", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setProfile({ ...profile, avatarUrl: res.data.avatar });
@@ -241,7 +241,8 @@ export default function Profile() {
           </Box>
         )}
 
-        <Box className="membership-history" sx={{ mt: 6 }}>
+        {user?.userType === "Member" && (
+          <Box className="membership-history" sx={{ mt: 6 }}>
           <Typography className="membership-history-title">Lịch sử gói thành viên</Typography>
           {history.length === 0 ? (
             <Typography className="membership-history-empty">Chưa có lịch sử.</Typography>
@@ -255,6 +256,7 @@ export default function Profile() {
             </ul>
           )}
         </Box>
+        )}
       </Paper>
     </Box>
   );

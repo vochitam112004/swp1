@@ -10,8 +10,10 @@ import {
   ListItem,
   ListItemText,
   IconButton,
+  Modal
 } from "@mui/material";
 import api from "../../api/axios";
+import EditIcon from "@mui/icons-material/Edit";
 import { toast } from "react-toastify";
 import DeleteIcon from "@mui/icons-material/Delete";
 import "../../css/Admin.css";
@@ -27,6 +29,9 @@ export default function ManageCoach() {
   });
 
   const [coaches, setCoaches] = useState([]);
+
+  const [editingCoach, setEditingCoach] = useState(null);
+  const [editingData, setEditingData] = useState(null);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -72,16 +77,27 @@ export default function ManageCoach() {
     }
   };
 
-  const handleDelete = async (username) => {
+  const handleDelete = async (userId) => {
     const confirmed = window.confirm("Bạn có chắc muốn xóa coach này?");
     if (!confirmed) return;
 
     try {
-      await api.delete(`/Admin/delete-coach-by-username/${username}`);
+      await api.delete(`/User/${userId}`);
       toast.success("Đã xóa coach thành công");
       fetchCoaches();
     } catch {
       toast.error("Xóa coach thất bại");
+    }
+  };
+
+  const handleUpdateCoach = async (coach) => {
+    try {
+      await api.put(`/User/${coach.userId}`, coach);
+      toast.success("Cập nhật thành công!");
+      setEditingCoach(null);
+      fetchCoaches();
+    } catch {
+      toast.error("Cập nhật thất bại!");
     }
   };
 
@@ -137,15 +153,28 @@ export default function ManageCoach() {
         <List>
           {coaches.map((coach) => (
             <ListItem
-              key={coach.username}
+              key={coach.userId}
               secondaryAction={
-                <IconButton
-                  edge="end"
-                  aria-label="delete"
-                  onClick={() => handleDelete(coach.username)}
-                >
-                  <DeleteIcon color="error" />
-                </IconButton>
+                <>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setEditingCoach(coach);
+                      setEditingData({ ...coach }); // clone dữ liệu để chỉnh riêng
+                    }}
+                    sx={{ mr: 1 }}
+                  >
+                    <EditIcon color="primary" />
+                  </Button>
+
+                  <IconButton
+                    edge="end"
+                    aria-label="delete"
+                    onClick={() => handleDelete(coach.userId)}
+                  >
+                    <DeleteIcon color="error" />
+                  </IconButton>
+                </>
               }
             >
               <ListItemText
@@ -158,6 +187,69 @@ export default function ManageCoach() {
       ) : (
         <Typography color="text.secondary">Chưa có coach nào.</Typography>
       )}
+      <Modal
+        open={Boolean(editingCoach)}
+        onClose={() => {
+          setEditingCoach(null);
+          setEditingData(null);
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            borderRadius: 2,
+            p: 4,
+            width: 600,
+            maxWidth: '95%',
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Cập nhật Coach: {editingData?.username}
+          </Typography>
+
+          {editingData && (
+            <Grid container spacing={2}>
+              {["email", "displayName", "phoneNumber", "address"].map((field) => (
+                <Grid item xs={12} sm={6} key={field}>
+                  <TextField
+                    label={field}
+                    name={field}
+                    fullWidth
+                    value={editingData[field] || ""}
+                    onChange={(e) =>
+                      setEditingData({ ...editingData, [field]: e.target.value })
+                    }
+                  />
+                </Grid>
+              ))}
+
+              <Grid item xs={12} sx={{ textAlign: 'right' }}>
+                <Button
+                  variant="contained"
+                  onClick={() => handleUpdateCoach(editingData)}
+                >
+                  Lưu cập nhật
+                </Button>
+                <Button
+                  variant="text"
+                  onClick={() => {
+                    setEditingCoach(null);
+                    setEditingData(null);
+                  }}
+                  sx={{ ml: 2 }}
+                >
+                  Hủy
+                </Button>
+              </Grid>
+            </Grid>
+          )}
+        </Box>
+      </Modal>
     </Box>
   );
 }

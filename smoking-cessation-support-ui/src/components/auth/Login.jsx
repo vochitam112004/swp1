@@ -4,7 +4,6 @@ import {
   Button,
   TextField,
   Typography,
-  Paper,
   IconButton,
   InputAdornment,
   Avatar,
@@ -15,8 +14,8 @@ import { useNavigate, Link } from "react-router-dom";
 import api from "../../api/axios.js";
 import GoogleLogin from "./GoogleLogin";
 import { useAuth } from "./AuthContext.jsx";
-import PersonIcon from '@mui/icons-material/Person';
-import LockIcon from '@mui/icons-material/Lock';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
@@ -87,141 +86,188 @@ export default function Login() {
     }
   };
 
+  // ✅ Nếu đã đăng nhập, hiện avatar và nút đăng xuất
   if (user) {
     return (
-      <div className="auth-bg">
-        <div className="register-container" style={{ minWidth: 340, textAlign: "center" }}>
+      <Box className="auth-bg" sx={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <Box sx={{ textAlign: "center", p: 4, background: "#fff", borderRadius: 4, boxShadow: 2 }}>
           <Avatar
-            src={
-              user.avatar ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`
-            }
+            src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`}
             sx={{ width: 64, height: 64, margin: "0 auto", mb: 2 }}
           />
           <Typography variant="h6" fontWeight={700} mb={2}>
             Xin chào, {user.username}
           </Typography>
-          <Button variant="outlined" color="error" onClick={logout} fullWidth>
-            Đăng xuất
-          </Button>
-        </div>
-      </div>
+         <Button
+  variant="outlined"
+  color="error"
+  onClick={() => {
+    logout();
+    navigate("/");
+  }}
+  fullWidth
+>
+  Đăng xuất
+</Button>
+        </Box>
+      </Box>
     );
   }
 
   return (
-       <Box
-      className="auth-bg"
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%)',
-      }}
-    >
+    <Box sx={{ display: "flex", minHeight: "100vh", fontFamily: 'Poppins, sans-serif' }}>
+      {/* ✅ Bên trái: Hình nền với overlay và lời chào */}
       <Box
-        className="register-container"
         sx={{
-          width: 350,
-          p: 2, // giảm padding
-          borderRadius: 4,
-          boxShadow: 3,
-          background: '#fff',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 0, // loại bỏ gap
+          flex: 1,
+          backgroundImage: 'linear-gradient(rgba(43, 180, 227, 0.4), rgba(43, 180, 227, 0.4)), url("/images/backgroup_login.jpg")',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          color: "#fff",
+          display: { xs: 'none', md: 'flex' }, // ✅ Ẩn trên thiết bị nhỏ
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+          p: 4,
         }}
       >
-        <Avatar sx={{ bgcolor: '#1976d2', width: 48, height: 48, mb: 1 }} />
-        <Typography variant="h5" fontWeight={700} mb={1}>
-          Bạn đã có tài khoản?
+        <Typography variant="h4" fontWeight="bold" mb={2} color="#ffffff">
+          Chào mừng bạn đến với nền tảng hỗ trợ cai nghiện thuốc lá
         </Typography>
-        <form onSubmit={handleSubmit} style={{ width: "100%", margin: 0, padding: 0 }}>
-          <TextField
-            fullWidth
-            margin="dense"
-            label="Tên đăng nhập"
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            required
-            InputProps={{
-              style: { background: "#fff", borderRadius: 8 },
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonIcon color="primary" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ mb: 1 }}
-          />
-          <TextField
-            fullWidth
-            margin="dense"
-            label="Mật khẩu"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            value={form.password}
-            onChange={handleChange}
-            required
-            InputProps={{
-              style: { background: "#fff", borderRadius: 8 },
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon color="primary" />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={handleClickShowPassword}
-                    edge="end"
-                    aria-label="toggle password visibility"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{ mb: 1 }}
-          />
-          <Box textAlign="right" mt={0} mb={1}>
-            <Typography
-              variant="body2"
-              color="textSecondary"
-              sx={{ cursor: "pointer", textDecoration: "underline" }}
-              onClick={() => navigate("/forgot-password")}
-            >
-              Forgot password?
-            </Typography>
-          </Box>
-          <Button
-            fullWidth
-            variant="contained"
-            sx={{
-              mt: 1,
-              borderRadius: 2,
-              fontWeight: 600,
-              background: 'linear-gradient(90deg, #1976d2 60%, #42a5f5 100%)',
-              boxShadow: 2,
-              '&:hover': { background: 'linear-gradient(90deg, #1565c0 60%, #1976d2 100%)' },
-            }}
-            type="submit"
-          >
+        <Typography variant="body1" mb={3}>
+          Bạn chưa có tài khoản?
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#00c6a2", // ✅ Nút xanh ngọc
+            color: "#fff",
+            fontWeight: "bold",
+            px: 4,
+            py: 1,
+            borderRadius: 9999,
+            boxShadow: 3,
+            transition: "all 0.3s ease",
+            '&:hover': {
+              backgroundColor: "#00dfb6",
+              transform: "scale(1.05)"
+            },
+          }}
+          onClick={() => navigate("/register")}
+        >
+          Đăng ký ngay
+        </Button>
+      </Box>
+
+      {/* ✅ Bên phải: Form đăng nhập hiện đại */}
+      <Box
+        sx={{
+          flex: 1,
+          background: "#f4f7f9",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2,
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 400,
+            background: "#fff",
+            p: 4,
+            borderRadius: 5,
+            boxShadow: 4,
+          }}
+        >
+          <Typography variant="h5" fontWeight={700} mb={2} color="#1e1e1e" align="center">
             Đăng nhập
-          </Button>
-          <div style={{ width: "100%", marginTop: 8, display: "flex", justifyContent: "center" }}>
-            <GoogleLogin />
-             </div>
-               </form>
-        <Typography mt={1} fontSize={14}>
-          Chưa có tài khoản?{' '}
-          <Link to="/register" style={{ color: '#1976d2', fontWeight: 600 }}>
-            Đăng ký
-          </Link>
-        </Typography>
+          </Typography>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Tên đăng nhập hoặc Email"
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonOutlineIcon color="primary" />
+                  </InputAdornment>
+                ),
+                style: {
+                  background: "#f5f7fb", // ✅ Nền input sáng
+                  borderRadius: 10,       // ✅ Bo góc input
+                },
+              }}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Mật khẩu"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={form.password}
+              onChange={handleChange}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlinedIcon color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={handleClickShowPassword} edge="end">
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+                style: {
+                  background: "#f5f7fb",
+                  borderRadius: 10,
+                },
+              }}
+            />
+            <Box textAlign="right" mt={1}>
+              <Typography
+                variant="body2"
+                sx={{ cursor: "pointer", color: "#1976d2", textDecoration: "underline" }}
+                onClick={() => navigate("/forgot-password")}
+              >
+                Quên mật khẩu?
+              </Typography>
+            </Box>
+            <Box mt={2}>
+              <Button
+                fullWidth
+                type="submit"
+                variant="contained"
+                sx={{
+                  backgroundColor: "#2b7de9", // ✅ Màu chính
+                  fontWeight: "bold",
+                  borderRadius: 9999,
+                  boxShadow: 2,
+                  transition: "all 0.3s ease",
+                  '&:hover': {
+                    backgroundColor: "#125fd5",
+                    transform: "scale(1.02)"
+                  },
+                }}
+              >
+                Đăng nhập
+              </Button>
+            </Box>
+            <Box mt={2} display="flex" justifyContent="center">
+              <GoogleLogin />
+            </Box>
+          </form>
+        </Box>
       </Box>
     </Box>
   );

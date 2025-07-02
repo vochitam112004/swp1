@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, List, ListItem, ListItemText, IconButton, Stack } from "@mui/material";
-import api from "../../api/axios";
+import {
+  Box, Typography, List, ListItem, ListItemText, IconButton,
+  Stack, Modal, Grid, TextField, Button
+} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import api from "../../api/axios";
+import { toast } from "react-toastify";
 
 export default function UserManager() {
   const [users, setUsers] = useState([]);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editingData, setEditingData] = useState(null);
 
   const fetchUsers = async () => {
     try {
       const res = await api.get("/User/Get-All-User");
-      console.log(res.data)
       setUsers(res.data);
     } catch {
       console.error("Không lấy được danh sách người dùng");
@@ -22,9 +28,22 @@ export default function UserManager() {
 
     try {
       await api.delete(`/User/${id}`);
+      toast.success("Xóa thành công!");
       fetchUsers();
     } catch {
-      console.error("Xóa người dùng thất bại");
+      toast.error("Xóa người dùng thất bại");
+    }
+  };
+
+  const handleUpdateUser = async () => {
+    try {
+      await api.put(`/User/${editingData.userId}`, editingData);
+      toast.success("Cập nhật thành công!");
+      setEditingUser(null);
+      setEditingData(null);
+      fetchUsers();
+    } catch {
+      toast.error("Cập nhật thất bại!");
     }
   };
 
@@ -45,6 +64,16 @@ export default function UserManager() {
               <Stack direction="row" spacing={1}>
                 <IconButton
                   edge="end"
+                  aria-label="edit"
+                  onClick={() => {
+                    setEditingUser(user);
+                    setEditingData({ ...user });
+                  }}
+                >
+                  <EditIcon color="primary" />
+                </IconButton>
+                <IconButton
+                  edge="end"
                   aria-label="delete"
                   onClick={() => handleDelete(user.userId)}
                 >
@@ -60,6 +89,67 @@ export default function UserManager() {
           </ListItem>
         ))}
       </List>
+
+      <Modal
+        open={Boolean(editingUser)}
+        onClose={() => {
+          setEditingUser(null);
+          setEditingData(null);
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            borderRadius: 2,
+            p: 4,
+            width: 600,
+            maxWidth: '95%',
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Cập nhật người dùng: {editingData?.username}
+          </Typography>
+
+          {editingData && (
+            <Grid container spacing={2}>
+              {["displayName", "email", "phoneNumber", "address"].map((field) => (
+                <Grid item xs={12} sm={6} key={field}>
+                  <TextField
+                    label={field}
+                    name={field}
+                    fullWidth
+                    value={editingData[field] || ""}
+                    onChange={(e) =>
+                      setEditingData({ ...editingData, [field]: e.target.value })
+                    }
+                  />
+                </Grid>
+              ))}
+
+              <Grid item xs={12} sx={{ textAlign: 'right' }}>
+                <Button variant="contained" onClick={handleUpdateUser}>
+                  Lưu cập nhật
+                </Button>
+                <Button
+                  variant="text"
+                  onClick={() => {
+                    setEditingUser(null);
+                    setEditingData(null);
+                  }}
+                  sx={{ ml: 2 }}
+                >
+                  Hủy
+                </Button>
+              </Grid>
+            </Grid>
+          )}
+        </Box>
+      </Modal>
     </Box>
   );
 }

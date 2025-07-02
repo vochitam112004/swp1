@@ -34,6 +34,10 @@ export default function AdminPage() {
     navigate("/");
   };
 
+  const handleCoach = () => {
+    navigate("/coach");
+  }
+
   return (
     <Box
       sx={{
