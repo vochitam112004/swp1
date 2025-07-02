@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, DatePicker, Button, Modal, InputNumber } from 'antd';
 import moment from 'moment';
+import api from "../../api/axios";
+import { toast } from 'react-toastify';
 
 const samplePlan = {
   reason: 'Bảo vệ sức khỏe, tiết kiệm chi phí, làm gương cho con cái',
@@ -15,46 +17,34 @@ const PlanTab = () => {
   const [form] = Form.useForm();
   const [modalVisible, setModalVisible] = useState(false);
   const [planStatus, setPlanStatus] = useState(""); // trạng thái kế hoạch
+  const [plans, setPlans] = useState([]);
+  const [progress, setProgress] = useState(null); // Thêm state cho tiến trình
 
-  // Hàm kiểm tra trạng thái hoàn thành
-  const checkPlanStatus = () => {
-    const plan = JSON.parse(localStorage.getItem("quitPlan") || "{}");
-    const progress = JSON.parse(localStorage.getItem("quitProgress") || "{}");
-    if (plan && plan.goalDays) {
-      if (progress && progress.daysNoSmoke) {
-        if (progress.daysNoSmoke >= Number(plan.goalDays)) {
-          setPlanStatus("Hoàn thành kế hoạch cai thuốc! 🎉");
-        } else {
-          setPlanStatus(`Đã không hút thuốc ${progress.daysNoSmoke}/${plan.goalDays} ngày.`);
-        }
+  // Lấy kế hoạch và tiến trình từ API khi load
+  useEffect(() => {
+    api.get("/GoalPlan").then(res => setPlans(res.data)).catch(() => setPlans([]));
+    api.get("/ProgressLog/progress-log").then(res => setProgress(res.data)).catch(() => setProgress(null));
+  }, []);
+
+  // Hàm kiểm tra trạng thái hoàn thành dựa vào API
+  useEffect(() => {
+    if (!plans.length || !progress) {
+      setPlanStatus("Bạn chưa tạo kế hoạch cai thuốc.");
+      return;
+    }
+    const plan = plans[0];
+    // Tính tổng số ngày không hút thuốc từ progress log
+    const daysNoSmoke = progress.reduce((acc, log) => acc + (log.cigarettesSmoked === 0 ? 1 : 0), 0);
+    if (plan.goalDays) {
+      if (daysNoSmoke >= Number(plan.goalDays)) {
+        setPlanStatus("Hoàn thành kế hoạch cai thuốc! 🎉");
       } else {
-        setPlanStatus("Chưa có dữ liệu tiến trình.");
+        setPlanStatus(`Đã không hút thuốc ${daysNoSmoke}/${plan.goalDays} ngày.`);
       }
     } else {
-      setPlanStatus("Bạn chưa tạo kế hoạch cai thuốc.");
+      setPlanStatus("Chưa có dữ liệu tiến trình.");
     }
-  };
-
-  useEffect(() => {
-    checkPlanStatus();
-    // Lắng nghe sự kiện thay đổi localStorage từ các tab khác
-    const handleStorage = (e) => {
-      if (e.key === "quitProgress" || e.key === "quitPlan") {
-        checkPlanStatus();
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-
-    // Kiểm tra định kỳ để cập nhật trạng thái trong cùng tab
-    const interval = setInterval(() => {
-      checkPlanStatus();
-    }, 1000); // kiểm tra mỗi 1 giây
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      clearInterval(interval);
-    };
-  }, []);
+  }, [plans, progress]);
 
   const handleSuggestPlan = () => {
     form.setFieldsValue({
@@ -68,11 +58,20 @@ const PlanTab = () => {
     setModalVisible(true);
   };
 
-  const onFinish = (values) => {
-    // Lưu kế hoạch vào localStorage
-    localStorage.setItem("quitPlan", JSON.stringify(values));
-    checkPlanStatus();
-    console.log('Kế hoạch đã lưu:', values);
+  const onFinish = async (values) => {
+    try {
+      await api.post("/GoalPlan", {
+        targetQuitDate: values.expectedDate,
+        personalMotivation: values.reason,
+        useTemplate: false,
+      });
+      toast.success("Đã lưu kế hoạch!");
+      // Reload lại danh sách kế hoạch
+      const res = await api.get("/GoalPlan");
+      setPlans(res.data);
+    } catch {
+      toast.error("Lưu kế hoạch thất bại!");
+    }
   };
 
   return (

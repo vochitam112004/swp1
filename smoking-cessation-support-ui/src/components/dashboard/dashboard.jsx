@@ -12,7 +12,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { saveAs } from "file-saver"; 
+import { saveAs } from "file-saver";
+import api from "../../api/axios";
 
 ChartJS.register(
   CategoryScale,
@@ -81,8 +82,7 @@ const Dashboard = () => {
     }
   };
 
-  // Thêm state cho tiến trình
-  const [progress, setProgress] = useState(() => safeParse("quitProgress", { startDate: null, daysNoSmoke: 0, moneySaved: 0, health: 0 }));
+  
   // Thêm state cho lịch sử tiến trình và số lần tái nghiện
   const [quitHistory, setQuitHistory] = useState(() => safeParse("quitHistory", []));
   const [todayCigarettes, setTodayCigarettes] = useState("");
@@ -94,90 +94,87 @@ const Dashboard = () => {
     // Mặc định là hôm nay
     return new Date().toISOString().slice(0, 10);
   });
-  const [frequency, setFrequency] = useState(() => localStorage.getItem("smokeFrequency") || "");
   const [pricePerPack, setPricePerPack] = useState(() => localStorage.getItem("pricePerPack") || "");
   const [comments, setComments] = useState(() => safeParse("badgeComments", {}));
   const [editIdx, setEditIdx] = useState(null);
   const [editContent, setEditContent] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
+  const [progressLogs, setProgressLogs] = useState([]);
+  const [progress, setProgress] = useState({ daysNoSmoke: 0, moneySaved: 0, health: 0 });
+  const [plan, setPlan] = useState(null);
 
   // Hàm ghi nhận tiến trình mỗi ngày
-  const handleSubmitProgress = (e) => {
+  const handleSubmitProgress = async (e) => {
     e.preventDefault();
     if (isNaN(todayCigarettes) || todayCigarettes === "" || todayCigarettes < 0) {
       toast.error("Số điếu thuốc không hợp lệ!");
       return;
     }
-    localStorage.setItem("smokeFrequency", frequency);
-    localStorage.setItem("pricePerPack", pricePerPack);
-    const now = new Date();
-    let startDate = progress.startDate
-      ? new Date(progress.startDate)
-      : now;
-    if (!progress.startDate) startDate = now;
 
-    if (parseInt(todayCigarettes, 10) > 0) {
-      // Lưu chuỗi cũ vào lịch sử nếu có tiến trình
-      if (progress.daysNoSmoke > 0) {
-        const history = JSON.parse(localStorage.getItem("quitHistory") || "[]");
-        history.push({
-          daysNoSmoke: progress.daysNoSmoke,
-          moneySaved: progress.moneySaved,
-          startDate: progress.startDate,
-          endDate: now.toISOString(),
-        });
-        localStorage.setItem("quitHistory", JSON.stringify(history));
-        setQuitHistory(history);
-      }
-      // Xác nhận trước khi reset tiến trình
-      if (window.confirm("Bạn đã hút lại thuốc. Tiến trình sẽ bị đặt lại từ đầu. Bạn có chắc chắn không?")) {
-        const newProgress = {
-          startDate: now.toISOString(),
-          daysNoSmoke: 0,
-          moneySaved: 0,
-          health: 0,
-        };
-        setProgress(newProgress);
-        localStorage.setItem("quitProgress", JSON.stringify(newProgress));
-        toast.error("Tiến trình đã được đặt lại. Đừng nản lòng, hãy bắt đầu lại!");
-        setShowForm(false);
-        setTodayCigarettes("");
-      }
-      return;
-    }
-
-    // Giả sử mỗi ngày không hút tiết kiệm 70.000đ, cải thiện 2% sức khỏe
-    const daysNoSmoke =
-      todayCigarettes === "0"
-        ? Math.floor((now - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1
-        : 0;
-    const moneySaved = daysNoSmoke * 70000;
-    const health = Math.min(daysNoSmoke * 2, 100);
-    const newProgress = {
-      startDate: startDate.toISOString(),
-      daysNoSmoke,
-      moneySaved,
-      health,
+    const logDate = new Date().toISOString().slice(0, 10); // yyyy-MM-dd
+    const body = {
+      logDate,
+      cigarettesSmoked: Number(todayCigarettes),
+      pricePerPack: Number(pricePerPack),
+      mood: "",      // hoặc lấy từ input nếu bạn có
+      trigger: "",   // hoặc lấy từ input nếu bạn có
+      notes: "",     // hoặc lấy từ input nếu bạn có
     };
-    setProgress(newProgress);
-    localStorage.setItem("quitProgress", JSON.stringify(newProgress));
-    setShowForm(false);
-    setTodayCigarettes("");
+
+    try {
+      await api.post("/ProgressLog/progress-log", body);
+      toast.success("Đã ghi nhận tiến trình!");
+      setShowForm(false);
+      setTodayCigarettes("");
+      // Reload lại tiến trình
+      const res = await api.get("/ProgressLog/progress-log");
+      setProgressLogs(res.data);
+
+      // Tính lại progress
+      let daysNoSmoke = 0;
+      let moneySaved = 0;
+      let health = 0;
+      res.data.forEach(log => {
+        if (log.cigarettesSmoked === 0) daysNoSmoke += 1;
+        moneySaved += log.pricePerPack || 0;
+      });
+      health = Math.min(daysNoSmoke, 100);
+      setProgress({ daysNoSmoke, moneySaved, health });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Lỗi kết nối API!");
+    }
   };
 
-  // Hàm lưu nhật ký
-  const handleJournalSubmit = (e) => {
+  // Lấy nhật ký từ API khi load
+  useEffect(() => {
+    async function fetchJournal() {
+      try {
+        const res = await api.get("/ProgressLog");
+        setJournal(res.data);
+      } catch {
+        setJournal([]);
+      }
+    }
+    fetchJournal();
+  }, []);
+
+  // Lưu nhật ký qua API thay vì localStorage
+  const handleJournalSubmit = async (e) => {
     e.preventDefault();
     if (!journalEntry.trim()) return;
-    const newEntry = {
-      date: journalDate,
-      content: journalEntry,
-    };
-    const updatedJournal = [...journal, newEntry];
-    setJournal(updatedJournal);
-    localStorage.setItem("quitJournal", JSON.stringify(updatedJournal));
-    setJournalEntry("");
-    toast.success("Đã lưu nhật ký!");
+    try {
+      await api.post("/ProgressLog", {
+        date: journalDate,
+        content: journalEntry,
+      });
+      toast.success("Đã lưu nhật ký!");
+      // Sau khi lưu thành công, reload lại nhật ký
+      const res = await api.get("/ProgressLog");
+      setJournal(res.data);
+      setJournalEntry("");
+    } catch {
+      toast.error("Lưu nhật ký thất bại!");
+    }
   };
 
   // Dữ liệu cho biểu đồ tiến trình (số ngày không hút liên tục)
@@ -186,7 +183,7 @@ const Dashboard = () => {
 
   // Thông báo mỗi ngày 1 lần
   useEffect(() => {
-    requestNotificationPermission(); // Thêm dòng này
+    requestNotificationPermission(); 
     const lastNotify = localStorage.getItem("lastMotivationNotify");
     const today = new Date().toISOString().slice(0, 10);
     if (lastNotify !== today) {
@@ -218,7 +215,7 @@ const Dashboard = () => {
     const lastNotify = localStorage.getItem("lastPersonalReasonNotify");
     if (shouldSendReminder(lastNotify, frequency)) {
       toast.info(`Động viên: ${reason}`);
-      sendBrowserNotification("Động viên cai thuốc", reason); // Thêm dòng này
+      sendBrowserNotification("Động viên cai thuốc", reason); 
       localStorage.setItem("lastPersonalReasonNotify", new Date().toISOString());
     }
   }, []);
@@ -264,7 +261,7 @@ const Dashboard = () => {
   };
 
   function exportCSV() {
-     if (journal.length === 0) {
+    if (journal.length === 0) {
       toast.info("Chưa có nhật ký để xuất!");
       return;
     }
@@ -294,12 +291,13 @@ const Dashboard = () => {
   }, []);
 
   // Lấy goalDays từ kế hoạch (quitPlan) hoặc mặc định 60
-  const plan = JSON.parse(localStorage.getItem("quitPlan") || "{}");
-  const goalDays = plan.goalDays || 60;
+  // const plan = JSON.parse(localStorage.getItem("quitPlan") || "{}");
+  // const goalDays = plan.goalDays || 60;
+  // const frequency = plan.reminderFrequency || "daily"; // Thêm dòng này
 
   // Tính phần trăm hoàn thành mục tiêu
   const percent = Math.min(
-    Math.round((progress.daysNoSmoke / goalDays) * 100),
+    Math.round((progress.daysNoSmoke / (plan?.goalDays || 60)) * 100),
     100
   );
 
@@ -324,6 +322,49 @@ const Dashboard = () => {
   function getPersonalizedTips(daysNoSmoke) {
     return TIPS.filter(tip => daysNoSmoke >= tip.minDay && daysNoSmoke <= tip.maxDay);
   }
+
+  useEffect(() => {
+    async function fetchProgressLogs() {
+      try {
+        const res = await api.get("/ProgressLog");
+        setProgressLogs(res.data);
+      } catch {
+        setProgressLogs([]);
+      }
+    }
+    fetchProgressLogs();
+  }, []);
+
+  const handleAddProgressLog = async (logData) => {
+    try {
+      await api.post("/ProgressLog", logData);
+      const res = await api.get("/ProgressLog");
+      setProgressLogs(res.data);
+    } catch {
+      // handle error
+    }
+  };
+
+  // Lấy kế hoạch từ API khi load
+  useEffect(() => {
+    api.get("/GoalPlan")
+      .then(res => setPlan(res.data[0] || null))
+      .catch(() => setPlan(null));
+  }, []);
+
+  const handleUpdatePlan = async (newPlan) => {
+    try {
+      await api.put("/GoalPlan", {
+        ...newPlan,
+        goalPlanId: plan.goalPlanId,
+      });
+      const res = await api.get("/GoalPlan");
+      setPlan(res.data[0] || null);
+      toast.success("Đã cập nhật kế hoạch!");
+    } catch {
+      toast.error("Cập nhật kế hoạch thất bại!");
+    }
+  };
 
   return (
     <div className="bg-white py-5">
@@ -415,7 +456,7 @@ const Dashboard = () => {
                   <div className="col-md-8">
                     <div className="bg-white p-4 rounded-3 shadow-sm border mb-4 mb-md-0">
                       <h3 className="fs-5 fw-semibold mb-3">Tiến trình cai thuốc</h3>
-                      <div className="d-flex align-items-center justify-content-center" style={{height: "250px", background: "#f5f6fa", borderRadius: "1rem"}}>
+                      <div className="d-flex align-items-center justify-content-center" style={{ height: "250px", background: "#f5f6fa", borderRadius: "1rem" }}>
                         <span className="text-secondary">Biểu đồ tiến trình sẽ hiển thị tại đây</span>
                       </div>
                     </div>
@@ -423,7 +464,7 @@ const Dashboard = () => {
                   <div className="col-md-4">
                     <div className="bg-white p-4 rounded-3 shadow-sm border text-center">
                       <h3 className="fs-5 fw-semibold mb-3">Mục tiêu hiện tại</h3>
-                      <div className="position-relative mx-auto mb-3" style={{width: "160px", height: "160px"}}>
+                      <div className="position-relative mx-auto mb-3" style={{ width: "160px", height: "160px" }}>
                         <svg width="160" height="160" viewBox="0 0 100 100">
                           <circle stroke="#e9ecef" strokeWidth="10" fill="transparent" r="40" cx="50" cy="50" />
                           <circle
@@ -444,7 +485,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <p className="text-secondary">
-                        Bạn đã hoàn thành {percent}% mục tiêu {goalDays} ngày không thuốc lá
+                        Bạn đã hoàn thành {percent}% mục tiêu {plan?.goalDays || 60} ngày không thuốc lá
                       </p>
                       <button className="btn btn-primary mt-3" onClick={() => setShowForm(!showForm)}>
                         {showForm ? "Đóng" : "Cập nhật tiến trình"}
@@ -462,21 +503,8 @@ const Dashboard = () => {
                               style={{ marginLeft: 8, width: 60 }}
                             />
                           </label>
-                          <div>
-                            <label>
-                              Tần suất hút/ngày:&nbsp;
-                              <input
-                                type="number"
-                                min="1"
-                                value={frequency}
-                                onChange={e => setFrequency(e.target.value)}
-                                required
-                              />
-                              &nbsp;điếu/ngày
-                            </label>
-                          </div>
-                          <div>
-                            <label>
+                          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
+                            <label style={{ marginBottom: 0 }}>
                               Giá tiền/bao:&nbsp;
                               <input
                                 type="number"
@@ -485,9 +513,10 @@ const Dashboard = () => {
                                 value={pricePerPack}
                                 onChange={e => setPricePerPack(e.target.value)}
                                 required
+                                style={{ width: 80, marginRight: 4 }}
                               />
-                              &nbsp;VNĐ/bao
                             </label>
+                            <span>VNĐ/bao</span>
                           </div>
                           <button type="submit" className="btn btn-success ms-3">
                             Ghi nhận
@@ -505,7 +534,7 @@ const Dashboard = () => {
                     {getAchievedBadges(progress).map((badge, idx) => (
                       <div className="col-6 col-sm-4 col-md-2" key={badge.key}>
                         <div className="bg-warning bg-opacity-10 p-3 rounded-3 shadow-sm text-center">
-                          <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{width: "48px", height: "48px"}}>
+                          <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: "48px", height: "48px" }}>
                             <i className={`${badge.icon} text-warning fs-4`}></i>
                           </div>
                           <div className="small fw-medium">{badge.label}</div>
@@ -586,7 +615,7 @@ const Dashboard = () => {
                 {/* Motivation */}
                 <div className="mt-5 bg-light p-4 rounded-3 shadow-sm">
                   <div className="d-flex align-items-start">
-                    <div className="bg-primary rounded-circle p-3 text-white me-3 d-flex align-items-center justify-content-center" style={{width: "48px", height: "48px"}}>
+                    <div className="bg-primary rounded-circle p-3 text-white me-3 d-flex align-items-center justify-content-center" style={{ width: "48px", height: "48px" }}>
                       <i className="fas fa-lightbulb fs-4"></i>
                     </div>
                     <div>
@@ -649,9 +678,9 @@ const Dashboard = () => {
                 <div className="mb-4">
                   <h5>Chi tiết kế hoạch hiện tại:</h5>
                   <ul>
-                    <li><b>Mục tiêu số ngày không hút:</b> {plan.goalDays || "Chưa đặt"} ngày</li>
-                    <li><b>Lý do bỏ thuốc:</b> {plan.reason || "Chưa nhập"}</li>
-                    <li><b>Tần suất nhắc nhở:</b> {plan.reminderFrequency || "Chưa chọn"}</li>
+                    <li><b>Mục tiêu số ngày không hút:</b> {plan?.goalDays || "Chưa đặt"} ngày</li>
+                    <li><b>Lý do bỏ thuốc:</b> {plan?.reason || "Chưa nhập"}</li>
+                    <li><b>Tần suất nhắc nhở:</b> {plan?.reminderFrequency || "Chưa chọn"}</li>
                   </ul>
                 </div>
                 {/* Form chỉnh sửa kế hoạch */}
@@ -677,7 +706,7 @@ const Dashboard = () => {
                         type="number"
                         name="goalDays"
                         min="1"
-                        defaultValue={plan.goalDays || 60}
+                        defaultValue={plan?.goalDays || 60}
                         required
                         className="form-control"
                       />
@@ -688,7 +717,7 @@ const Dashboard = () => {
                       <input
                         type="text"
                         name="reason"
-                        defaultValue={plan.reason || ""}
+                        defaultValue={plan?.reason || ""}
                         required
                         className="form-control"
                       />
@@ -698,7 +727,7 @@ const Dashboard = () => {
                     <label>Tần suất nhắc nhở:&nbsp;
                       <select
                         name="reminderFrequency"
-                        defaultValue={plan.reminderFrequency || "daily"}
+                        defaultValue={plan?.reminderFrequency || "daily"}
                         className="form-control"
                       >
                         <option value="daily">Hàng ngày</option>
@@ -711,7 +740,7 @@ const Dashboard = () => {
                 </form>
               </div>
             )}
-            
+
             {activeTab === "journal" && (
               <div>
                 <h3 className="fs-5 fw-semibold mb-3">Nhật ký cai thuốc</h3>
@@ -764,46 +793,63 @@ const Dashboard = () => {
                   <h5 className="mb-3">Lịch sử nhật ký</h5>
                   {journal.length === 0 && <div className="text-secondary">Chưa có nhật ký nào.</div>}
                   {journal
-                    .filter(entry => !filterMonth || entry.date.startsWith(filterMonth))
-                    .slice().reverse().map((entry, idx) => (
-                    <div key={idx} className="border rounded p-2 mb-2 bg-light">
-                      <b>{entry.date}</b>:&nbsp;
-                      {editIdx === idx ? (
-                        <>
-                          <input
-                            value={editContent}
-                            onChange={e => setEditContent(e.target.value)}
-                            style={{ width: "60%" }}
-                          />
-                          <button className="btn btn-sm btn-success ms-2" onClick={() => {
-                            const updated = [...journal];
-                            updated[journal.length - 1 - idx].content = editContent;
-                            setJournal(updated);
-                            localStorage.setItem("quitJournal", JSON.stringify(updated));
-                            setEditIdx(null);
-                            toast.success("Đã cập nhật nhật ký!");
-                          }}>Lưu</button>
-                          <button className="btn btn-sm btn-secondary ms-1" onClick={() => setEditIdx(null)}>Hủy</button>
-                        </>
-                      ) : (
-                        <>
-                          {entry.content}
-                          <button className="btn btn-sm btn-outline-primary ms-2" onClick={() => {
-                            setEditIdx(idx);
-                            setEditContent(entry.content);
-                          }}>Sửa</button>
-                          <button className="btn btn-sm btn-outline-danger ms-1" onClick={() => {
-                            if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
-                              const updated = journal.filter((_, i) => i !== journal.length - 1 - idx);
-                              setJournal(updated);
-                              localStorage.setItem("quitJournal", JSON.stringify(updated));
-                              toast.success("Đã xóa nhật ký!");
-                            }
-                          }}>Xóa</button>
-                        </>
-                      )}
-                    </div>
-                  ))}
+  .filter(entry => !filterMonth || entry.date.startsWith(filterMonth))
+  .slice().reverse().map((entry, idx) => (
+    <div key={idx} className="border rounded p-2 mb-2 bg-light">
+      <b>{entry.date}</b>:&nbsp;
+      {editIdx === idx ? (
+        <>
+          <input
+            value={editContent}
+            onChange={e => setEditContent(e.target.value)}
+            className="form-control d-inline-block"
+            style={{ width: "60%" }}
+          />
+          <button
+            className="btn btn-sm btn-success ms-1"
+            onClick={async () => {
+              // Gọi API cập nhật nhật ký
+              try {
+                await api.put(`/ProgressLog/${entry.logId}`, {
+                  ...entry,
+                  content: editContent,
+                });
+                toast.success("Đã cập nhật nhật ký!");
+                // Reload lại nhật ký
+                const res = await api.get("/ProgressLog");
+                setJournal(res.data);
+                setEditIdx(null);
+              } catch {
+                toast.error("Cập nhật thất bại!");
+              }
+            }}
+          >Lưu</button>
+          <button className="btn btn-sm btn-secondary ms-1" onClick={() => setEditIdx(null)}>Hủy</button>
+        </>
+      ) : (
+        <>
+          {entry.content}
+          <button className="btn btn-sm btn-outline-primary ms-2" onClick={() => {
+            setEditIdx(idx);
+            setEditContent(entry.content);
+          }}>Sửa</button>
+          <button className="btn btn-sm btn-outline-danger ms-1" onClick={async () => {
+            if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
+              try {
+                await api.delete(`/ProgressLog/${entry.logId}`);
+                toast.success("Đã xóa nhật ký!");
+                // Reload lại nhật ký
+                const res = await api.get("/ProgressLog");
+                setJournal(res.data);
+              } catch {
+                toast.error("Xóa nhật ký thất bại!");
+              }
+            }
+          }}>Xóa</button>
+        </>
+      )}
+    </div>
+  ))}
                 </div>
 
                 {/* Biểu đồ tiến trình theo nhật ký */}
@@ -835,7 +881,7 @@ const Dashboard = () => {
                   {getAchievedBadges(progress).map((badge, idx) => (
                     <div className="col-6 col-sm-4 col-md-2" key={badge.key}>
                       <div className="bg-warning bg-opacity-10 p-3 rounded-3 shadow-sm text-center">
-                        <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{width: "48px", height: "48px"}}>
+                        <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: "48px", height: "48px" }}>
                           <i className={`${badge.icon} text-warning fs-4`}></i>
                         </div>
                         <div className="small fw-medium">{badge.label}</div>
@@ -889,18 +935,18 @@ const Dashboard = () => {
 
                 {/* Lịch sử các chuỗi cai thuốc */}
                 <div className="mt-4">
-      <h5>Lịch sử các chuỗi cai thuốc</h5>
-      {quitHistory.length === 0 && <div className="text-secondary">Chưa có chuỗi nào.</div>}
-      {quitHistory.slice().reverse().map((item, idx) => (
-        <div key={idx} className="border rounded p-2 mb-2 bg-light">
-          <div><b>Chuỗi #{quitHistory.length - idx}</b></div>
-          <div>Ngày bắt đầu: <b>{item.startDate ? new Date(item.startDate).toLocaleDateString() : "?"}</b></div>
-          <div>Ngày kết thúc: <b>{item.endDate ? new Date(item.endDate).toLocaleDateString() : "?"}</b></div>
-          <div>Số ngày không hút: <b>{item.daysNoSmoke}</b></div>
-          <div>Tiền tiết kiệm: <b>{item.moneySaved.toLocaleString()}đ</b></div>
-        </div>
-      ))}
-    </div>
+                  <h5>Lịch sử các chuỗi cai thuốc</h5>
+                  {quitHistory.length === 0 && <div className="text-secondary">Chưa có chuỗi nào.</div>}
+                  {quitHistory.slice().reverse().map((item, idx) => (
+                    <div key={idx} className="border rounded p-2 mb-2 bg-light">
+                      <div><b>Chuỗi #{quitHistory.length - idx}</b></div>
+                      <div>Ngày bắt đầu: <b>{item.startDate ? new Date(item.startDate).toLocaleDateString() : "?"}</b></div>
+                      <div>Ngày kết thúc: <b>{item.endDate ? new Date(item.endDate).toLocaleDateString() : "?"}</b></div>
+                      <div>Số ngày không hút: <b>{item.daysNoSmoke}</b></div>
+                      <div>Tiền tiết kiệm: <b>{item.moneySaved.toLocaleString()}đ</b></div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
