@@ -1,13 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import api from "../../api/axios.js";
-import { toast } from "react-toastify";
 import {
   Box,
   Button,
   TextField,
   Typography,
-  Paper,
   InputAdornment,
   IconButton,
   Avatar,
@@ -16,65 +12,9 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import EmailIcon from "@mui/icons-material/Email";
 import PersonIcon from "@mui/icons-material/Person";
 import LockIcon from "@mui/icons-material/Lock";
-
-// Modern CSS for the register page
-const styles = {
-  authBg: {
-    minHeight: "100vh",
-    width: "100vw",
-    display: "flex",
-    alignItems: "center", // căn giữa theo chiều dọc
-    justifyContent: "center",
-    background: "linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%)",
-    padding: 0,
-    margin: 0,
-    overflow: "hidden",
-  },
-  registerContainer: {
-    width: 400,
-    maxWidth: "100vw",
-    padding: "32px 28px 24px 28px",
-    borderRadius: "20px",
-    boxShadow: "0 8px 32px rgba(44, 62, 80, 0.18)",
-    background: "#fff",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "10px",
-    margin: "40px 0", // cách trên dưới
-    // Bỏ minHeight và justifyContent ở đây
-  },
-  registerTitle: {
-    fontSize: "2.2rem",
-    fontWeight: 800,
-    color: "#2193b0",
-    marginBottom: "10px",
-    letterSpacing: "1.5px",
-    textAlign: "center",
-    marginTop: 0,
-  },
-  registerBtn: {
-    width: "100%",
-    padding: "12px",
-    background: "linear-gradient(90deg, #42a5f5 60%, #1976d2 100%)",
-    border: "none",
-    borderRadius: "10px",
-    color: "#fff",
-    fontSize: "18px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    marginTop: "12px",
-    marginBottom: "6px",
-    transition: "background 0.2s",
-    boxShadow: "0 2px 8px rgba(33,147,176,0.10)",
-  },
-  googleBtnWrapper: {
-    width: "100%",
-    margin: "8px 0",
-    display: "flex",
-    justifyContent: "center",
-  },
-};
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../../api/axios.js";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -124,221 +64,213 @@ export default function Register() {
   };
 
   return (
-    <div style={styles.authBg}>
-      <div style={styles.registerContainer}>
-        <Avatar
-          src="/logo192.png"
+    <Box sx={{ display: "flex", minHeight: "100vh", fontFamily: 'Poppins, sans-serif' }}>
+      {/* ✅ Bên trái: Hình ảnh & lời chào */}
+      <Box
+        sx={{
+          flex: 1,
+          backgroundImage: 'linear-gradient(rgba(33, 147, 176, 0.5), rgba(109, 213, 250, 0.5)), url("/images/backgroup_login.jpg")',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          color: "#fff",
+          display: { xs: "none", md: "flex" },
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+          p: 4,
+        }}
+      >
+        <Typography variant="h4" fontWeight="bold" mb={2}>
+          Chào mừng bạn đến với nền tảng hỗ trợ cai nghiện thuốc lá
+        </Typography>
+        <Typography variant="body1" mb={3}>
+          Đã có tài khoản?
+        </Typography>
+        <Button
+          variant="contained"
           sx={{
-            width: 64,
-            height: 64,
-            mb: 1,
-            bgcolor: "#2193b0",
-            boxShadow: "0 2px 8px #2193b033",
+            backgroundColor: "#00c6a2",
+            color: "#fff",
+            fontWeight: "bold",
+            px: 4,
+            py: 1,
+            borderRadius: 9999,
+            boxShadow: 3,
+            transition: "all 0.3s ease",
+            "&:hover": {
+              backgroundColor: "#00dfb6",
+              transform: "scale(1.05)",
+            },
           }}
-        />
-        <div style={styles.registerTitle}>Đăng ký tài khoản</div>
-        <form
-          onSubmit={handleSubmit}
-          style={{
+          onClick={() => navigate("/login")}
+        >
+          Đăng nhập ngay
+        </Button>
+      </Box>
+
+      {/* ✅ Bên phải: Form đăng ký */}
+      <Box
+        sx={{
+          flex: 1,
+          background: "#f4f7f9",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2,
+        }}
+      >
+        <Box
+          sx={{
             width: "100%",
-            margin: 0,
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px",
+            maxWidth: 500,
+            background: "#fff",
+            p: 4,
+            borderRadius: 5,
+            boxShadow: 4,
           }}
         >
-          <TextField
-            label="Email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            fullWidth
-            margin="none"
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon color="primary" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              background: "#f7fafc",
-              borderRadius: 2,
-            }}
-          />
-          <TextField
-            label="Tên đăng nhập"
-            name="userName"
-            value={form.userName}
-            onChange={handleChange}
-            fullWidth
-            margin="none"
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonIcon color="primary" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              background: "#f7fafc",
-              borderRadius: 2,
-            }}
-          />
-          <TextField
-            label="Mật khẩu"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            value={form.password}
-            onChange={handleChange}
-            fullWidth
-            margin="none"
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon color="primary" />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={handleClickShowPassword}
-                    edge="end"
-                    size="small"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              background: "#f7fafc",
-              borderRadius: 2,
-            }}
-          />
-          <TextField
-            label="Nhập lại mật khẩu"
-            name="confirmPassword"
-            type={showPassword ? "text" : "password"}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            fullWidth
-            margin="none"
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon color="primary" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              background: "#f7fafc",
-              borderRadius: 2,
-            }}
-          />
-          <TextField
-            label="Số điện thoại"
-            name="phoneNumber"
-            value={form.phoneNumber}
-            onChange={handleChange}
-            fullWidth
-            margin="none"
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <i className="fas fa-phone" style={{ color: "#2193b0" }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              background: "#f7fafc",
-              borderRadius: 2,
-            }}
-          />
-          <TextField
-            label="Địa chỉ"
-            name="address"
-            value={form.address}
-            onChange={handleChange}
-            fullWidth
-            margin="none"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <i className="fas fa-map-marker-alt" style={{ color: "#2193b0" }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              background: "#f7fafc",
-              borderRadius: 2,
-            }}
-          />
-          <TextField
-            label="Tên hiển thị"
-            name="displayName"
-            value={form.displayName}
-            onChange={handleChange}
-            fullWidth
-            margin="none"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <i className="fas fa-id-card" style={{ color: "#2193b0" }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              background: "#f7fafc",
-              borderRadius: 2,
-            }}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            sx={{
-              mt: 1,
-              borderRadius: 3,
-              fontWeight: 700,
-              fontSize: "1rem",
-              background: "linear-gradient(90deg, #42a5f5 60%, #1976d2 100%)",
-              boxShadow: 2,
-              py: 1.2,
-              "&:hover": {
-                background: "linear-gradient(90deg, #1976d2 60%, #1565c0 100%)",
-              },
-            }}
-            disabled={message}
-            fullWidth
-          >
-            Đăng ký
-          </Button>
-        </form>
-        <Box mt={2} textAlign="center" width="100%">
-          <Typography variant="body2">
-            Đã có tài khoản?{" "}
-            <Link
-              to="/login"
-              style={{
-                color: "#2193b0",
-                cursor: "pointer",
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              Đăng nhập
-            </Link>
+          <Typography variant="h5" fontWeight={700} mb={2} align="center" color="#1e1e1e">
+            Đăng ký tài khoản
           </Typography>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailIcon color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ background: "#f5f7fb", borderRadius: 2 }}
+            />
+            <TextField
+              label="Tên đăng nhập"
+              name="userName"
+              value={form.userName}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonIcon color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ background: "#f5f7fb", borderRadius: 2 }}
+            />
+            <TextField
+              label="Mật khẩu"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={form.password}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={handleClickShowPassword} edge="end">
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ background: "#f5f7fb", borderRadius: 2 }}
+            />
+            <TextField
+              label="Nhập lại mật khẩu"
+              name="confirmPassword"
+              type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ background: "#f5f7fb", borderRadius: 2 }}
+            />
+            <TextField
+              label="Số điện thoại"
+              name="phoneNumber"
+              value={form.phoneNumber}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+              sx={{ background: "#f5f7fb", borderRadius: 2 }}
+            />
+            <TextField
+              label="Địa chỉ"
+              name="address"
+              value={form.address}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              sx={{ background: "#f5f7fb", borderRadius: 2 }}
+            />
+            <TextField
+              label="Tên hiển thị"
+              name="displayName"
+              value={form.displayName}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              sx={{ background: "#f5f7fb", borderRadius: 2 }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              sx={{
+                mt: 2,
+                fontWeight: 700,
+                fontSize: "1rem",
+                background: "linear-gradient(90deg, #42a5f5 60%, #1976d2 100%)",
+                borderRadius: 9999,
+                py: 1.3,
+                "&:hover": {
+                  background: "linear-gradient(90deg, #1976d2 60%, #1565c0 100%)",
+                },
+              }}
+              disabled={message}
+            >
+              Đăng ký
+            </Button>
+          </form>
+          <Box mt={2} textAlign="center">
+            <Typography variant="body2">
+              Bạn đã có tài khoản?{" "}
+              <Link to="/login" style={{ color: "#2193b0", textDecoration: "none", fontWeight: 600 }}>
+                Đăng nhập
+              </Link>
+            </Typography>
+          </Box>
         </Box>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
