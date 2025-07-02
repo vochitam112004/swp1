@@ -33,11 +33,7 @@ export default function AdminPage() {
     handleMenuClose();
     navigate("/");
   };
-
-  const handleCoach = () => {
-    navigate("/coach");
-  }
-
+  
   return (
     <Box
       sx={{
