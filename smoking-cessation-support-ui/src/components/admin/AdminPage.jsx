@@ -14,6 +14,7 @@ import FeedbackManager from "./FeedbackManager";
 import DashboardOverview from "./DashboardOverview";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
+import SystemReportManager from "./SystemReportManager";
 
 export default function AdminPage() {
   const [tab, setTab] = useState(0);
@@ -56,26 +57,6 @@ export default function AdminPage() {
       >
         Bảng điều khiển quản trị viên
       </Typography>
-
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-        <MenuItem
-          onClick={handleCoach}
-          sx={{
-            backgroundColor: "#333",
-            color: "white",
-            borderRadius: "8px",
-            px: 2,
-            py: 1,
-            width: "fit-content",
-            fontWeight: "bold",
-            "&:hover": {
-              backgroundColor: "#ccc",
-            },
-          }}
-        >
-          Trang của coach
-        </MenuItem>
-      </Box>
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
         <MenuItem
@@ -127,6 +108,7 @@ export default function AdminPage() {
           <Tab label="Gói thành viên" />
           <Tab label="Phản hồi & Đánh giá" />
           <Tab label="Thống kê hệ thống" />
+          <Tab label="Báo cáo hệ thống" />
         </Tabs>
       </Paper>
 
@@ -135,6 +117,7 @@ export default function AdminPage() {
       {tab === 2 && <MembershipManager />}
       {tab === 3 && <FeedbackManager />}
       {tab === 4 && <DashboardOverview />}
+      {tab === 5 && <SystemReportManager />}
     </Box>
   );
 }
