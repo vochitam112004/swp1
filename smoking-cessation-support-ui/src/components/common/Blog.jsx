@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import BlogDetailModal from "./BlogDetail";
 import { toast } from "react-toastify";
 import "../../css/Blog.css";
+import { Button } from "@mui/material";
 
 function removeVietnameseTones(str) {
   return str
@@ -71,13 +72,13 @@ export default function Blog() {
   );
 
   return (
-    <div className="blog-container">
-      <h1 className="blog-title">Danh sách bài viết Blog</h1>
+    <div className="blog">
+      <h1 className="blog__title">Danh sách bài viết Blog</h1>
 
       {token && (
-        <div style={{ marginBottom: 16 }}>
-          <Link to="/blog/create">
-            <button className="blog-button">+ Đăng bài mới</button>
+        <div className="blog__new-post">
+          <Link to="/blog/create" className="blog__new-post-link">
+            <Button className="blog__new-post-button">+ Đăng bài mới</Button>
           </Link>
         </div>
       )}
@@ -90,40 +91,44 @@ export default function Blog() {
           setSearch(e.target.value);
           setPage(1);
         }}
-        className="blog-search"
+        className="blog__search"
       />
 
       {loading ? (
-        <div>Đang tải bài viết...</div>
+        <div className="blog__loading">Đang tải bài viết...</div>
       ) : error ? (
-        <div style={{ color: "red" }}>❌ {error}</div>
+        <div className="blog__error">❌ {error}</div>
       ) : filteredPosts.length === 0 ? (
-        <div>
+        <div className="blog__empty">
           {search ? "Không tìm thấy bài viết phù hợp." : "Chưa có bài viết nào."}
         </div>
       ) : (
-        <div className="blog-list">
+        <div className="blog__list">
           {paginatedPosts.map((post, index) => (
-            <div className="blog-item" key={index} onClick={() => setDetail(post)}>
-              <div className="blog-content">
-                <h2
-                  className="blog-post-title clickable"
-                >
+            <div
+              className="blog__item"
+              key={index}
+              onClick={() => setDetail(post)}
+            >
+              <div className="blog__content">
+                <h2 className="blog__post-title blog__post-title--clickable">
                   {post.title || "(Không có tiêu đề)"}
                 </h2>
-                <div className="blog-meta">
-                  <span className="blog-author">{post.displayName || "Ẩn danh"}</span>{" "}
+                <div className="blog__meta">
+                  <span className="blog__author">
+                    {post.displayName || "Ẩn danh"}
+                  </span>{" "}
                   -{" "}
-                  <span className="blog-date">
+                  <span className="blog__date">
                     {new Date(post.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="blog-summary">
+                <p className="blog__summary">
                   {post.content?.slice(0, 150) || "(Không có nội dung)"}...
                 </p>
                 {token && (
                   <button
-                    className="blog-delete-button"
+                    className="blog__delete-button"
                     onClick={() => handleDelete(post.postId)}
                   >
                     Xóa
@@ -136,12 +141,13 @@ export default function Blog() {
       )}
 
       {totalPages > 1 && (
-        <div className="blog-pagination">
+        <div className="blog__pagination">
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i + 1}
               onClick={() => setPage(i + 1)}
-              className={page === i + 1 ? "active" : ""}
+              className={`blog__pagination-button ${page === i + 1 ? "blog__pagination-button--active" : ""
+                }`}
             >
               {i + 1}
             </button>
@@ -149,12 +155,8 @@ export default function Blog() {
         </div>
       )}
 
-      {detail && (
-        <BlogDetailModal
-          post={detail}
-          onClose={() => setDetail(null)}
-        />
-      )}
+      {detail && <BlogDetailModal post={detail} onClose={() => setDetail(null)} />}
     </div>
+
   );
 }

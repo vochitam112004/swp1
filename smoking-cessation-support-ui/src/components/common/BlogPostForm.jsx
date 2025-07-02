@@ -72,51 +72,49 @@ export default function BlogPostForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h2>Đăng bài mới</h2>
-      {/* ...Phần JSX của form giữ nguyên... */}
+    <form onSubmit={handleSubmit} className="blog-form">
+      <h2 className="blog-form__title">Đăng bài mới</h2>
+
       <input
         type="text"
+        className="blog-form__input"
         placeholder="Tiêu đề"
         value={title}
         onChange={e => setTitle(e.target.value)}
         required
-        style={{ width: "100%", marginBottom: 12, padding: 8, borderRadius: 4, border: "1px solid #ccc" }}
       />
+
       <textarea
+        className="blog-form__textarea"
         placeholder="Nội dung"
         value={content}
         onChange={e => setContent(e.target.value)}
         required
         rows={8}
-        style={{ width: "100%", marginBottom: 12, padding: 8, borderRadius: 4, border: "1px solid #ccc" }}
       />
-      <div style={{ marginBottom: 12 }}>
-        <label>
+
+      <div>
+        <label className="blog-form__label">
           Ảnh đại diện bài viết:
-          <input type="file" accept="image/*" onChange={handleImageChange} style={{ marginLeft: 8 }} />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="blog-form__file-input"
+          />
         </label>
+
         {preview && (
-          <div style={{ marginTop: 8 }}>
-            <img src={preview} alt="preview" style={{ maxWidth: 180, borderRadius: 8 }} />
+          <div>
+            <img src={preview} alt="preview" className="blog-form__preview" />
           </div>
         )}
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        style={{
-          background: "#1976d2",
-          color: "#fff",
-          border: "none",
-          borderRadius: 6,
-          padding: "8px 20px",
-          fontWeight: 600,
-          cursor: loading ? "not-allowed" : "pointer"
-        }}
-      >
+
+      <button type="submit" disabled={loading} className="blog-form__submit">
         {loading ? "Đang đăng..." : "Đăng bài"}
       </button>
     </form>
+
   );
 }

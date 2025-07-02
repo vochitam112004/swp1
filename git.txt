@@ -1,0 +1,19 @@
+git init
+git add .
+git commit -m "Fix conflict"
+git remote add origin https://github.com/vochitam112004/swp1.git
+
+git pull origin main --allow-unrelated-histories
+
+git pull origin main --rebase (lấy code mới nhất về máy)
+git push -u origin main        (đẩy code mới nhất lên github)
+
+
+
+npm create vite@latest
+cd 
+npm install
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+npm install axios react-router-dom
+

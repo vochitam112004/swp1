@@ -74,8 +74,8 @@ const Navigation = () => {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
-              <MenuItem onClick={handleProfile}>Xem hồ sơ</MenuItem>
-              <MenuItem onClick={() => { navigate("/dashboard"); handleMenuClose(); }}>Dashboard cá nhân</MenuItem>
+              <MenuItem onClick={handleProfile}>Thông tin cá nhân</MenuItem>
+              <MenuItem onClick={() => { navigate("/dashboard"); handleMenuClose(); }}>Trung tâm người dùng</MenuItem>
               <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
             </Menu>
           </>
