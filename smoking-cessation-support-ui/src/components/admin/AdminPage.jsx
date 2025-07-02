@@ -14,6 +14,7 @@ import FeedbackManager from "./FeedbackManager";
 import DashboardOverview from "./DashboardOverview";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
+import SystemReportManager from "./SystemReportManager";
 
 export default function AdminPage() {
   const [tab, setTab] = useState(0);
@@ -103,6 +104,7 @@ export default function AdminPage() {
           <Tab label="Gói thành viên" />
           <Tab label="Phản hồi & Đánh giá" />
           <Tab label="Thống kê hệ thống" />
+          <Tab label="Báo cáo hệ thống" />
         </Tabs>
       </Paper>
 
@@ -111,6 +113,7 @@ export default function AdminPage() {
       {tab === 2 && <MembershipManager />}
       {tab === 3 && <FeedbackManager />}
       {tab === 4 && <DashboardOverview />}
+      {tab === 5 && <SystemReportManager />}
     </Box>
   );
 }

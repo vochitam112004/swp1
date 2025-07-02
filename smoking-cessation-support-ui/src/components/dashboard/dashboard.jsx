@@ -14,6 +14,7 @@ import {
 } from "chart.js";
 import { saveAs } from "file-saver";
 import api from "../../api/axios";
+import SystemReportForm from "../common/SystemReportForm";
 
 ChartJS.register(
   CategoryScale,
@@ -401,6 +402,11 @@ const Dashboard = () => {
             <li className="nav-item">
               <button className={`nav-link ${activeTab === "report" ? "active" : ""}`} onClick={() => setActiveTab("report")}>
                 <i className="fas fa-chart-bar me-2"></i>Báo cáo nâng cao
+              </button>
+            </li>
+            <li className="nav-item">
+              <button className={`nav-link ${activeTab === "systemreport" ? "active" : ""}`} onClick={() => setActiveTab("systemreport")}>
+                <i className="fas fa-flag me-2"></i>Báo cáo hệ thống
               </button>
             </li>
           </ul>
@@ -947,6 +953,11 @@ const Dashboard = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+            {activeTab === "systemreport" && (
+              <div>
+                <SystemReportForm />
               </div>
             )}
           </div>
