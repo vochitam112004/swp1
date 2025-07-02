@@ -98,9 +98,17 @@ export default function Login() {
           <Typography variant="h6" fontWeight={700} mb={2}>
             Xin chào, {user.username}
           </Typography>
-          <Button variant="outlined" color="error" onClick={logout} fullWidth>
-            Đăng xuất
-          </Button>
+         <Button
+  variant="outlined"
+  color="error"
+  onClick={() => {
+    logout();
+    navigate("/");
+  }}
+  fullWidth
+>
+  Đăng xuất
+</Button>
         </Box>
       </Box>
     );
