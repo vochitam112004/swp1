@@ -1,60 +1,50 @@
-import { Card, CardContent, Typography, Button, Box, Grid, Chip } from "@mui/material";
+import { Card, CardContent, Typography, Button, Box, Grid, Chip, CircularProgress } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
-const plans = [
-  {
-    name: "Cơ bản",
-    price: "Miễn phí",
-    color: "secondary",
-    features: [
-      { text: "Theo dõi tình trạng hút thuốc", included: true },
-      { text: "Kế hoạch cai thuốc cơ bản", included: true },
-      { text: "Thống kê cơ bản", included: true },
-      { text: "Hỗ trợ từ chuyên gia", included: false },
-      { text: "Kế hoạch nâng cao", included: false },
-    ],
-    button: { text: "Sử dụng miễn phí", variant: "outlined", color: "secondary" },
-  },
-  {
-    name: "Premium",
-    price: "199,000đ",
-    color: "primary",
-    features: [
-      { text: "Tất cả tính năng gói Cơ bản", included: true },
-      { text: "Kế hoạch cai thuốc nâng cao", included: true },
-      { text: "Nhắc nhở và động viên tức thì", included: true },
-      { text: "2 buổi tư vấn với chuyên gia/tháng", included: true },
-      { text: "Theo dõi sức khỏe chi tiết", included: true },
-    ],
-    button: { text: "Đăng ký ngay", variant: "contained", color: "primary" },
-    chip: "Phổ biến",
-  },
-  {
-    name: "VIP",
-    price: "499,000đ",
-    color: "error",
-    features: [
-      { text: "Tất cả tính năng gói Premium", included: true },
-      { text: "5 buổi tư vấn với chuyên gia/tháng", included: true },
-      { text: "Hỗ trợ 24/7 với huấn luyện viên", included: true },
-      { text: "Kế hoạch cá nhân hóa cao", included: true },
-      { text: "Phân tích sức khỏe chuyên sâu", included: true },
-    ],
-    button: { text: "Đăng ký VIP", variant: "contained", color: "error" },
-  },
-];
+import { useEffect, useState } from "react";
 
 const Membership = () => {
-  const navigate = useNavigate(); // Thêm dòng này
+  const navigate = useNavigate();
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [paid, setPaid] = useState(localStorage.getItem("membershipPaid") === "true");
+
+  useEffect(() => {
+    fetch("/api/memberships") // Đổi endpoint cho đúng backend của bạn
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Membership plans:", data);
+        setPlans(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const handleSelect = (plan) => {
     toast.success(`Bạn đã chọn gói "${plan.name}"!`);
-    // Nếu muốn truyền tên gói sang trang payment, có thể dùng navigate("/payment?plan=Premium")
+    localStorage.setItem("membershipPaid", "true"); // Lưu trạng thái đã thanh toán
     navigate("/payment");
   };
+
+  if (paid) {
+    return (
+      <Box sx={{ textAlign: "center", py: 8 }}>
+        <Typography variant="h5" color="primary">
+          Bạn đã đăng ký gói thành viên!
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ bgcolor: "#f8fafc", py: 8 }}>
@@ -107,11 +97,7 @@ const Membership = () => {
                     )}
                   </Typography>
                   <Typography color="text.secondary" mb={2} mt={1}>
-                    {plan.name === "Cơ bản"
-                      ? "Bắt đầu hành trình cai thuốc"
-                      : plan.name === "Premium"
-                      ? "Tất cả tính năng hỗ trợ tốt nhất"
-                      : "Hỗ trợ tối đa từ chuyên gia"}
+                    {plan.description}
                   </Typography>
                   <Box component="ul" sx={{ listStyle: "none", p: 0, mb: 3, width: "100%" }}>
                     {plan.features.map((f, i) => (

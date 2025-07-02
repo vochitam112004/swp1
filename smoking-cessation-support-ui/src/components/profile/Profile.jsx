@@ -89,23 +89,27 @@ export default function Profile() {
   };
 
   const handleAvatarChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !file.type.startsWith("image/")) {
-      toast.error("Vui lòng chọn file ảnh!");
-      return;
-    }
+  const file = e.target.files[0];
+  if (!file || !file.type.startsWith("image/")) {
+    toast.error("Vui lòng chọn file ảnh!");
+    return;
+  }
+  try {
+    // 1. Upload ảnh lên server để lấy URL
     const formData = new FormData();
-    formData.append("avatar", file);
-    try {
-      const res = await api.put("/User/My-Update", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setProfile({ ...profile, avatarUrl: res.data.avatar });
-      toast.success("Cập nhật ảnh đại diện thành công!");
-    } catch {
-      toast.error("Cập nhật ảnh đại diện thất bại!");
-    }
-  };
+    formData.append("file", file);
+    const uploadRes = await api.post("/Upload/image", formData);
+    const imageUrl = uploadRes.data.url;
+    if (!imageUrl) throw new Error("Không lấy được URL ảnh!");
+
+    // 2. Gửi URL ảnh lên API cập nhật profile
+    const updateRes = await api.put("/User/My-Update", { avatarUrl: imageUrl });
+    setProfile({ ...profile, avatarUrl: imageUrl });
+    toast.success("Cập nhật ảnh đại diện thành công!");
+  } catch (err) {
+    toast.error("Cập nhật ảnh đại diện thất bại!");
+  }
+};
 
   if (!profile) return <div>Đang tải...</div>;
 
