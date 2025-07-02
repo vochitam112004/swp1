@@ -75,6 +75,7 @@ const Navigation = () => {
               onClose={handleMenuClose}
             >
               <MenuItem onClick={handleProfile}>Xem hồ sơ</MenuItem>
+              <MenuItem onClick={() => { navigate("/dashboard"); handleMenuClose(); }}>Dashboard cá nhân</MenuItem>
               <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
             </Menu>
           </>
