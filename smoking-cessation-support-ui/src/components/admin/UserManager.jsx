@@ -1,22 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, List, ListItem, ListItemText, Button } from "@mui/material";
+import { Box, Typography, List, ListItem, ListItemText, IconButton, Stack } from "@mui/material";
 import api from "../../api/axios";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function UserManager() {
   const [users, setUsers] = useState([]);
 
   const fetchUsers = async () => {
     try {
-      const res = await api.get("/Admin/user-list");
+      const res = await api.get("/User/Get-All-User");
+      console.log(res.data)
       setUsers(res.data);
     } catch {
       console.error("Không lấy được danh sách người dùng");
     }
-  };
-
-  const handleBan = async (id) => {
-    await api.patch(`/Admin/ban-user/${id}`);
-    fetchUsers();
   };
 
   const handleDelete = async (id) => {
@@ -24,7 +21,7 @@ export default function UserManager() {
     if (!confirmed) return;
 
     try {
-      await api.delete(`/Admin/delete-user/${id}`);
+      await api.delete(`/User/${id}`);
       fetchUsers();
     } catch {
       console.error("Xóa người dùng thất bại");
@@ -35,11 +32,7 @@ export default function UserManager() {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-   return (
+  return (
     <Box>
       <Typography variant="h6" mb={2}>
         Quản lý người dùng
@@ -50,20 +43,13 @@ export default function UserManager() {
             key={user.userId}
             secondaryAction={
               <Stack direction="row" spacing={1}>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => handleBan(user.userId)}
-                >
-                  Ban
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="warning"
+                <IconButton
+                  edge="end"
+                  aria-label="delete"
                   onClick={() => handleDelete(user.userId)}
                 >
-                  Xóa
-                </Button>
+                  <DeleteIcon color="error" />
+                </IconButton>
               </Stack>
             }
           >
