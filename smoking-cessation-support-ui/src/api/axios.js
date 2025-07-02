@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://0a89-113-173-227-8.ngrok-free.app/api",// Thay bằng base URL backend của bạn
-
+  baseURL: "https://72bb-113-173-227-8.ngrok-free.app/api",// Thay bằng base URL backend của bạn
 });
 
 // Interceptor để tự gắn token vào header
