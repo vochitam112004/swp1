@@ -16,6 +16,7 @@ import UserPlans from "./UserPlans";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Profile from "../profile/Profile";
+import "../../css/Coach.css"; 
 
 export default function CoachDashboard() {
   const [tab, setTab] = useState(0);
@@ -43,19 +44,20 @@ export default function CoachDashboard() {
 
   const handleProfile = () => {
     handleMenuClose();
-    setTab(4); 
+    setTab(4);
   };
 
   return (
-    <Box p={3}>
-      <Typography variant="h4" mb={2} color="secondary">
+    <Box className="coach-container">
+      <div className="coach-title" variant="h4" color="secondary">
         Trang huấn luyện viên
-      </Typography>
+      </div>
 
-      <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
+      <Box className="coach-header">
         <Avatar
           src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || "")}`}
           alt={user?.username}
+          className="coach-avatar"
           sx={{ cursor: "pointer" }}
           onClick={handleAvatarClick}
         />
@@ -63,27 +65,28 @@ export default function CoachDashboard() {
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
+          className="coach-menu"
         >
           <MenuItem onClick={handleProfile}>Xem hồ sơ</MenuItem>
           <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
         </Menu>
       </Box>
 
-      <Paper elevation={3} sx={{ mb: 2 }}>
+      <Paper elevation={3} className="coach-tabs">
         <Tabs value={tab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
           <Tab label="Người dùng được phân công" />
           <Tab label="Tiến trình & Sức khỏe" />
           <Tab label="Tư vấn cá nhân" />
           <Tab label="Huy hiệu động viên" />
-          <Tab label="Hồ sơ huấn luyện viên"/>
+          <Tab label="Hồ sơ huấn luyện viên" />
         </Tabs>
       </Paper>
 
-      {tab === 0 && <AssignedUsers />}
-      {tab === 1 && <UserProgress />}
-      {tab === 2 && <SendAdvice />}
-      {tab === 3 && <UserPlans />}
-      {tab === 4 && <Profile />}
+      {tab === 0 && <div className="coach-tab-panel"><AssignedUsers /></div>}
+      {tab === 1 && <div className="coach-tab-panel"><UserProgress /></div>}
+      {tab === 2 && <div className="coach-tab-panel"><SendAdvice /></div>}
+      {tab === 3 && <div className="coach-tab-panel"><UserPlans /></div>}
+      {tab === 4 && <div className="coach-tab-panel"><Profile /></div>}
     </Box>
   );
 }

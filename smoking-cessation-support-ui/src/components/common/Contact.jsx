@@ -13,7 +13,7 @@ export default function Contact() {
           Thông tin liên hệ
         </Typography>
 
-        <Paper className="contact-info" elevation={0}>
+        <div className="contact-info" elevation={0}>
           <Box className="contact-row">
             <PhoneIcon sx={{ mr: 1 }} />
             <Typography>SĐT: 0889 462 565</Typography>
@@ -31,18 +31,19 @@ export default function Contact() {
             <LocationOnIcon sx={{ mr: 1 }} />
             <Typography>Địa chỉ: 123 Đường Nguyễn Văn Cừ, Quận 5, TP.HCM</Typography>
           </Box>
-        </Paper>
+        </div>
 
         <div className="map-container">
           <iframe
-            title="Google Map"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.2133513641695!2d106.67998397587448!3d10.794800089354314!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752930e41647cd%3A0x354cce3154c2e9e3!2zMTIzIMSQLiBOZ3V54buFbiBWxINuIEPGrSwgUXXhuq1uIDUsIFF14bqtbiAxLCBUaOG7pyBUaOG6p24gSG8gQ2jDrSBNaW5oLCBWaWV0bmFt!5e0!3m2!1sen!2s!4v1688356560000!5m2!1sen!2s"
+            title="VNUHCM Map"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10546.759791708197!2d106.79153537636185!3d10.8673702347461!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3174d8a6b19d6763%3A0x143c54525028b2e!2sVNUHCM%20Student%20Cultural%20House!5e0!3m2!1sen!2s!4v1751524188705!5m2!1sen!2s"
             width="100%"
-            height="350"
+            height="400"
+            style={{ border: 0 }}
             allowFullScreen=""
             loading="lazy"
-            style={{ border: 0 }}
-          />
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
         </div>
       </div>
     </div>
