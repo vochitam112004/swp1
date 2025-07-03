@@ -55,8 +55,8 @@ function AppContent() {
           />
           <Route path="/contact" element={<Contact />} />
           <Route path="/methodology" element={<Methodology />} />
-          <Route path="/research" element={<Research />} />
-          <Route path="/faq" element={<FAQ />} />
+          <Route path="research" element={<Research />} />
+          <Route path="faq" element={<FAQ />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/create" element={<BlogPostForm />} />
           <Route path="/bxh" element={<BXH />} />

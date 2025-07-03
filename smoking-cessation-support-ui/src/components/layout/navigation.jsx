@@ -11,6 +11,7 @@ import "../../css/navigation.css";
 const Navigation = () => {
   const { user, logout } = useAuth(); // ✅ context đã có user và logout
   const [anchorEl, setAnchorEl] = useState(null);
+  const [blogAnchorEl, setBlogAnchorEl] = useState(null); // Thêm state cho menu Blog
   const navigate = useNavigate();
 
   const handleAvatarClick = (event) => {
@@ -29,6 +30,12 @@ const Navigation = () => {
     handleMenuClose();
     navigate("/");
   };
+  const handleBlogMenuOpen = (event) => {
+    setBlogAnchorEl(event.currentTarget);
+  };
+  const handleBlogMenuClose = () => {
+    setBlogAnchorEl(null);
+  };
 
   return (
     <Box
@@ -39,7 +46,7 @@ const Navigation = () => {
         justifyContent: "space-between",
         py: 1.2,
         px: 4,
-        backgroundColor:  "#e2e6ea",
+        backgroundColor: "#e2e6ea",
         boxShadow: 2,
       }}
     >
@@ -48,19 +55,36 @@ const Navigation = () => {
           <img
             src="/images/logo.jpg"
             alt="Logo"
-            style={{ height: 50, marginRight: 15, verticalAlign: "middle",
-               borderRadius: 12, // ✅ Bo góc
+            style={{
+              height: 50, marginRight: 15, verticalAlign: "middle",
+              borderRadius: 12, // ✅ Bo góc
             }}
           />
           Breathe Free
         </Link>
         <Box sx={{ ml: 4, display: "flex", gap: 2 }}>
-  <Link to="/" className="nav-link">Trang chủ</Link>
-  <Link to="/blog" className="nav-link">Blog</Link>
-  <Link to="/bxh" className="nav-link">Bảng xếp hạng</Link>
-  <Link to="/membership" className="nav-link">Gói thành viên</Link>
-  <Link to="/dashboard" className="nav-link">Dữ liệu cá nhân</Link>
-</Box>
+          <Link to="/" className="nav-link">Trang chủ</Link>
+
+          <Link to="#" className="nav-link" onClick={handleBlogMenuOpen}
+            style={{ cursor: "pointer" }} // để hiện tay trỏ khi hover
+          >
+            Blog
+          </Link>
+          <Menu
+            anchorEl={blogAnchorEl}
+            open={Boolean(blogAnchorEl)}
+            onClose={handleBlogMenuClose}
+            MenuListProps={{ onMouseLeave: handleBlogMenuClose }}
+          >
+            <MenuItem component={Link} to="/blog" onClick={handleBlogMenuClose}>Blog chia sẻ</MenuItem>
+            <MenuItem component={Link} to="research" onClick={handleBlogMenuClose}>Nghiên cứu</MenuItem>
+            <MenuItem component={Link} to="faq" onClick={handleBlogMenuClose}>Câu hỏi thường gặp</MenuItem>
+          </Menu>
+
+          <Link to="/bxh" className="nav-link">Bảng xếp hạng</Link>
+          <Link to="/membership" className="nav-link">Gói thành viên</Link>
+          <Link to="/dashboard" className="nav-link">Dữ liệu cá nhân</Link>
+        </Box>
 
       </Box>
 
