@@ -1,0 +1,15 @@
+.nav-link {
+  padding: 8px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #222;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background: linear-gradient(to right, #059cfa, #bebcc2); /* pink to purple */
+  color: rgb(53, 48, 48);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
