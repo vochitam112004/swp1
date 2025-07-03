@@ -48,7 +48,6 @@ function AppContent() {
                 <StatsSection />
                 <FeaturesSection />
                 <Dashboard />
-                <Membership />
                 <Testimonials />
                 <CTASection />
               </>

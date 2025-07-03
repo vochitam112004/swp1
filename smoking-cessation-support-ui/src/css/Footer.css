@@ -8,41 +8,29 @@
     border-radius: 16px;
 }
 
-/* UserForm styles */
-.user-form-container {
-  max-width: 500px;
-  margin: 40px auto;
-  background: #fff;
-  padding: 32px;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-}
-.user-form-title {
-  color: #1976d2;
-  margin-bottom: 24px;
-}
-.user-form-button {
-  margin-top: 24px;
-  font-weight: 600;
-}
-
 /* About styles */
-.about-bg {
+.about-bg, 
+.methodology-bg,
+.research-bg {
   background: #232733;
   padding: 64px 0;
+  min-height: 65vh;
 }
-.about-container {
+.about-container, 
+.methodology-container {
   max-width: 900px;
   margin: 0 auto;
   color: #f3f4f6;
 }
-.about-paper {
+.about-paper,
+.methodology-paper {
   background: transparent;
   border-radius: 0;
   box-shadow: none;
   padding: 0;
 }
-.about-title {
+.about-title,
+.methodology-title {
   font-size: 2.2rem;
   font-weight: 800;
   color: #fff;
@@ -57,11 +45,13 @@
   margin-top: 40px;
   margin-bottom: 12px;
 }
-.about-list {
+.about-list,
+.methodology-list {
   padding-left: 24px;
   margin-bottom: 0;
 }
-.about-list li {
+.about-list li,
+.methodology-list li {
   font-size: 1.05rem;
   margin-bottom: 6px;
   color: #e0e0e0;
@@ -76,13 +66,149 @@
   font-weight: 700;
 }
 @media (max-width: 600px) {
-  .about-container {
+  .about-container,
+  .methodology-container {
     padding: 0 12px;
   }
-  .about-title {
+  .about-title,
+  .methodology-title {
     font-size: 1.4rem;
   }
   .about-section-title {
     font-size: 1.1rem;
   }
+
+  .research-title,
+  .faq-title {
+    font-size: 1.6rem;
+  }
+
+  .research-paper {
+    padding: 16px;
+  }
 }
+
+.research-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px;
+  color: #f3f4f6;
+}
+
+.research-title,
+.faq-title  {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 32px;
+}
+
+.research-paper {
+  background: #2f3344;
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 8px;
+  color: #e0e0e0;
+}
+
+.research-paper h6 {
+  color: #333;
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.research-paper .MuiTypography-body2 {
+  color: #b0b0b0;
+  margin-bottom: 8px;
+}
+
+.faq-bg {
+  background: #232733;
+  padding: 64px 0;
+  min-height: 65vh;
+}
+
+.faq-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px;
+  color: #f3f4f6;
+}
+
+.faq-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 32px;
+}
+
+.faq-accordion {
+  background-color: #2f3344 !important;
+  color: #e0e0e0;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.faq-accordion-summary {
+  font-weight: 600;
+  color: #fff;
+}
+
+.faq-accordion-details {
+  color: #cfcfcf;
+  font-size: 0.95rem;
+}
+
+.contact-bg {
+  background: #232733;
+  padding: 64px 0;
+}
+
+.contact-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 16px;
+  color: #f3f4f6;
+}
+
+.contact-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 32px;
+}
+
+.contact-form {
+  background: #2f3344;
+  padding: 32px;
+  border-radius: 8px;
+  color: #fff;
+}
+
+.contact-form .MuiTextField-root {
+  margin-bottom: 16px;
+}
+
+.contact-form .MuiInputBase-input,
+.contact-form .MuiInputLabel-root {
+  color: #fff;
+}
+
+.contact-form .MuiOutlinedInput-root {
+  fieldset {
+    border-color: #666;
+  }
+  &:hover fieldset {
+    border-color: #aaa;
+  }
+  &.Mui-focused fieldset {
+    border-color: #4fc3f7;
+  }
+}
+
+.contact-form button {
+  margin-top: 8px;
+}
+
+

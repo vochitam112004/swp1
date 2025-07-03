@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, Rating, TextField, Button, Typography } from "@mui/material";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
+import "../../css/Feedback.css";
 
 export default function FeedbackForm({ planId, coachId, onSubmitted }) {
   const [rating, setRating] = useState(5);
@@ -16,7 +17,7 @@ export default function FeedbackForm({ planId, coachId, onSubmitted }) {
     }
     setLoading(true);
     try {
-      await api.post("/feedback", { planId, coachId, rating, comment }); // thêm coachId
+      await api.post("/feedback", { planId, coachId, rating, comment });
       setComment("");
       setRating(5);
       toast.success("Cảm ơn bạn đã đánh giá!");
@@ -32,12 +33,12 @@ export default function FeedbackForm({ planId, coachId, onSubmitted }) {
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{ maxWidth: 500, mx: "auto", my: 2 }}
+      className="feedback-form-container"
     >
-      <Typography variant="h6" mb={1}>
+      <Typography variant="h6" className="feedback-form-title">
         Đánh giá & Nhận xét
       </Typography>
-      <Box display="flex" alignItems="center" mb={2}>
+      <Box className="feedback-form-rating">
         <Typography mr={2}>Đánh giá:</Typography>
         <Rating value={rating} onChange={(_, v) => setRating(v)} />
       </Box>
@@ -48,9 +49,15 @@ export default function FeedbackForm({ planId, coachId, onSubmitted }) {
         fullWidth
         multiline
         minRows={3}
+        className="feedback-form-textfield"
         sx={{ mb: 2 }}
       />
-      <Button type="submit" variant="contained" disabled={loading}>
+      <Button
+        type="submit"
+        variant="contained"
+        disabled={loading}
+        className="feedback-form-button"
+      >
         {loading ? "Đang gửi..." : "Gửi đánh giá"}
       </Button>
     </Box>
