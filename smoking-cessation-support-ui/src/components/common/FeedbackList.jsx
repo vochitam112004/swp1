@@ -24,8 +24,11 @@ export default function FeedbackList({ coachId }) {
   return (
     <Box sx={{ maxWidth: 600, mx: "auto", mt: 4 }}>
       <Typography variant="h5" fontWeight={700} mb={3}>
-        <h4>Đánh giá từ người dùng</h4>
+        <Typography variant="h4" component="span">
+          Đánh giá từ người dùng
+        </Typography>
       </Typography>
+
       {feedbacks.length === 0 ? (
         <Typography>Chưa có đánh giá nào.</Typography>
       ) : (
