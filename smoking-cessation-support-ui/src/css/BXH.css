@@ -1,25 +1,40 @@
+/* BXH.css */
 .bxh-container {
-  max-width: 600px;
-  margin: 40px auto;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-  padding: 32px 24px;
+  background: #f5f7fa;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px #0001;
+  padding: 40px 20px;
+  margin: 32px auto;
+  max-width: 800px;
+}
+
+.bxh-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1976d2;
+  margin-bottom: 32px;
   text-align: center;
 }
-.bxh-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 16px;
+
+.bxh-table th,
+.bxh-table td {
+  font-size: 1.1rem;
+  padding: 18px 12px;
 }
-.bxh-table th, .bxh-table td {
-  border: 1px solid #e0e0e0;
-  padding: 10px;
+
+.bxh-table .MuiAvatar-root {
+  width: 48px;
+  height: 48px;
+  border: 2px solid #1976d2;
+  margin-right: 12px;
 }
-.bxh-table th {
-  background: #1976d2;
-  color: #fff;
+
+.bxh-table .top1 {
+  background: linear-gradient(90deg, #fffbe6 60%, #fffde7 100%);
 }
-.bxh-table tr:nth-child(even) {
-  background: #f7fafd;
+.bxh-table .top2 {
+  background: linear-gradient(90deg, #f0f0f0 60%, #f7f7f7 100%);
+}
+.bxh-table .top3 {
+  background: linear-gradient(90deg, #fbeee6 60%, #fdf7e7 100%);
 }

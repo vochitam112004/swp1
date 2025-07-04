@@ -8,7 +8,6 @@ import HeroSection from "./components/layout/heroSection";
 import StatsSection from "./components/dashboard/statsSection";
 import FeaturesSection from "./components/dashboard/featuresSection";
 import Dashboard from "./components/dashboard/dashboard";
-import Membership from "./components/dashboard/membership";
 import Testimonials from "./components/dashboard/testimonials";
 import CTASection from "./components/layout/CTASection";
 import Login from "./components/auth/Login";
@@ -29,6 +28,7 @@ import Contact from "./components/common/Contact";
 import Methodology from "./components/common/Methodology";
 import Research from "./components/common/Research";
 import FAQ from "./components/common/FAQ";
+import MembershipList from "./components/dashboard/membership";
 
 function AppContent() {
   const location = useLocation();
@@ -70,7 +70,7 @@ function AppContent() {
             }
           />
           <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="/membership" element={<Membership />} />
+          <Route path="/membership" element={<MembershipList />} />
           <Route path="/register" element={<Register />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/about" element={<About />} />
