@@ -27,7 +27,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (user.userType != "Member") return;
-    api.get("/membership/history")
+    api.get("/UserMemberShipHistory/my-history")
       .then(res => setHistory(Array.isArray(res.data) ? res.data : []))
       .catch(() => toast.error("Không lấy được lịch sử gói thành viên!"));
   }, [user]);
@@ -48,6 +48,7 @@ export default function Profile() {
       setProfile({ ...profile, ...form });
       setEdit(false);
     } catch (error) {
+      console.error("Error updating profile:", error);
       toast.error("Cập nhật thất bại!");
     }
   };

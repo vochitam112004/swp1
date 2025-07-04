@@ -43,23 +43,22 @@
   padding: 24px;
   background-color: #f9f9f9;
   border-radius: 12px;
-  margin-bottom: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.manage-coach__input {
-  background-color: #fff;
-  border-radius: 8px;
+.manage-coach__input input {
+  background-color: white;
+  border-radius: 6px;
 }
 
 .manage-coach__button {
-  background-color: #1976d2;
-  color: white;
-  padding: 10px 24px;
-  border-radius: 8px;
+  background-color: #1976d2 !important;
+  font-weight: 600;
+  text-transform: none;
 }
 
 .manage-coach__button:hover {
-  background-color: #115293;
+  background-color: #1565c0 !important;
 }
 
 .manage-coach__list {
@@ -72,4 +71,39 @@
 
 .manage-coach__item {
   margin-bottom: 8px;
+}
+/* Modal CSS */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); /* nền mờ */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1300; /* cao hơn app */
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+/* Animation nhẹ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

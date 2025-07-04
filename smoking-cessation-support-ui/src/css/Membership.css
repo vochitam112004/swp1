@@ -1,0 +1,95 @@
+.membership-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  transition: 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 16px;
+  text-align: center;
+  background-color: white;
+  height: 100%;
+}
+
+.membership-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+}
+
+.membership-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.title-free {
+  color: #7b1fa2;
+}
+
+.title-premium {
+  color: #1976d2;
+}
+
+.title-vip {
+  color: #d32f2f;
+}
+
+.membership-price {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+.price-sub {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  text-align: left;
+}
+
+.features li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.features li svg {
+  margin-right: 8px;
+}
+
+.icon-yes {
+  color: #4caf50;
+}
+
+.icon-no {
+  color: #f44336;
+}
+
+.action-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 0;
+  font-weight: bold;
+}
+
+.btn-free {
+  background-color: #9e9e9e !important;
+  color: white !important;
+}
+
+.btn-premium {
+  background-color: #1976d2 !important;
+  color: white !important;
+}
+
+.btn-vip {
+  background-color: #d32f2f !important;
+  color: white !important;
+}

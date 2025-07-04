@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, Button, TextField, Typography, Paper } from "@mui/material";
 import { toast } from "react-toastify";
 import api from "../../api/axios";
+import { useNavigate } from "react-router-dom";
 
 export default function ForgotPassword() {
   const [step, setStep] = useState(1); // 1: email, 2: otp, 3: new password
@@ -9,7 +10,7 @@ export default function ForgotPassword() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
+  const navigate = useNavigate();
   const handleSendOTP = async () => {
     if (!email) return toast.error("Vui lòng nhập email!");
     try {
@@ -24,7 +25,7 @@ export default function ForgotPassword() {
   const handleVerifyOTP = async () => {
     if (!otp) return toast.error("Vui lòng nhập mã OTP!");
     try {
-      await api.post("/Auth/verify-otp", { otpCode: otp }); // ⬅️ bạn đổi path theo backend
+      await api.post("/Auth/verify-otp", {email, otpCode: otp }); // ⬅️ bạn đổi path theo backend
       toast.success("Xác thực OTP thành công!");
       setStep(3);
     } catch {
@@ -43,6 +44,7 @@ export default function ForgotPassword() {
       setOtp("");
       setNewPassword("");
       setConfirmPassword("");
+      navigate("/login");
     } catch {
       toast.error("Không thể đặt lại mật khẩu!");
     }

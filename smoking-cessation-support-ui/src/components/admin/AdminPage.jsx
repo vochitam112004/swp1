@@ -16,6 +16,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import SystemReportManager from "./SystemReportManager";
 
+
 export default function AdminPage() {
   const [tab, setTab] = useState(0);
   const { logout } = useAuth();
