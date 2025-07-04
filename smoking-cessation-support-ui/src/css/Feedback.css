@@ -1,0 +1,30 @@
+.feedback-form-container {
+  background: #f8fafc;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #0001;
+  padding: 32px 24px;
+  margin: 24px auto;
+  max-width: 500px;
+}
+
+.feedback-form-title {
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 12px;
+}
+
+.feedback-form-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.feedback-form-textfield textarea {
+  font-size: 16px;
+}
+
+.feedback-form-button {
+  margin-top: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}

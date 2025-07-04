@@ -2,7 +2,7 @@ import FeedbackForm from "../common/FeedbackForm";
 import FeedbackList from "../common/FeedbackList";
 
 const Testimonials = () => (
-  <div className="bg-white py-5">
+  <div className="bg-light py-5">
     <div className="container">
       <div className="text-center mb-5">
         <h2 className="text-primary text-uppercase fw-semibold fs-6">
@@ -107,9 +107,13 @@ const Testimonials = () => (
           </div>
         </div>
       </div>
-      <div className="mt-5">
-        <FeedbackForm />
-        <FeedbackList />
+      <div className="row mt-5">
+        <div className="col-md-5 mb-4 mb-md-0">
+          <FeedbackForm />
+        </div>
+        <div className="col-md-7">
+          <FeedbackList />
+        </div>
       </div>
     </div>
   </div>

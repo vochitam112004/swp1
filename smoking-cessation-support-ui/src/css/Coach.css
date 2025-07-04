@@ -1,0 +1,57 @@
+.coach-container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.coach-title {
+  font-weight: bold;
+  font-size: 1.8rem;
+  color: #1976d2;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.coach-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.coach-avatar {
+  cursor: pointer;
+}
+
+.coach-menu .MuiMenu-paper {
+  border-radius: 8px;
+}
+
+.coach-tabs {
+  background-color: #fff;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  padding: 8px 16px;
+}
+
+.coach-tab-panel {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+/* Optional: section for content under each tab */
+.coach-section-title {
+  font-weight: bold;
+  font-size: 1.25rem;
+  color: #1976d2;
+  margin-bottom: 16px;
+}
+
+.coach-card {
+  background-color: #fafafa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}

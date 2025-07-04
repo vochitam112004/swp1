@@ -6,10 +6,12 @@ import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useAuth } from "../auth/AuthContext"; // ✅ dùng context
+import "../../css/navigation.css";
 
 const Navigation = () => {
   const { user, logout } = useAuth(); // ✅ context đã có user và logout
   const [anchorEl, setAnchorEl] = useState(null);
+  const [blogAnchorEl, setBlogAnchorEl] = useState(null); // Thêm state cho menu Blog
   const navigate = useNavigate();
 
   const handleAvatarClick = (event) => {
@@ -28,6 +30,12 @@ const Navigation = () => {
     handleMenuClose();
     navigate("/");
   };
+  const handleBlogMenuOpen = (event) => {
+    setBlogAnchorEl(event.currentTarget);
+  };
+  const handleBlogMenuClose = () => {
+    setBlogAnchorEl(null);
+  };
 
   return (
     <Box
@@ -36,10 +44,10 @@ const Navigation = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        py: 2,
+        py: 1.2,
         px: 4,
-        bgcolor: "#fff",
-        boxShadow: 1,
+        backgroundColor: "#e2e6ea",
+        boxShadow: 2,
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -47,17 +55,37 @@ const Navigation = () => {
           <img
             src="/images/logo.jpg"
             alt="Logo"
-            style={{ height: 50, marginRight: 15, verticalAlign: "middle" }}
+            style={{
+              height: 50, marginRight: 15, verticalAlign: "middle",
+              borderRadius: 12, // ✅ Bo góc
+            }}
           />
           Breathe Free
         </Link>
-        <Box sx={{ ml: 4, display: "flex", gap: 3 }}>
-          <Link to="/" style={{ textDecoration: "none", color: "#222", fontWeight: 500 }}>Trang chủ</Link>
-          <Link to="/blog" style={{ textDecoration: "none", color: "#222", fontWeight: 500 }}>Blog</Link>
-          <Link to="/bxh" style={{ textDecoration: "none", color: "#222", fontWeight: 500 }}>Bảng xếp hạng</Link>
-          <Link to="/membership" style={{ textDecoration: "none", color: "#222", fontWeight: 500 }}>Gói thành viên</Link>
-          <Link to="/dashboard" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 600 }}>Dữ liệu cá nhân</Link>
+        <Box sx={{ ml: 4, display: "flex", gap: 2 }}>
+          <Link to="/" className="nav-link">Trang chủ</Link>
+
+          <Link to="#" className="nav-link" onClick={handleBlogMenuOpen}
+            style={{ cursor: "pointer" }} // để hiện tay trỏ khi hover
+          >
+            Blog
+          </Link>
+          <Menu
+            anchorEl={blogAnchorEl}
+            open={Boolean(blogAnchorEl)}
+            onClose={handleBlogMenuClose}
+            MenuListProps={{ onMouseLeave: handleBlogMenuClose }}
+          >
+            <MenuItem component={Link} to="/blog" onClick={handleBlogMenuClose}>Blog chia sẻ</MenuItem>
+            <MenuItem component={Link} to="/research" onClick={handleBlogMenuClose}>Nghiên cứu</MenuItem>
+            <MenuItem component={Link} to="/faq" onClick={handleBlogMenuClose}>Câu hỏi thường gặp</MenuItem>
+          </Menu>
+
+          <Link to="/bxh" className="nav-link">Bảng xếp hạng</Link>
+          <Link to="/membership" className="nav-link">Gói thành viên</Link>
+          <Link to="/dashboard" className="nav-link">Dữ liệu cá nhân</Link>
         </Box>
+
       </Box>
 
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
