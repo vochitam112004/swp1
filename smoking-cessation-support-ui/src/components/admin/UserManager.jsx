@@ -12,6 +12,7 @@ export default function UserManager() {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [editingData, setEditingData] = useState(null);
+  const [deleteUser, setDeleteUser] = useState(null);
 
   const fetchUsers = async () => {
     try {
@@ -22,12 +23,10 @@ export default function UserManager() {
     }
   };
 
-  const handleDelete = async (id) => {
-    const confirmed = window.confirm("Bạn có chắc chắn muốn xóa người dùng này?");
-    if (!confirmed) return;
-
+  const handleDelete = async (userId) => {
     try {
-      await api.delete(`/User/${id}`);
+      await api.delete(`/User/${userId}`);
+      setDeleteUser(null);
       toast.success("Xóa thành công!");
       fetchUsers();
     } catch {
@@ -75,7 +74,7 @@ export default function UserManager() {
                 <IconButton
                   edge="end"
                   aria-label="delete"
-                  onClick={() => handleDelete(user.userId)}
+                  onClick={() => setDeleteUser(user)}
                 >
                   <DeleteIcon color="error" />
                 </IconButton>
@@ -89,6 +88,30 @@ export default function UserManager() {
           </ListItem>
         ))}
       </List>
+
+      <Modal open={!!deleteUser} onClose={() => setDeleteUser(null)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "#fff",
+            p: 3,
+            borderRadius: 2,
+            boxShadow: 24,
+            minWidth: 360,
+          }}
+        >
+          <Typography variant="body1" color="error" mb={2}>
+            Bạn có chắc chắn muốn xóa <strong>{deleteUser?.displayName}</strong>?
+          </Typography>
+          <Box display="flex" justifyContent="flex-end" gap={2}>
+            <Button variant="contained" color="error" onClick={() => handleDelete(deleteUser.userId)}>Xóa</Button>
+            <Button variant="outlined" onClick={() => setDeleteUser(null)}>Hủy</Button>
+          </Box>
+        </Box>
+      </Modal>
 
       <Modal
         open={Boolean(editingUser)}

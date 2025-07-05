@@ -10,10 +10,12 @@ import {
 } from "@mui/material";
 import api from "../../api/axios";
 import "../../css/Membership.css";
+import { useNavigate } from "react-router-dom";
 
 export default function MembershipList() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.get("/MembershipPlan")
@@ -25,7 +27,7 @@ export default function MembershipList() {
   }, []);
 
   const handleSelectPlan = (planId) => {
-    window.location.href = `/payment?planId=${planId}`;
+    navigate(`/payment?planId=${planId}`);
   };
 
   if (loading) {
@@ -48,20 +50,17 @@ export default function MembershipList() {
           const isVIP = lower.includes("vip");
           const isPremium = lower.includes("premium");
 
-          const cardClass = `membership-card ${
-            isVIP ? "vip" : isPremium ? "popular" : ""
-          }`;
-          const titleClass = `membership-title ${
-            isVIP ? "title-vip" : isPremium ? "title-premium" : "title-free"
-          }`;
-          const buttonClass = `action-btn ${
-            isVIP ? "btn-vip" : isPremium ? "btn-premium" : "btn-free"
-          }`;
+          const cardClass = `membership-card ${isVIP ? "vip" : isPremium ? "popular" : ""
+            }`;
+          const titleClass = `membership-title ${isVIP ? "title-vip" : isPremium ? "title-premium" : "title-free"
+            }`;
+          const buttonClass = `action-btn ${isVIP ? "btn-vip" : isPremium ? "btn-premium" : "btn-free"
+            }`;
           const buttonText = isFree
             ? "SỬ DỤNG MIỄN PHÍ"
             : isVIP
-            ? "ĐĂNG KÝ VIP"
-            : "ĐĂNG KÝ NGAY";
+              ? "ĐĂNG KÝ VIP"
+              : "ĐĂNG KÝ NGAY";
 
           return (
             <Grid item xs={12} md={4} key={plan.planId}>
