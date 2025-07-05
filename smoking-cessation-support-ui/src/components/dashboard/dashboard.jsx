@@ -15,6 +15,7 @@ import {
 import { saveAs } from "file-saver";
 import api from "../../api/axios";
 import SystemReportForm from "../common/SystemReportForm";
+import NotificationHistory from "./NotificationHistory";
 
 ChartJS.register(
   CategoryScale,
@@ -67,10 +68,40 @@ function requestNotificationPermission() {
     Notification.requestPermission();
   }
 }
-function sendBrowserNotification(title, body) {
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(title, { body });
+function sendBrowserNotification(title, body, type = "motivation") {
+  const settings = JSON.parse(localStorage.getItem("notificationSettings") || "{}");
+  if (settings.enableBrowserNotifications === false) return;
+  if (type === "motivation" && settings.enableMotivationMessages === false) return;
+  if (type === "health" && settings.enableHealthTips === false) return;
+  if (type === "milestone" && settings.enableMilestoneNotifications === false) return;
+  if (type === "achievement" && settings.enableAchievementNotifications === false) return;
+
+  if ("Notification" in window) {
+    if (Notification.permission === "granted") {
+      new Notification(title, { body });
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          new Notification(title, { body });
+        } else {
+          toast.info(`${title}: ${body}`);
+        }
+      });
+    } else {
+      toast.info(`${title}: ${body}`);
+    }
+  } else {
+    toast.info(`${title}: ${body}`);
   }
+  // Lưu lịch sử thông báo
+  const history = JSON.parse(localStorage.getItem("notificationHistory") || "[]");
+  history.push({
+    title,
+    message: body,
+    type,
+    timestamp: Date.now(),
+  });
+  localStorage.setItem("notificationHistory", JSON.stringify(history.slice(-100)));
 }
 
 const Dashboard = () => {
@@ -958,6 +989,7 @@ const Dashboard = () => {
             {activeTab === "systemreport" && (
               <div>
                 <SystemReportForm />
+                <NotificationHistory />
               </div>
             )}
           </div>
