@@ -7,10 +7,10 @@ export default function AssignedUsers() {
 
   const fetchUsers = async () => {
     try {
-      const res = await api.get("/Coach/users-assigned");
-      setUsers(res.data);
-    } catch {
-      console.error("Lỗi khi lấy người dùng");
+      const res = await api.get("/CurrentGoal/current-goal");
+      setUsers([res.data]);
+    } catch (error) {
+      console.error("Lỗi khi lấy người dùng", error);
     }
   };
 
@@ -21,14 +21,15 @@ export default function AssignedUsers() {
   return (
     <Box>
       <Typography variant="h6" mb={2}>
-        Người dùng được phân công
+        Người dùng được giao
       </Typography>
       <List>
-        {users.map((user) => (
-          <ListItem key={user.userId}>
+        {users.map((user, index) => (
+          <ListItem key={index}>
             <ListItemText
-              primary={user.displayName}
-              secondary={`Ngày không hút: ${user.smokeFreeDays} | Tiết kiệm: ${user.moneySaved} VNĐ`}
+              primary={user.memberDisplayName}
+              secondary={`Ngày không hút: ${user.smokeFreeDays} 
+              | Tiết kiệm: ${user.totalSpenMoney} VNĐ`}
             />
           </ListItem>
         ))}
