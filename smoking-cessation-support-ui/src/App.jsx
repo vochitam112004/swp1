@@ -31,6 +31,9 @@ import FAQ from "./components/common/FAQ";
 import MembershipList from "./components/dashboard/membership";
 import ResearchDetail from "./components/common/ResearchDetail";
 import ScrollToTop from "./components/common/ScrollToTop";
+import Developers from "./components/common/Developers";
+import Chuyengia from "./components/common/chuyengia";
+import Researchers from "./components/common/Researchers";
 
 function AppContent() {
   const location = useLocation();
@@ -77,6 +80,10 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/about" element={<About />} />
+          <Route path="/chuyengia" element={<Chuyengia />} />
+          <Route path="/developers" element={<Developers />} />
+          <Route path="/researchers" element={<Researchers />} />
+        
           <Route
             path="/profile"
             element={
