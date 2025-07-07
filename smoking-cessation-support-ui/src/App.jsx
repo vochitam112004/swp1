@@ -30,6 +30,7 @@ import Research from "./components/common/Research";
 import FAQ from "./components/common/FAQ";
 import MembershipList from "./components/dashboard/membership";
 import ResearchDetail from "./components/common/ResearchDetail";
+import ScrollToTop from "./components/common/ScrollToTop";
 
 function AppContent() {
   const location = useLocation();
@@ -113,6 +114,7 @@ function AppContent() {
 function App() {
   return (
     <Router>
+       <ScrollToTop />
       <AppContent />
     </Router>
   );
