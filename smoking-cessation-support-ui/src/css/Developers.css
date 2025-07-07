@@ -70,3 +70,150 @@
   font-size: 0.95rem;
   color: #666;
 }
+
+/* chuyengia.css */
+.team-bg {
+  background: #fff;
+  padding: 40px 0;
+  text-align: center;
+}
+.team-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1976d2;
+}
+.team-desc {
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 32px;
+}
+.team-list {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.team-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  width: 210px;
+  padding: 24px 16px 16px 16px;
+  box-shadow: 0 2px 8px #0001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.team-img-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 16px;
+}
+.team-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.team-number {
+  position: absolute;
+  bottom: 8px;
+  right: -16px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.3rem;
+  padding: 6px 18px;
+  border-radius: 6px;
+  opacity: 0.95;
+}
+.team-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.team-role {
+  font-size: 0.98rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.team-desc2 {
+  font-size: 0.95rem;
+  color: #666;
+}
+/* researchers.css */
+.research-team-bg {
+  background: #fff;
+  padding: 40px 0;
+  text-align: center;
+}
+.research-team-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1976d2;
+}
+.research-team-desc {
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 32px;
+}
+.research-team-list {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.research-team-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  width: 210px;
+  padding: 24px 16px 16px 16px;
+  box-shadow: 0 2px 8px #0001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.research-team-img-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 16px;
+}
+.research-team-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.research-team-number {
+  position: absolute;
+  bottom: 8px;
+  right: -16px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.3rem;
+  padding: 6px 18px;
+  border-radius: 6px;
+  opacity: 0.95;
+}
+.research-team-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.research-team-role {
+  font-size: 0.98rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.research-team-desc2 {
+  font-size: 0.95rem;
+  color: #666;
+}
