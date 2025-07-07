@@ -29,6 +29,7 @@ import Methodology from "./components/common/Methodology";
 import Research from "./components/common/Research";
 import FAQ from "./components/common/FAQ";
 import MembershipList from "./components/dashboard/membership";
+import ResearchDetail from "./components/common/ResearchDetail";
 
 function AppContent() {
   const location = useLocation();
@@ -56,6 +57,7 @@ function AppContent() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/methodology" element={<Methodology />} />
           <Route path="/research" element={<Research />} />
+          <Route path="/research/:id" element={<ResearchDetail />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/create" element={<BlogPostForm />} />
