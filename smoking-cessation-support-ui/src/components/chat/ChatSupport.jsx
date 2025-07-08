@@ -27,18 +27,25 @@ const ChatSupport = ({ targetUserId, onClose }) => {
   const role = getUserRole();
 
   useEffect(() => {
-    if (!targetUserId) return;
+    const fetchHistory = async () => {
+      try {
+        const url =
+          role === "coach" && targetUserId
+            ? `/chat/history/${targetUserId}`
+            : `/chat/history`; // user hoặc coach không chọn ai thì lấy của mình
 
-    api.get(`/chat/history/${targetUserId}`) // ✅ đổi endpoint
-      .then((res) => {
+        const res = await api.get(url);
         setMessages(res.data.length ? res.data : [
           { from: "support", text: "Xin chào! Tôi có thể giúp gì cho bạn?" }
         ]);
-      })
-      .catch(() => {
+      } catch {
         setMessages([{ from: "support", text: "Không thể tải tin nhắn." }]);
-      });
-  }, [targetUserId]);
+      }
+    };
+
+    fetchHistory();
+  }, [targetUserId, role]);
+
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -67,7 +74,7 @@ const ChatSupport = ({ targetUserId, onClose }) => {
     }
   };
 
-  return targetUserId ? (
+  return (
     <div style={styles.chatContainer}>
       <div style={styles.header}>
         Hộp thư huấn luyện viên
@@ -112,7 +119,7 @@ const ChatSupport = ({ targetUserId, onClose }) => {
         </button>
       </form>
     </div>
-  ) : null;
+  );
 };
 
 const styles = {
