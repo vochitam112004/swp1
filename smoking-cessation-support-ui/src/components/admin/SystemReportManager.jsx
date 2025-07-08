@@ -30,7 +30,6 @@ export default function SystemReportManager() {
         <table className="table table-bordered">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Người gửi</th>
               <th>Loại</th>
               <th>Thời gian</th>
@@ -39,11 +38,10 @@ export default function SystemReportManager() {
           </thead>
           <tbody>
             {reports.map(r => (
-              <tr key={r.report_id}>
-                <td>{r.report_id}</td>
-                <td>{r.reporter_id}</td>
-                <td>{r.report_type}</td>
-                <td>{new Date(r.reported_at).toLocaleString()}</td>
+              <tr key={r.reportId}>
+                <td>{r.nameReporter}</td>
+                <td>{r.reportType}</td>
+                <td>{new Date(r.reportedAt).toLocaleString()}</td>
                 <td>{r.details}</td>
               </tr>
             ))}

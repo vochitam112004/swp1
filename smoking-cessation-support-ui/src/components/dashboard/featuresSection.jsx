@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom';
+import { Button } from '@mui/material';
+
 const FeaturesSection = () => (
   <div className="py-5 bg-light">
     <div className="container">
@@ -11,6 +14,10 @@ const FeaturesSection = () => (
         <p className="mt-3 mx-auto fs-5 text-secondary" style={{maxWidth: 700}}>
           Chúng tôi cung cấp giải pháp toàn diện giúp bạn từ bỏ thói quen hút thuốc.
         </p>
+          <Button 
+          component={Link} to="/about" variant="contained" color="primary"  sx={{ mt: 2 }} >
+          Tìm hiểu về Breathe Free
+        </Button>
       </div>
 
       <div className="row g-4">

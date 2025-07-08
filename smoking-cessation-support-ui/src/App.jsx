@@ -29,6 +29,11 @@ import Methodology from "./components/common/Methodology";
 import Research from "./components/common/Research";
 import FAQ from "./components/common/FAQ";
 import MembershipList from "./components/dashboard/membership";
+import ResearchDetail from "./components/common/ResearchDetail";
+import ScrollToTop from "./components/common/ScrollToTop";
+import Developers from "./components/common/Developers";
+import Chuyengia from "./components/common/chuyengia";
+import Researchers from "./components/common/Researchers";
 
 function AppContent() {
   const location = useLocation();
@@ -56,6 +61,7 @@ function AppContent() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/methodology" element={<Methodology />} />
           <Route path="/research" element={<Research />} />
+          <Route path="/research/:id" element={<ResearchDetail />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/create" element={<BlogPostForm />} />
@@ -74,6 +80,10 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/about" element={<About />} />
+          <Route path="/chuyengia" element={<Chuyengia />} />
+          <Route path="/developers" element={<Developers />} />
+          <Route path="/researchers" element={<Researchers />} />
+        
           <Route
             path="/profile"
             element={
@@ -111,6 +121,7 @@ function AppContent() {
 function App() {
   return (
     <Router>
+       <ScrollToTop />
       <AppContent />
     </Router>
   );

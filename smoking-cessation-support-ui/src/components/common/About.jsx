@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "../../css/Footer.css"; // Import CSS styles for the About component
 
 const About = () => (
@@ -15,9 +16,21 @@ const About = () => (
         </div>
         <div className="about-section-title">Đội ngũ phát triển</div>
         <ul className="about-list">
-          <li>Chuyên gia y tế và tâm lý</li>
-          <li>Nhà phát triển phần mềm</li>
-          <li>Nhà nghiên cứu về sức khỏe cộng đồng</li>
+          <li>
+            <Link to="/chuyengia" style={{ color: "#1976d2", textDecoration: "underline" }}>
+              Chuyên gia y tế và tâm lý
+            </Link>
+          </li>
+          <li>
+            <Link to="/developers" style={{ color: "#1976d2", textDecoration: "underline" }}>
+              Nhà phát triển phần mềm
+            </Link>
+          </li>
+          <li>
+            <Link to="/researchers" style={{ color: "#1976d2", textDecoration: "underline" }}>
+              Nhà nghiên cứu về sức khỏe cộng đồng
+            </Link>
+          </li>
         </ul>
         <div className="about-section-title">Liên hệ</div>
         <div className="about-contact" style={{ fontSize: 16 }}>

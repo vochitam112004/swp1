@@ -7,6 +7,8 @@ export default function SystemReportForm() {
   const [details, setDetails] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const userName = localStorage.getItem("username") || "Guest";
+
   const handleSubmit = async e => {
     e.preventDefault();
     if (!type || !details.trim()) {
@@ -15,7 +17,12 @@ export default function SystemReportForm() {
     }
     setLoading(true);
     try {
-      await api.post("/SystemReport", { report_type: type, details });
+      await api.post("/SystemReport", {
+        reportType: type,
+        userName,
+        reportedAt: new Date().toISOString(),
+        details,
+      });
       toast.success("Đã gửi báo cáo hệ thống!");
       setType("");
       setDetails("");

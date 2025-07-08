@@ -1,8 +1,15 @@
-import React from "react";
-import { Typography, Paper } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { Button, Typography } from "@mui/material";
+import researchArticles from "../../data/research";
 import "../../css/Footer.css";
 
 export default function Research() {
+  const navigate = useNavigate();
+
+  const handleReadMore = (id) => {
+    navigate(`/research/${id}`);
+  };
+
   return (
     <div className="research-bg">
       <div className="research-container">
@@ -10,25 +17,22 @@ export default function Research() {
           Nghiên cứu & Tài liệu
         </Typography>
 
-        <Paper className="research-paper">
-          <Typography variant="h6">Hiệu quả của hỗ trợ kỹ thuật số trong cai thuốc</Typography>
-          <Typography variant="body2" gutterBottom>
-            J. Smith et al., 2023
-          </Typography>
-          <Typography>
-            Ứng dụng đã giúp tăng gấp đôi tỷ lệ bỏ thuốc trong vòng 12 tuần.
-          </Typography>
-        </Paper>
-
-        <Paper className="research-paper">
-          <Typography variant="h6">Tâm lý học hành vi trong hỗ trợ cai thuốc</Typography>
-          <Typography variant="body2" gutterBottom>
-            Nguyễn Văn Dũng, 2022
-          </Typography>
-          <Typography>
-            Kỹ thuật CBT giúp người dùng vượt qua cơn thèm thuốc và duy trì động lực.
-          </Typography>
-        </Paper>
+        {researchArticles.map((article) => (
+          <div key={article.id} className="research-paper">
+            <div className="research-card-info">
+              <div className="research-card-title">{article.title}</div>
+              <div className="research-card-author">{article.author}</div>
+            </div>
+            <Button
+              variant="outlined"
+              size="small"
+              className="research-card-button"
+              onClick={() => handleReadMore(article.id)}
+            >
+              ĐỌC BÀI
+            </Button>
+          </div>
+        ))}
       </div>
     </div>
   );

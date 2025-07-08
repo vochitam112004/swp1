@@ -88,6 +88,16 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: background 0.3s ease;
 }
+.research-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+.research-card-title {
+  font-weight: 700;
+  font-size: 1.18rem;
+  margin-bottom: 2px;
+}
 
 .research-paper:hover {
   background: #f1f8ff;
@@ -184,7 +194,6 @@ footer a:hover {
   color: #4fc3f7;
   text-decoration: underline;
 }
-
 /* === RESPONSIVE === */
 @media (max-width: 600px) {
   .about-title,
@@ -209,5 +218,67 @@ footer a:hover {
   .faq-container,
   .contact-container {
     padding: 0 16px;
+  }
+  
+}
+/* === RESEARCH DETAIL === */
+.research-detail-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 64px 20px;
+  background-color: #f7f7f7;
+  min-height: 80vh;
+  color: #1a237e;
+}
+
+.research-detail-title {
+  font-size: 1rem;
+  font-weight: 1000;
+  color: #160960;
+  margin-bottom: 16px;
+}
+
+.research-detail-author {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.research-detail-paragraph {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.research-detail-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 1.05rem;
+  color: #1a237e;
+}
+
+.research-detail-bullet::before {
+  content: "◆";
+  color: #1565c0;
+  font-size: 1rem;
+  margin-top: 3px;
+}
+
+@media (max-width: 600px) {
+  .research-detail-container {
+    padding: 32px 16px;
+  }
+
+  .research-detail-title {
+    font-size: 1.8rem;
+  }
+
+  .research-detail-paragraph,
+  .research-detail-bullet {
+    font-size: 1rem;
   }
 }
