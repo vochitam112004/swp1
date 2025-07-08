@@ -134,10 +134,22 @@ const Dashboard = () => {
   const [progressLogs, setProgressLogs] = useState([]);
   const [progress, setProgress] = useState({ daysNoSmoke: 0, moneySaved: 0, health: 0 });
   const [plan, setPlan] = useState(null);
+  // Thêm state cho mục tiêu hiện tại từ API
+  const [currentGoal, setCurrentGoal] = useState(null);
+  // Thêm state cho MemberGoal
+  const [memberGoals, setMemberGoals] = useState([]);
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = async (e) => {
     e.preventDefault();
+    // Kiểm tra đã có ProgressLog cho ngày hôm nay chưa
+    const today = new Date().toISOString().slice(0, 10);
+    const existed = journal.find(j => j.date === today);
+    if (existed) {
+      toast.error("Bạn đã ghi nhật ký cho ngày hôm nay. Hãy sửa hoặc xóa để ghi lại.");
+      return;
+    }
+
     if (isNaN(todayCigarettes) || todayCigarettes === "" || todayCigarettes < 0) {
       toast.error("Số điếu thuốc không hợp lệ!");
       return;
@@ -148,17 +160,19 @@ const Dashboard = () => {
       logDate,
       cigarettesSmoked: Number(todayCigarettes),
       pricePerPack: Number(pricePerPack),
-      mood: "",      // hoặc lấy từ input nếu bạn có
-      trigger: "",   // hoặc lấy từ input nếu bạn có
-      notes: "",     // hoặc lấy từ input nếu bạn có
+      mood: "",
+      notes: "",
+      // Nếu có thêm cigarettesPerPack thì bổ sung:
+      // cigarettesPerPack: 20,
     };
 
     try {
-      await api.post("/ProgressLog/progress-log", body);
+      // ĐÚNG: POST vào /ProgressLog
+      await api.post("/ProgressLog", body);
       toast.success("Đã ghi nhận tiến trình!");
       setShowForm(false);
       setTodayCigarettes("");
-      // Reload lại tiến trình
+      // ĐÚNG: GET lại từ /ProgressLog/progress-log
       const res = await api.get("/ProgressLog/progress-log");
       setProgressLogs(res.data);
 
@@ -327,11 +341,10 @@ const Dashboard = () => {
   // const goalDays = plan.goalDays || 60;
   // const frequency = plan.reminderFrequency || "daily"; // Thêm dòng này
 
-  // Tính phần trăm hoàn thành mục tiêu
-  const percent = Math.min(
-    Math.round((progress.daysNoSmoke / (plan?.goalDays || 60)) * 100),
-    100
-  );
+  // Tính phần trăm hoàn thành mục tiêu (ưu tiên currentGoal nếu có)
+  const percent = currentGoal && currentGoal.totalDays
+    ? Math.min(Math.round((currentGoal.smokeFreeDays / currentGoal.totalDays) * 100), 100)
+    : Math.min(Math.round((progress.daysNoSmoke / (plan?.goalDays || 60)) * 100), 100);
 
   // Tính strokeDashoffset cho vòng tròn SVG
   const circleLength = 2 * Math.PI * 40; // r=40
@@ -358,7 +371,7 @@ const Dashboard = () => {
   useEffect(() => {
     async function fetchProgressLogs() {
       try {
-        const res = await api.get("/ProgressLog");
+        const res = await api.get("/ProgressLog/progress-log");
         setProgressLogs(res.data);
       } catch {
         setProgressLogs([]);
@@ -384,7 +397,26 @@ const Dashboard = () => {
       .catch(() => setPlan(null));
   }, []);
 
+  // Lấy mục tiêu hiện tại từ API khi load
+  useEffect(() => {
+    api.get("/CurrentGoal/current-goal")
+      .then(res => setCurrentGoal(res.data))
+      .catch(() => setCurrentGoal(null));
+  }, []);
+
+  // Lấy danh sách MemberGoal khi load
+  useEffect(() => {
+    api.get("/MemberGoal")
+      .then(res => setMemberGoals(res.data))
+      .catch(() => setMemberGoals([]));
+  }, []);
+
+  // Hàm cập nhật GoalPlan qua API
   const handleUpdatePlan = async (newPlan) => {
+    if (!plan) {
+      toast.error("Không tìm thấy kế hoạch để cập nhật.");
+      return;
+    }
     try {
       await api.put("/GoalPlan", {
         ...newPlan,
@@ -395,6 +427,22 @@ const Dashboard = () => {
       toast.success("Đã cập nhật kế hoạch!");
     } catch {
       toast.error("Cập nhật kế hoạch thất bại!");
+    }
+  };
+
+  // Hàm tạo mới GoalPlan qua API
+  const handleCreatePlan = async (newPlan) => {
+    if (plan) {
+      toast.error("Bạn đã có kế hoạch. Hãy xóa kế hoạch cũ trước khi tạo mới.");
+      return;
+    }
+    try {
+      await api.post("/GoalPlan", newPlan);
+      const res = await api.get("/GoalPlan");
+      setPlan(res.data[0] || null);
+      toast.success("Đã tạo kế hoạch mới!");
+    } catch {
+      toast.error("Tạo kế hoạch mới thất bại!");
     }
   };
 
@@ -521,9 +569,24 @@ const Dashboard = () => {
                           <span className="h3 fw-bold text-primary">{percent}%</span>
                         </div>
                       </div>
-                      <p className="text-secondary">
-                        Bạn đã hoàn thành {percent}% mục tiêu {plan?.goalDays || 60} ngày không thuốc lá
-                      </p>
+                      {/* Sửa lỗi DOM: không dùng <div> trong <p> */}
+                      <div className="text-secondary">
+                        {currentGoal ? (
+                          <div className="text-start small">
+                            <div><b>Ngày bắt đầu:</b> {currentGoal.startDate ? new Date(currentGoal.startDate).toLocaleDateString() : "?"}</div>
+                            <div><b>Ngày mục tiêu:</b> {currentGoal.targetQuitDate ? new Date(currentGoal.targetQuitDate).toLocaleDateString() : "?"}</div>
+                            <div><b>Động lực:</b> {currentGoal.personalMotivation || "Chưa nhập"}</div>
+                            <div><b>Số ngày không hút:</b> {currentGoal.smokeFreeDays}</div>
+                            <div><b>Tổng số ngày mục tiêu:</b> {currentGoal.totalDays}</div>
+                            <div><b>Tổng số điếu đã hút:</b> {currentGoal.totalCigarettesSmoked}</div>
+                            <div><b>Tổng tiền đã chi:</b> {currentGoal.totalSpenMoney?.toLocaleString() || 0}đ</div>
+                            <div><b>Tiền hôm nay:</b> {currentGoal.todaySpent?.toLocaleString() || 0}đ</div>
+                            <div><b>Tiền hôm qua:</b> {currentGoal.yesterdaySpent?.toLocaleString() || 0}đ</div>
+                          </div>
+                        ) : (
+                          <>Bạn đã hoàn thành {percent}% mục tiêu {plan?.goalDays || 60} ngày không thuốc lá</>
+                        )}
+                      </div>
                       <button className="btn btn-primary mt-3" onClick={() => setShowForm(!showForm)}>
                         {showForm ? "Đóng" : "Cập nhật tiến trình"}
                       </button>
@@ -722,16 +785,14 @@ const Dashboard = () => {
                 </div>
                 {/* Form chỉnh sửa kế hoạch */}
                 <form
-                  onSubmit={e => {
+                  onSubmit={async e => {
                     e.preventDefault();
                     const newPlan = {
                       goalDays: e.target.goalDays.value,
                       reason: e.target.reason.value,
                       reminderFrequency: e.target.reminderFrequency.value,
                     };
-                    localStorage.setItem("quitPlan", JSON.stringify(newPlan));
-                    toast.success("Đã cập nhật kế hoạch!");
-                    window.location.reload(); // reload để cập nhật ngay
+                    await handleUpdatePlan(newPlan);
                   }}
                   className="border rounded p-3 bg-light"
                   style={{ maxWidth: 400 }}
@@ -775,6 +836,20 @@ const Dashboard = () => {
                   </div>
                   <button type="submit" className="btn btn-primary mt-2">Lưu kế hoạch</button>
                 </form>
+
+                {/* Danh sách mục tiêu của bạn */}
+                {memberGoals.length > 0 && (
+                  <div className="mt-4">
+                    <h5>Danh sách mục tiêu của bạn</h5>
+                    <ul>
+                      {memberGoals.map(goal => (
+                        <li key={goal.memberGoalId}>
+                          <b>Goal ID:</b> {goal.goalId} | <b>Status:</b> {goal.status}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
