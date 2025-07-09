@@ -18,12 +18,12 @@ const PlanTab = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [planStatus, setPlanStatus] = useState(""); // trạng thái kế hoạch
   const [plans, setPlans] = useState([]);
-  const [progress, setProgress] = useState(null); // Thêm state cho tiến trình
+  const [progress, setProgress] = useState(null);
 
   // Lấy kế hoạch và tiến trình từ API khi load
   useEffect(() => {
-    api.get("/GoalPlan").then(res => setPlans(res.data)).catch(() => setPlans([]));
-    api.get("/ProgressLog/progress-log").then(res => setProgress(res.data)).catch(() => setProgress(null));
+    api.get("/GoalPlan/Get-GoalPlan").then(res => setPlans(res.data)).catch(() => setPlans([]));
+    api.get("/ProgressLog/GetProgress-logs").then(res => setProgress(res.data)).catch(() => setProgress(null));
   }, []);
 
   // Hàm kiểm tra trạng thái hoàn thành dựa vào API
@@ -60,15 +60,18 @@ const PlanTab = () => {
 
   const onFinish = async (values) => {
     try {
-      await api.post("/GoalPlan", {
+      await api.post("/GoalPlan/Create-GoalPlan", {
         targetQuitDate: values.expectedDate,
         personalMotivation: values.reason,
         useTemplate: false,
       });
       toast.success("Đã lưu kế hoạch!");
-      // Reload lại danh sách kế hoạch
-      const res = await api.get("/GoalPlan");
-      setPlans(res.data);
+      const [planRes, progressRes] = await Promise.all([
+        api.get("/GoalPlan/Get-GoalPlan"),
+        api.get("/ProgressLog/GetProgress-logs")
+      ]);
+      setPlans(planRes.data);
+      setProgress(progressRes.data);
     } catch {
       toast.error("Lưu kế hoạch thất bại!");
     }

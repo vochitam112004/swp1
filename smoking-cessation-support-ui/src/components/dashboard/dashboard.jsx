@@ -136,8 +136,36 @@ const Dashboard = () => {
   const [plan, setPlan] = useState(null);
   // Thêm state cho mục tiêu hiện tại từ API
   const [currentGoal, setCurrentGoal] = useState(null);
-  // Thêm state cho MemberGoal
+  const [loading, setLoading] = useState(true);
   const [memberGoals, setMemberGoals] = useState([]);
+
+  useEffect(() => {
+    async function fetchAll() {
+      setLoading(true);
+      try {
+        const [
+          progressLogRes,
+          currentGoalRes,
+          goalPlanRes,
+          memberGoalRes
+        ] = await Promise.all([
+          api.get("/ProgressLog/GetProgress-logs"),
+          api.get("/CurrentGoal/current-goal"),
+          api.get("/GoalPlan/Get-GoalPlan"),
+          api.get("/MemberGoal")
+        ]);
+        setProgressLogs(progressLogRes.data);
+        setCurrentGoal(currentGoalRes.data);
+        setPlan(goalPlanRes.data[0] || null);
+        setMemberGoals(memberGoalRes.data);
+      } catch (err) {
+        toast.error("Lỗi tải dữ liệu!");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAll();
+  }, []); // <-- chỉ chạy khi mount
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = async (e) => {
@@ -161,20 +189,22 @@ const Dashboard = () => {
       cigarettesSmoked: Number(todayCigarettes),
       pricePerPack: Number(pricePerPack),
       mood: "",
-      notes: "",
+      notes: journalEntry,
       // Nếu có thêm cigarettesPerPack thì bổ sung:
       // cigarettesPerPack: 20,
     };
 
     try {
-      // ĐÚNG: POST vào /ProgressLog
-      await api.post("/ProgressLog", body);
+      await api.post("/ProgressLog/CreateProgress-log", body);
       toast.success("Đã ghi nhận tiến trình!");
       setShowForm(false);
       setTodayCigarettes("");
-      // ĐÚNG: GET lại từ /ProgressLog/progress-log
-      const res = await api.get("/ProgressLog/progress-log");
+      const res = await api.get("/ProgressLog/GetProgress-logs");
       setProgressLogs(res.data);
+
+      // Thêm dòng này để reload lại currentGoal
+      const goalRes = await api.get("/CurrentGoal/current-goal");
+      setCurrentGoal(goalRes.data);
 
       // Tính lại progress
       let daysNoSmoke = 0;
@@ -343,9 +373,9 @@ const Dashboard = () => {
 
   // Tính phần trăm hoàn thành mục tiêu (ưu tiên currentGoal nếu có)
   const percent = currentGoal && currentGoal.totalDays
-    ? Math.min(Math.round((currentGoal.smokeFreeDays / currentGoal.totalDays) * 100), 100)
-    : Math.min(Math.round((progress.daysNoSmoke / (plan?.goalDays || 60)) * 100), 100);
-
+  ? Math.min(Math.round((currentGoal.smokeFreeDays / currentGoal.totalDays) * 100), 100)
+  : Math.min(Math.round((progress.daysNoSmoke / (plan?.goalDays || 60)) * 100), 100);
+  
   // Tính strokeDashoffset cho vòng tròn SVG
   const circleLength = 2 * Math.PI * 40; // r=40
   const offset = circleLength * (1 - percent / 100);
@@ -383,16 +413,32 @@ const Dashboard = () => {
   const handleAddProgressLog = async (logData) => {
     try {
       await api.post("/ProgressLog", logData);
+      const [logsRes, goalRes] = await Promise.all([
+        api.get("/ProgressLog"),
+        api.get("/CurrentGoal/current-goal"),
+      ]);
+      setProgressLogs(logsRes.data);
+      setCurrentGoal(goalRes.data);
+      toast.success("Đã ghi nhận tiến trình!");
+    } catch {
+      toast.error("Ghi nhật ký thất bại!");
+    }
+  };
+
+  const handleDeleteProgressLog = async (logId) => {
+    try {
+      await api.delete(`/ProgressLog/DeleteByIdProgress-log/${logId}`);
       const res = await api.get("/ProgressLog");
       setProgressLogs(res.data);
+      toast.success("Đã xóa nhật ký!");
     } catch {
-      // handle error
+      toast.error("Xóa nhật ký thất bại!");
     }
   };
 
   // Lấy kế hoạch từ API khi load
   useEffect(() => {
-    api.get("/GoalPlan")
+    api.get("/GoalPlan/Get-GoalPlan")
       .then(res => setPlan(res.data[0] || null))
       .catch(() => setPlan(null));
   }, []);
@@ -400,7 +446,10 @@ const Dashboard = () => {
   // Lấy mục tiêu hiện tại từ API khi load
   useEffect(() => {
     api.get("/CurrentGoal/current-goal")
-      .then(res => setCurrentGoal(res.data))
+      .then(res => {
+        console.log("CurrentGoal API result:", res.data);
+        setCurrentGoal(res.data);
+      })
       .catch(() => setCurrentGoal(null));
   }, []);
 
@@ -418,7 +467,7 @@ const Dashboard = () => {
       return;
     }
     try {
-      await api.put("/GoalPlan", {
+      await api.put("/GoalPlan/Update-GoalPlan", {
         ...newPlan,
         goalPlanId: plan.goalPlanId,
       });
@@ -437,7 +486,7 @@ const Dashboard = () => {
       return;
     }
     try {
-      await api.post("/GoalPlan", newPlan);
+      await api.post("/GoalPlan/Create-GoalPlan", newPlan);
       const res = await api.get("/GoalPlan");
       setPlan(res.data[0] || null);
       toast.success("Đã tạo kế hoạch mới!");
@@ -445,6 +494,8 @@ const Dashboard = () => {
       toast.error("Tạo kế hoạch mới thất bại!");
     }
   };
+
+  if (loading) return <div style={{textAlign:"center",marginTop:40}}><span className="spinner-border"></span> Đang tải dữ liệu...</div>;
 
   return (
     <div className="bg-white py-5">
@@ -922,7 +973,7 @@ const Dashboard = () => {
             onClick={async () => {
               // Gọi API cập nhật nhật ký
               try {
-                await api.put(`/ProgressLog/${entry.logId}`, {
+                await api.put("/ProgressLog/UpdateProgress-log", {
                   ...entry,
                   content: editContent,
                 });
@@ -948,7 +999,7 @@ const Dashboard = () => {
           <button className="btn btn-sm btn-outline-danger ms-1" onClick={async () => {
             if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
               try {
-                await api.delete(`/ProgressLog/${entry.logId}`);
+                await api.delete(`/ProgressLog/DeleteByIdProgress-log/${entry.logId}`);
                 toast.success("Đã xóa nhật ký!");
                 // Reload lại nhật ký
                 const res = await api.get("/ProgressLog");

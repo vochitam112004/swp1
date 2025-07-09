@@ -7,16 +7,39 @@ import { toast } from "react-toastify";
 import { useAuth } from "../auth/AuthContext";
 import "../../css/Profile.css";
 
+const LEVELS = [
+  { value: 1, label: "Mới bắt đầu" },
+  { value: 2, label: "Đã từng thử cai thuốc" },
+  { value: 3, label: "Đã cai được một thời gian" },
+];
+
 export default function Profile() {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [edit, setEdit] = useState(false);
-  const [form, setForm] = useState(null);
+  const [form, setForm] = useState({
+    displayName: "",
+    email: "",
+    phoneNumber: "",
+    address: "",
+    experience_level: 1, // Thêm trường level
+  });
   const [history, setHistory] = useState([]);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [passwords, setPasswords] = useState({ old: "", new1: "", new2: "" });
+
+  // Lấy profile khi load
+  useEffect(() => {
+    api.get("/MemberProfile")
+      .then(res => setForm(f => ({
+        ...f,
+        ...res.data,
+        experience_level: res.data.experience_level || 1,
+      })))
+      .catch(() => toast.error("Không lấy được profile!"));
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -32,6 +55,7 @@ export default function Profile() {
       .catch(() => toast.error("Không lấy được lịch sử gói thành viên!"));
   }, [user]);
 
+  // Cập nhật profile
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     if (!form.displayName || !form.email) {
@@ -43,12 +67,9 @@ export default function Profile() {
       return;
     }
     try {
-      await api.put("/User/My-Update", form);
+      await api.put("/MemberProfile", form); // PUT nếu cập nhật
       toast.success("Cập nhật thông tin thành công!");
-      setProfile({ ...profile, ...form });
-      setEdit(false);
-    } catch (error) {
-      console.error("Error updating profile:", error);
+    } catch {
       toast.error("Cập nhật thất bại!");
     }
   };
@@ -195,6 +216,16 @@ export default function Profile() {
               onChange={e => setForm({ ...form, address: e.target.value })}
               fullWidth
             />
+            <label>Kinh nghiệm cai thuốc:</label>
+            <select
+              value={form.experience_level}
+              onChange={e => setForm(f => ({ ...f, experience_level: Number(e.target.value) }))}
+              className="form-control"
+            >
+              {LEVELS.map(l => (
+                <option key={l.value} value={l.value}>{l.label}</option>
+              ))}
+            </select>
             <Box sx={{ mt: 2 }}>
               <Button type="submit" variant="contained">Lưu</Button>
               <Button variant="outlined" onClick={() => setEdit(false)} sx={{ ml: 2 }}>Hủy</Button>
