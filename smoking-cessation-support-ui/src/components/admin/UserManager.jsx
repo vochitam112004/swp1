@@ -51,7 +51,7 @@ export default function UserManager() {
   }, []);
 
   return (
-    <Box sx={{ p: 3, maxWidth: 800, margin: "0 auto" }}>
+    <Box sx={{ p: 3, margin: "0 auto" }}>
       <Typography variant="h6" mb={2}>
         Quản lý người dùng
       </Typography>

@@ -1,6 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-
 import Unauthorized from "./components/auth/Unauthorized";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Navigation from "./components/layout/navigation";
@@ -34,6 +32,7 @@ import ScrollToTop from "./components/common/ScrollToTop";
 import Developers from "./components/common/Developers";
 import Chuyengia from "./components/common/chuyengia";
 import Researchers from "./components/common/Researchers";
+import ChatSupport from "./components/chat/ChatSupport";
 
 function AppContent() {
   const location = useLocation();
@@ -55,6 +54,7 @@ function AppContent() {
                 <Dashboard />
                 <Testimonials />
                 <CTASection />
+                <ChatSupport/>
               </>
             }
           />

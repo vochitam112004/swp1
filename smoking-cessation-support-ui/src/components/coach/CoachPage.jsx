@@ -16,7 +16,7 @@ import UserPlans from "./UserPlans";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Profile from "../profile/Profile";
-import "../../css/Coach.css"; 
+import "../../css/Coach.css";
 
 export default function CoachDashboard() {
   const [tab, setTab] = useState(0);
@@ -72,8 +72,31 @@ export default function CoachDashboard() {
         </Menu>
       </Box>
 
-      <Paper elevation={3} className="coach-tabs">
-        <Tabs value={tab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
+      <Paper
+        elevation={3}
+        sx={{
+          mb: 2,
+          borderRadius: 2,
+          bgcolor: "#ffffff",
+        }}
+      >
+        <Tabs
+          value={tab}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          textColor="primary"
+          indicatorColor="primary"
+          sx={{
+            "& .MuiTab-root": {
+              fontWeight: "bold",
+              textTransform: "none",
+            },
+            "& .Mui-selected": {
+              color: "#1976d2 !important",
+            },
+          }}
+        >
           <Tab label="Người dùng được phân công" />
           <Tab label="Tiến trình & Sức khỏe" />
           <Tab label="Tư vấn cá nhân" />
@@ -82,11 +105,11 @@ export default function CoachDashboard() {
         </Tabs>
       </Paper>
 
-      {tab === 0 && <div className="coach-tab-panel"><AssignedUsers /></div>}
-      {tab === 1 && <div className="coach-tab-panel"><UserProgress /></div>}
-      {tab === 2 && <div className="coach-tab-panel"><SendAdvice /></div>}
-      {tab === 3 && <div className="coach-tab-panel"><UserPlans /></div>}
-      {tab === 4 && <div className="coach-tab-panel"><Profile /></div>}
+      {tab === 0 && <AssignedUsers />}
+      {tab === 1 && <UserProgress />}
+      {tab === 2 && <SendAdvice />}
+      {tab === 3 && <UserPlans />}
+      {tab === 4 && <Profile />}
     </Box>
   );
 }
