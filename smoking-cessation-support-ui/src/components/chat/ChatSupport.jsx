@@ -1,73 +1,141 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
 
+const getCurrentUser = () => {
+  return JSON.parse(localStorage.getItem("user") || "{}");
+};
+
 const getUserRole = () => {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  return user.role || "user"; // "coach" hoặc "user"
+  const user = getCurrentUser();
+  return user.role || "user";
 };
 
-const getMessageColor = (from) => {
-  if (from === "user") return "#e3f2fd";
-  if (from === "coach") return "#fff3cd";
-  return "#f1f1f1";
+const getMessageColor = (fromId, currentUserId) => {
+  return fromId === currentUserId ? "#e3f2fd" : "#fff3cd";
 };
 
-const getSenderLabel = (from) => {
-  if (from === "coach") return "Huấn luyện viên";
-  if (from === "user") return "Bạn";
-  return "Hệ thống";
+const getSenderLabel = (fromId, currentUserId, senderName) => {
+  return fromId === currentUserId ? "Bạn" : senderName;
 };
-
 
 const ChatSupport = ({ targetUserId, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [coaches, setCoaches] = useState([]);
+  const [selectedCoachId, setSelectedCoachId] = useState(targetUserId || "");
+  const [recentChats, setRecentChats] = useState([]);
+  const currentUser = getCurrentUser();
   const role = getUserRole();
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const url =
-          role === "coach" && targetUserId
-            ? `/chat/history/${targetUserId}`
-            : `/chat/history`; // user hoặc coach không chọn ai thì lấy của mình
+  const ITEM_HEIGHT = 48;
+  const ITEM_PADDING_TOP = 8;
+  const MenuProps = {
+    PaperProps: {
+      style: {
+        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+        width: 250,
+      },
+    },
+  };
 
-        const res = await api.get(url);
-        setMessages(res.data.length ? res.data : [
-          { from: "support", text: "Xin chào! Tôi có thể giúp gì cho bạn?" }
-        ]);
+  const markMessagesAsRead = async (msgs) => {
+    for (const msg of msgs) {
+      if (!msg.isRead && msg.messageId) {
+        try {
+          await api.post(`/ChatMessage/mark-as-read/${msg.messageId}`);
+        } catch (err) {
+          console.error("Không thể đánh dấu tin nhắn đã đọc", msg.messageId, err);
+        }
+      }
+    }
+  };
+
+  const fetchData = useCallback(async () => {
+    if (role === "user") {
+      try {
+        const coachRes = await api.get("/ChatMessage/available-contacts");
+        setCoaches(coachRes.data);
+      } catch (err) {
+        console.log(err)
+        toast.error("Không tải được danh sách huấn luyện viên!");
+      }
+    }
+
+    let url = null;
+    if (role === "coach" && targetUserId) {
+      url = `/ChatMessage/history/${targetUserId}`;
+    } else if (role === "user" && selectedCoachId) {
+      url = `/ChatMessage/history/${selectedCoachId}`;
+    }
+
+    if (!url) return;
+
+    try {
+      const res = await api.get(url);
+      const msgs = res.data.length
+        ? res.data.map((msg) => ({
+          ...msg,
+          from: msg.senderId,
+        }))
+        : [{ senderId: null, senderDisplayName: "Hệ thống", content: "Xin chào! Tôi có thể giúp gì cho bạn?" }];
+      setMessages(msgs);
+      markMessagesAsRead(msgs);
+    } catch (err) {
+      console.log(err)
+      setMessages([{ senderId: null, senderDisplayName: "Hệ thống", content: "Không thể tải tin nhắn." }]);
+    }
+  }, [role, targetUserId, selectedCoachId]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchData();
+    }, 2000000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  useEffect(() => {
+    const fetchRecentChats = async () => {
+      try {
+        const res = await api.get("/ChatMessage/recent-chat");
+        setRecentChats(res.data);
       } catch {
-        setMessages([{ from: "support", text: "Không thể tải tin nhắn." }]);
+        console.error("Không thể lấy danh sách trò chuyện gần đây");
       }
     };
-
-    fetchHistory();
-  }, [targetUserId, role]);
-
+    if (role === "coach") {
+      fetchRecentChats();
+    }
+  }, [role]);
 
   const handleSend = async (e) => {
     e.preventDefault();
     const trimmedInput = input.trim();
-    if (!trimmedInput || !targetUserId) return;
+    if (!trimmedInput || (!targetUserId && !selectedCoachId)) return;
 
-    const newMsg = { from: role, to: targetUserId, text: trimmedInput };
-    setMessages(prev => [...prev, newMsg]);
+    const receiverId = role === "user" ? selectedCoachId : targetUserId;
+    const newMsg = {
+      receiverId: receiverId,
+      content: trimmedInput,
+    };
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        senderId: currentUser.id,
+        senderDisplayName: currentUser.fullName || "Bạn",
+        content: trimmedInput,
+      },
+    ]);
     setInput("");
     setLoading(true);
 
     try {
-      const res = await api.post("/chat/send", newMsg);
-      if (res.data.reply) {
-        setMessages(prev => [...prev, { from: "coach", text: res.data.reply }]);
-        toast.success("Đã gửi tin nhắn!");
-      }
+      await api.post("/ChatMessage/send", newMsg);
+      toast.success("Đã gửi tin nhắn!");
+      await fetchData();
     } catch {
-      setMessages(prev => [...prev, {
-        from: "support",
-        text: "Không gửi được tin nhắn. Vui lòng thử lại."
-      }]);
       toast.error("Lỗi kết nối máy chủ!");
     } finally {
       setLoading(false);
@@ -77,25 +145,56 @@ const ChatSupport = ({ targetUserId, onClose }) => {
   return (
     <div style={styles.chatContainer}>
       <div style={styles.header}>
-        Hộp thư huấn luyện viên
+        Nhắn tin
         <span style={{ float: "right", cursor: "pointer" }} onClick={onClose}>✕</span>
       </div>
+      {role === "user" && (
+        <div style={{ padding: "16px 24px 8px 24px", borderBottom: "1px solid #e3e3e3", background: "#f5f7fa" }}>
+          <label style={{ fontWeight: 600, color: "#1976d2", marginBottom: 6, display: "block" }}>
+            Chọn huấn luyện viên:
+          </label>
+          <select
+            value={selectedCoachId}
+            onChange={(e) => setSelectedCoachId(e.target.value)}
+            style={{
+              width: "100%",
+              marginTop: 4,
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid #bfc8d6",
+              background: "#fff",
+              fontSize: 15,
+              color: "#222",
+              outline: "none",
+              transition: "border-color 0.2s",
+              boxShadow: "0 1px 2px #0001",
+            }}
+          >
+            <option value="">-- Chọn --</option>
+            {coaches.map((coach) => (
+              <option key={coach.userId} value={coach.userId}>
+                {coach.displayName}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div style={styles.messageList}>
         {messages.map((msg, idx) => (
           <div
             key={idx}
             style={{
-              textAlign: msg.from === role ? "right" : "left",
+              textAlign: msg.senderId === currentUser.id ? "right" : "left",
               marginBottom: 8,
             }}
           >
             <span
               style={{
                 ...styles.messageBubble,
-                background: getMessageColor(msg.from),
+                background: getMessageColor(msg.senderId, currentUser.id),
               }}
             >
-              <b>{getSenderLabel(msg.from)}:</b> {msg.text}
+              <b>{getSenderLabel(msg.senderId, currentUser.id, msg.senderDisplayName)}:</b> {msg.content}
             </span>
           </div>
         ))}

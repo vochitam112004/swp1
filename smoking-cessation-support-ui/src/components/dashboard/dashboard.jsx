@@ -114,7 +114,7 @@ const Dashboard = () => {
     }
   };
 
-  
+
   // Thêm state cho lịch sử tiến trình và số lần tái nghiện
   const [quitHistory, setQuitHistory] = useState(() => safeParse("quitHistory", []));
   const [todayCigarettes, setTodayCigarettes] = useState("");
@@ -259,7 +259,7 @@ const Dashboard = () => {
 
   // Thông báo mỗi ngày 1 lần
   useEffect(() => {
-    requestNotificationPermission(); 
+    requestNotificationPermission();
     const lastNotify = localStorage.getItem("lastMotivationNotify");
     const today = new Date().toISOString().slice(0, 10);
     if (lastNotify !== today) {
@@ -291,7 +291,7 @@ const Dashboard = () => {
     const lastNotify = localStorage.getItem("lastPersonalReasonNotify");
     if (shouldSendReminder(lastNotify, frequency)) {
       toast.info(`Động viên: ${reason}`);
-      sendBrowserNotification("Động viên cai thuốc", reason); 
+      sendBrowserNotification("Động viên cai thuốc", reason);
       localStorage.setItem("lastPersonalReasonNotify", new Date().toISOString());
     }
   }, []);
@@ -373,9 +373,9 @@ const Dashboard = () => {
 
   // Tính phần trăm hoàn thành mục tiêu (ưu tiên currentGoal nếu có)
   const percent = currentGoal && currentGoal.totalDays
-  ? Math.min(Math.round((currentGoal.smokeFreeDays / currentGoal.totalDays) * 100), 100)
-  : Math.min(Math.round((progress.daysNoSmoke / (plan?.goalDays || 60)) * 100), 100);
-  
+    ? Math.min(Math.round((currentGoal.smokeFreeDays / currentGoal.totalDays) * 100), 100)
+    : Math.min(Math.round((progress.daysNoSmoke / (plan?.goalDays || 60)) * 100), 100);
+
   // Tính strokeDashoffset cho vòng tròn SVG
   const circleLength = 2 * Math.PI * 40; // r=40
   const offset = circleLength * (1 - percent / 100);
@@ -495,7 +495,7 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) return <div style={{textAlign:"center",marginTop:40}}><span className="spinner-border"></span> Đang tải dữ liệu...</div>;
+  if (loading) return <div style={{ textAlign: "center", marginTop: 40 }}><span className="spinner-border"></span> Đang tải dữ liệu...</div>;
 
   return (
     <div className="bg-white py-5">
@@ -956,63 +956,63 @@ const Dashboard = () => {
                   <h5 className="mb-3">Lịch sử nhật ký</h5>
                   {journal.length === 0 && <div className="text-secondary">Chưa có nhật ký nào.</div>}
                   {journal
-  .filter(entry => !filterMonth || entry.date.startsWith(filterMonth))
-  .slice().reverse().map((entry, idx) => (
-    <div key={idx} className="border rounded p-2 mb-2 bg-light">
-      <b>{entry.date}</b>:&nbsp;
-      {editIdx === idx ? (
-        <>
-          <input
-            value={editContent}
-            onChange={e => setEditContent(e.target.value)}
-            className="form-control d-inline-block"
-            style={{ width: "60%" }}
-          />
-          <button
-            className="btn btn-sm btn-success ms-1"
-            onClick={async () => {
-              // Gọi API cập nhật nhật ký
-              try {
-                await api.put("/ProgressLog/UpdateProgress-log", {
-                  ...entry,
-                  content: editContent,
-                });
-                toast.success("Đã cập nhật nhật ký!");
-                // Reload lại nhật ký
-                const res = await api.get("/ProgressLog");
-                setJournal(res.data);
-                setEditIdx(null);
-              } catch {
-                toast.error("Cập nhật thất bại!");
-              }
-            }}
-          >Lưu</button>
-          <button className="btn btn-sm btn-secondary ms-1" onClick={() => setEditIdx(null)}>Hủy</button>
-        </>
-      ) : (
-        <>
-          {entry.content}
-          <button className="btn btn-sm btn-outline-primary ms-2" onClick={() => {
-            setEditIdx(idx);
-            setEditContent(entry.content);
-          }}>Sửa</button>
-          <button className="btn btn-sm btn-outline-danger ms-1" onClick={async () => {
-            if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
-              try {
-                await api.delete(`/ProgressLog/DeleteByIdProgress-log/${entry.logId}`);
-                toast.success("Đã xóa nhật ký!");
-                // Reload lại nhật ký
-                const res = await api.get("/ProgressLog");
-                setJournal(res.data);
-              } catch {
-                toast.error("Xóa nhật ký thất bại!");
-              }
-            }
-          }}>Xóa</button>
-        </>
-      )}
-    </div>
-  ))}
+                    .filter(entry => !filterMonth || entry.date.startsWith(filterMonth))
+                    .slice().reverse().map((entry, idx) => (
+                      <div key={idx} className="border rounded p-2 mb-2 bg-light">
+                        <b>{entry.date}</b>:&nbsp;
+                        {editIdx === idx ? (
+                          <>
+                            <input
+                              value={editContent}
+                              onChange={e => setEditContent(e.target.value)}
+                              className="form-control d-inline-block"
+                              style={{ width: "60%" }}
+                            />
+                            <button
+                              className="btn btn-sm btn-success ms-1"
+                              onClick={async () => {
+                                // Gọi API cập nhật nhật ký
+                                try {
+                                  await api.put("/ProgressLog/UpdateProgress-log", {
+                                    ...entry,
+                                    content: editContent,
+                                  });
+                                  toast.success("Đã cập nhật nhật ký!");
+                                  // Reload lại nhật ký
+                                  const res = await api.get("/ProgressLog");
+                                  setJournal(res.data);
+                                  setEditIdx(null);
+                                } catch {
+                                  toast.error("Cập nhật thất bại!");
+                                }
+                              }}
+                            >Lưu</button>
+                            <button className="btn btn-sm btn-secondary ms-1" onClick={() => setEditIdx(null)}>Hủy</button>
+                          </>
+                        ) : (
+                          <>
+                            {entry.content}
+                            <button className="btn btn-sm btn-outline-primary ms-2" onClick={() => {
+                              setEditIdx(idx);
+                              setEditContent(entry.content);
+                            }}>Sửa</button>
+                            <button className="btn btn-sm btn-outline-danger ms-1" onClick={async () => {
+                              if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
+                                try {
+                                  await api.delete(`/ProgressLog/DeleteByIdProgress-log/${entry.logId}`);
+                                  toast.success("Đã xóa nhật ký!");
+                                  // Reload lại nhật ký
+                                  const res = await api.get("/ProgressLog");
+                                  setJournal(res.data);
+                                } catch {
+                                  toast.error("Xóa nhật ký thất bại!");
+                                }
+                              }
+                            }}>Xóa</button>
+                          </>
+                        )}
+                      </div>
+                    ))}
                 </div>
 
                 {/* Biểu đồ tiến trình theo nhật ký */}
