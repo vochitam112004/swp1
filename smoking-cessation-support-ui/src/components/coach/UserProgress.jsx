@@ -67,7 +67,7 @@ export default function AssignedUsers() {
                   <Typography>{user.nameDisplay}</Typography>
                 </Box>
               </TableCell>
-              <TableCell align="center">{user.mood}</TableCell>
+              <TableCell align="center">{user.latestMood}</TableCell>
               <TableCell align="center">{user.smokeFreeDays}</TableCell>
               <TableCell align="center">{formatMoney(user.totalSpentMoney)}</TableCell>
             </TableRow>
