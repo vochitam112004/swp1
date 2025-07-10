@@ -133,7 +133,6 @@ const ChatSupport = ({ targetUserId, onClose }) => {
 
     try {
       await api.post("/ChatMessage/send", newMsg);
-      toast.success("Đã gửi tin nhắn!");
       await fetchData();
     } catch {
       toast.error("Lỗi kết nối máy chủ!");

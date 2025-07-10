@@ -138,6 +138,7 @@ const Dashboard = () => {
   const [currentGoal, setCurrentGoal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [memberGoals, setMemberGoals] = useState([]);
+  const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
 
   useEffect(() => {
     async function fetchAll() {
@@ -150,8 +151,8 @@ const Dashboard = () => {
           memberGoalRes
         ] = await Promise.all([
           api.get("/ProgressLog/GetProgress-logs"),
-          api.get("/CurrentGoal/current-goal"),
-          api.get("/GoalPlan/Get-GoalPlan"),
+          api.get("/CurrentGoal"),
+          api.get("/GoalPlan/all-goals"),
           api.get("/MemberGoal")
         ]);
         setProgressLogs(progressLogRes.data);
@@ -170,7 +171,6 @@ const Dashboard = () => {
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = async (e) => {
     e.preventDefault();
-    // Kiểm tra đã có ProgressLog cho ngày hôm nay chưa
     const today = new Date().toISOString().slice(0, 10);
     const existed = journal.find(j => j.date === today);
     if (existed) {
@@ -182,16 +182,23 @@ const Dashboard = () => {
       toast.error("Số điếu thuốc không hợp lệ!");
       return;
     }
+    if (isNaN(pricePerPack) || pricePerPack < 1000) {
+      toast.error("Giá tiền/bao không hợp lệ!");
+      return;
+    }
+    if (isNaN(cigarettesPerPack) || cigarettesPerPack < 1) {
+      toast.error("Số điếu/bao không hợp lệ!");
+      return;
+    }
 
-    const logDate = new Date().toISOString().slice(0, 10); // yyyy-MM-dd
+    const logDate = new Date().toISOString().slice(0, 10);
     const body = {
       logDate,
       cigarettesSmoked: Number(todayCigarettes),
       pricePerPack: Number(pricePerPack),
+      cigarettesPerPack: Number(cigarettesPerPack), // BẮT BUỘC
       mood: "",
       notes: journalEntry,
-      // Nếu có thêm cigarettesPerPack thì bổ sung:
-      // cigarettesPerPack: 20,
     };
 
     try {
@@ -203,7 +210,7 @@ const Dashboard = () => {
       setProgressLogs(res.data);
 
       // Thêm dòng này để reload lại currentGoal
-      const goalRes = await api.get("/CurrentGoal/current-goal");
+      const goalRes = await api.get("/CurrentGoal");
       setCurrentGoal(goalRes.data);
 
       // Tính lại progress
@@ -412,10 +419,10 @@ const Dashboard = () => {
 
   const handleAddProgressLog = async (logData) => {
     try {
-      await api.post("/ProgressLog", logData);
+      await api.post("/ProgressLog/CreateProgress-log", logData);
       const [logsRes, goalRes] = await Promise.all([
         api.get("/ProgressLog"),
-        api.get("/CurrentGoal/current-goal"),
+        api.get("/CurrentGoal"),
       ]);
       setProgressLogs(logsRes.data);
       setCurrentGoal(goalRes.data);
@@ -668,6 +675,21 @@ const Dashboard = () => {
                               />
                             </label>
                             <span>VNĐ/bao</span>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
+                            <label style={{ marginBottom: 0 }}>
+                              Số điếu/bao:&nbsp;
+                              <input
+                                type="number"
+                                min="1"
+                                max="30"
+                                value={cigarettesPerPack}
+                                onChange={e => setCigarettesPerPack(e.target.value)}
+                                required
+                                style={{ width: 60, marginRight: 4 }}
+                              />
+                            </label>
+                            <span>điếu</span>
                           </div>
                           <button type="submit" className="btn btn-success ms-3">
                             Ghi nhận
