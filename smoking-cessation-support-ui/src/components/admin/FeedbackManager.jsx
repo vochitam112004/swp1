@@ -17,12 +17,8 @@ export default function FeedbackManager() {
   // Nếu backend hỗ trợ filter:
   const fetchFeedbacks = async () => {
     try {
-      const params = [];
-      if (filterRating) params.push(`rating=${filterRating}`);
-      if (filterKeyword) params.push(`keyword=${encodeURIComponent(filterKeyword)}`);
-      const query = params.length ? "?" + params.join("&") : "";
-      const res = await api.get(`/Feedback${query}`);
-      setFeedbacks(res.data.items || res.data);
+      const res = await api.get("/Feedback/GetFeedbacks");
+      setFeedbacks(Array.isArray(res.data) ? res.data : []);
     } catch {
       toast.error("Không thể tải feedback!");
     }
@@ -38,9 +34,9 @@ export default function FeedbackManager() {
   // Lưu chỉnh sửa
   const handleSaveEdit = async () => {
     try {
-      await api.put(`/Feedback/${editing.feedbackId}`, {
-        rating: editing.rating,
-        comment: editing.comment,
+      await api.post(`/Feedback/UpdateFeedbackById/${editing.feedbackId}`, {
+        type: editing.type,
+        content: editing.content,
       });
       toast.success("Đã cập nhật feedback!");
       setEditing(null);
@@ -54,7 +50,7 @@ export default function FeedbackManager() {
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa feedback này?")) return;
     try {
-      await api.delete(`/Feedback/${id}`);
+      await api.delete(`/Feedback/DeleteFeedback/${id}`);
       toast.success("Đã xóa feedback!");
       fetchFeedbacks();
     } catch {
@@ -105,7 +101,7 @@ export default function FeedbackManager() {
         <Box key={fb.feedbackId} sx={{ p: 2, border: "1px solid #eee", mb: 2, borderRadius: 2, position: "relative" }}>
           <Typography fontWeight={600}>{fb.userName || "Ẩn danh"}</Typography>
           <Rating value={fb.rating} readOnly size="small" />
-          <Typography>{fb.comment}</Typography>
+          <Typography>{fb.content}</Typography>
           <IconButton sx={{ position: "absolute", top: 8, right: 48 }} onClick={() => setEditing({ ...fb })}>
             <EditIcon />
           </IconButton>

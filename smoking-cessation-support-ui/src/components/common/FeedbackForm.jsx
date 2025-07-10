@@ -4,9 +4,10 @@ import api from "../../api/axios";
 import { toast } from "react-toastify";
 import "../../css/Feedback.css";
 
-export default function FeedbackForm({ planId, coachId, onSubmitted }) {
+export default function FeedbackForm({ onSubmitted }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [type, setType] = useState("general");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -17,7 +18,11 @@ export default function FeedbackForm({ planId, coachId, onSubmitted }) {
     }
     setLoading(true);
     try {
-      await api.post("/feedback", { planId, coachId, rating, comment });
+      await api.post("/Feedback/SubmitFeedback", {
+        type,
+        content: comment, // chỉ gửi nhận xét
+        rating,           // gửi số sao riêng
+      });
       setComment("");
       setRating(5);
       toast.success("Cảm ơn bạn đã đánh giá!");
