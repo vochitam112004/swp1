@@ -171,8 +171,7 @@ const Dashboard = () => {
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = async (e) => {
     e.preventDefault();
-    const today = new Date().toISOString().slice(0, 10);
-    const existed = journal.find(j => j.date === today);
+    const existed = journal.find(j => (j.logDate || j.date) === journalDate);
     if (existed) {
       toast.error("Bạn đã ghi nhật ký cho ngày hôm nay. Hãy sửa hoặc xóa để ghi lại.");
       return;
@@ -191,9 +190,8 @@ const Dashboard = () => {
       return;
     }
 
-    const logDate = new Date().toISOString().slice(0, 10);
     const body = {
-      logDate,
+      logDate: journalDate,
       cigarettesSmoked: Number(todayCigarettes),
       pricePerPack: Number(pricePerPack),
       cigarettesPerPack: Number(cigarettesPerPack), // BẮT BUỘC
@@ -234,8 +232,10 @@ const Dashboard = () => {
       try {
         const res = await api.get("/ProgressLog/GetProgress-logs");
         setJournal(res.data);
+        setProgressLogs(res.data)
       } catch {
         setJournal([]);
+        setProgressLogs([])
       }
     }
     fetchJournal();
@@ -244,7 +244,11 @@ const Dashboard = () => {
   // Lưu nhật ký qua API thay vì localStorage
   const handleJournalSubmit = async (e) => {
     e.preventDefault();
-    if (!journalEntry.trim()) return;
+    const existed = journal.find(j => (j.logDate || j.date) === journalDate);
+    if (existed) {
+      toast.error("Bạn đã ghi nhật ký cho ngày này. Hãy sửa hoặc xóa để ghi lại.");
+      return;
+    }
     try {
       await api.post("/ProgressLog/CreateProgress-log", {
         date: journalDate,
@@ -260,9 +264,8 @@ const Dashboard = () => {
     }
   };
 
-  // Dữ liệu cho biểu đồ tiến trình (số ngày không hút liên tục)
-  const chartLabels = journal.map(j => j.date);
-  const chartData = journal.map((j, idx) => idx + 1);
+  const chartLabels = journal.map(j => j.logDate || j.date);
+  const chartData = journal.map(j => j.cigarettesSmoked);
 
   // Thông báo mỗi ngày 1 lần
   useEffect(() => {
@@ -600,7 +603,37 @@ const Dashboard = () => {
                     <div className="bg-white p-4 rounded-3 shadow-sm border mb-4 mb-md-0">
                       <h3 className="fs-5 fw-semibold mb-3">Tiến trình cai thuốc</h3>
                       <div className="d-flex align-items-center justify-content-center" style={{ height: "250px", background: "#f5f6fa", borderRadius: "1rem" }}>
-                        <span className="text-secondary">Biểu đồ tiến trình sẽ hiển thị tại đây</span>
+                        {progressLogs.length === 0 ? (
+                          <div className="text-secondary">Chưa có dữ liệu tiến trình.</div>
+                        ) : (
+                          <Line
+                            data={{
+                              labels: progressLogs.map(log => log.logDate || log.date),
+                              datasets: [
+                                {
+                                  label: "Số điếu thuốc hút mỗi ngày",
+                                  data: progressLogs.map(log => log.cigarettesSmoked),
+                                  fill: false,
+                                  borderColor: "#1976d2",
+                                  backgroundColor: "#1976d2",
+                                  tension: 0.1,
+                                },
+                              ],
+                            }}
+                            options={{
+                              responsive: true,
+                              plugins: {
+                                legend: { display: true },
+                                title: { display: false },
+                              },
+                              scales: {
+                                y: { beginAtZero: true, title: { display: true, text: "Điếu thuốc" } },
+                                x: { title: { display: true, text: "Ngày" } },
+                              },
+                            }}
+                            height={220}
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -655,18 +688,32 @@ const Dashboard = () => {
                       </button>
                       {showForm && (
                         <form onSubmit={handleSubmitProgress}>
-                          <label>
-                            Số điếu thuốc hút hôm nay:
-                            <input
-                              type="number"
-                              min="0"
-                              value={todayCigarettes}
-                              onChange={(e) => setTodayCigarettes(e.target.value)}
-                              required
-                              style={{ marginLeft: 8, width: 60 }}
-                            />
-                          </label>
-                          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
+                          <div className="mb-2">
+                            <label>
+                              Ngày ghi nhận:&nbsp;
+                              <input
+                                type="date"
+                                value={journalDate}
+                                onChange={e => setJournalDate(e.target.value)}
+                                required
+                                style={{ borderRadius: 6, border: "1px solid #ccc", padding: "4px 8px", width: 150 }}
+                              />
+                            </label>
+                          </div>
+                          <div className="mb-2">
+                            <label>
+                              Số điếu thuốc hút hôm nay:&nbsp;
+                              <input
+                                type="number"
+                                min="0"
+                                value={todayCigarettes}
+                                onChange={e => setTodayCigarettes(e.target.value)}
+                                required
+                                style={{ width: 80, marginLeft: 4 }}
+                              />
+                            </label>
+                          </div>
+                          <div className="mb-2" style={{ display: "flex", alignItems: "center" }}>
                             <label style={{ marginBottom: 0 }}>
                               Giá tiền/bao:&nbsp;
                               <input
@@ -681,7 +728,7 @@ const Dashboard = () => {
                             </label>
                             <span>VNĐ/bao</span>
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
+                          <div className="mb-2" style={{ display: "flex", alignItems: "center" }}>
                             <label style={{ marginBottom: 0 }}>
                               Số điếu/bao:&nbsp;
                               <input
@@ -806,45 +853,23 @@ const Dashboard = () => {
 
                 {/* Biểu đồ tiến trình */}
                 <div className="my-4">
-                  <h4>Biểu đồ tiến trình</h4>
+                  <h5>Biểu đồ tiến trình (theo nhật ký)</h5>
                   <Line
-                    key={chartLabels.join(",")}
+                    key={chartLabels.join(",")} // Thêm prop key để tránh lỗi canvas
                     data={{
                       labels: chartLabels.length > 0 ? chartLabels : ["Ngày 1"],
                       datasets: [
                         {
-                          label: "Số ngày không hút (theo nhật ký)",
+                          label: "Số điếu thuốc hút mỗi ngày",
                           data: chartData.length > 0 ? chartData : [0],
                           fill: false,
-                          borderColor: "#1976d2",
+                          borderColor: "#43a047",
                           tension: 0.1,
                         },
                       ],
                     }}
                     height={120}
                   />
-                </div>
-
-                {/* Thống kê nâng cao */}
-                <div className="row g-4 mt-4">
-                  <div className="col-md-4">
-                    <div className="bg-light p-3 rounded-3 shadow-sm text-center">
-                      <div className="fw-semibold">Chuỗi ngày không hút dài nhất</div>
-                      <div className="display-6 text-success">{maxStreak} ngày</div>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="bg-light p-3 rounded-3 shadow-sm text-center">
-                      <div className="fw-semibold">Số lần tái nghiện</div>
-                      <div className="display-6 text-danger">{relapseCount}</div>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="bg-light p-3 rounded-3 shadow-sm text-center">
-                      <div className="fw-semibold">Tổng tiền tiết kiệm được</div>
-                      <div className="display-6 text-primary">{totalMoneySaved.toLocaleString()}đ</div>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -986,7 +1011,7 @@ const Dashboard = () => {
                     .filter(entry => !filterMonth || entry.date.startsWith(filterMonth))
                     .slice().reverse().map((entry, idx) => (
                       <div key={idx} className="border rounded p-2 mb-2 bg-light">
-                        <b>{entry.date}</b>:&nbsp;
+                        <b>{entry.logDate}</b>:&nbsp;
                         {editIdx === idx ? (
                           // --- FORM CẬP NHẬT NHẬT KÝ ---
                           <form
@@ -1027,9 +1052,9 @@ const Dashboard = () => {
                                   type="number"
                                   name="cigarettesSmoked"
                                   min="0"
-                                  defaultValue={entry.cigarettesSmoked}
                                   className="form-control"
                                   placeholder="Điếu hút"
+                                  defaultValue={entry.cigarettesSmoked}
                                   required
                                 />
                               </div>
@@ -1038,8 +1063,8 @@ const Dashboard = () => {
                                   type="number"
                                   name="pricePerPack"
                                   min="0"
-                                  defaultValue={entry.pricePerPack}
                                   className="form-control"
+                                  defaultValue={entry.pricePerPack}
                                   placeholder="Giá/bao"
                                   required
                                 />
@@ -1049,9 +1074,9 @@ const Dashboard = () => {
                                   type="number"
                                   name="cigarettesPerPack"
                                   min="1"
-                                  defaultValue={entry.cigarettesPerPack || 20}
                                   className="form-control"
                                   placeholder="Điếu/bao"
+                                  defaultValue={entry.cigarettesPerPack}
                                   required
                                 />
                               </div>
@@ -1081,21 +1106,37 @@ const Dashboard = () => {
                           </form>
                         ) : (
                           <>
-                            {entry.content}
-                            <button className="btn btn-sm btn-outline-primary ms-2" onClick={() => setEditIdx(idx)}>Sửa</button>
-                            <button className="btn btn-sm btn-outline-danger ms-1" onClick={async () => {
-                              if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
-                                try {
-                                  await api.delete(`/ProgressLog/DeleteByIdProgress-log/${entry.logId}`);
-                                  toast.success("Đã xóa nhật ký!");
-                                  // Reload lại nhật ký
-                                  const res = await api.get("/ProgressLog/GetProgress-logs");
-                                  setJournal(res.data);
-                                } catch {
-                                  toast.error("Xóa nhật ký thất bại!");
+                            <div>
+                              <b>Ngày:</b> {entry.logDate || entry.date} <br />
+                              <b>Số điếu:</b> {entry.cigarettesSmoked} &nbsp;
+                              <b>Giá/bao:</b> {entry.pricePerPack}đ &nbsp;
+                              <b>Số điếu/bao:</b> {entry.cigarettesPerPack} <br />
+                              <b>Cảm xúc:</b> {entry.mood || "-"} <br />
+                              <b>Ghi chú:</b> {entry.notes || entry.content || "-"}
+                            </div>
+                            <button
+                              className="btn btn-sm btn-outline-primary ms-2"
+                              onClick={() => setEditIdx(idx)}
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-danger ms-1"
+                              onClick={async () => {
+                                if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
+                                  try {
+                                    await api.delete(`/ProgressLog/DeleteByIdProgress-log/${entry.logId}`);
+                                    toast.success("Đã xóa nhật ký!");
+                                    const res = await api.get("/ProgressLog/GetProgress-logs");
+                                    setJournal(res.data);
+                                  } catch {
+                                    toast.error("Xóa nhật ký thất bại!");
+                                  }
                                 }
-                              }
-                            }}>Xóa</button>
+                              }}
+                            >
+                              Xóa
+                            </button>
                           </>
                         )}
                       </div>
