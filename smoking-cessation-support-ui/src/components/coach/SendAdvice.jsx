@@ -60,7 +60,7 @@ export default function SendAdvice() {
       </TableContainer>
 
       {selectedUserId && (
-        <ChatSupport targetUserId={selectedUserId} onClose={handleCloseChat} />
+        <ChatSupport targetUserId={selectedUserId} onClose={handleCloseChat}/>
       )}
     </Box>
   );
