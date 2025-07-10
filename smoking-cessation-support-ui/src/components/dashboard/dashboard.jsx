@@ -188,8 +188,6 @@ const Dashboard = () => {
       logDate,
       cigarettesSmoked: Number(todayCigarettes),
       pricePerPack: Number(pricePerPack),
-      mood: "",
-      notes: journalEntry,
       // Nếu có thêm cigarettesPerPack thì bổ sung:
       // cigarettesPerPack: 20,
     };

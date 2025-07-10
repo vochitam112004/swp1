@@ -91,7 +91,7 @@ const ChatSupport = ({ targetUserId, onClose }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       fetchData();
-    }, 2000000);
+    }, 2000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
