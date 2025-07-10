@@ -138,6 +138,11 @@ const Dashboard = () => {
   const [currentGoal, setCurrentGoal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [memberGoals, setMemberGoals] = useState([]);
+  const [memberProfile, setMemberProfile] = useState(null);
+  const [smokingStatus, setSmokingStatus] = useState("");
+  const [quitAttempts, setQuitAttempts] = useState(0);
+  const [experienceLevel, setExperienceLevel] = useState(0);
+  const [previousAttempts, setPreviousAttempts] = useState("");
   const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
 
   useEffect(() => {
@@ -148,17 +153,28 @@ const Dashboard = () => {
           progressLogRes,
           currentGoalRes,
           goalPlanRes,
-          memberGoalRes
+          memberGoalRes,
+          memberProfileRes
         ] = await Promise.all([
           api.get("/ProgressLog/GetProgress-logs"),
           api.get("/CurrentGoal"),
-          api.get("/GoalPlan/all-goals"),
-          api.get("/MemberGoal")
+          api.get("/GoalPlan/current-goal"),
+          api.get("/MemberGoal"),
+          api.get("/MemberProfile")
         ]);
         setProgressLogs(progressLogRes.data);
         setCurrentGoal(currentGoalRes.data);
-        setPlan(goalPlanRes.data[0] || null);
+        setPlan(goalPlanRes.data || null);
         setMemberGoals(memberGoalRes.data);
+        
+        // Set member profile data
+        if (memberProfileRes.data) {
+          setMemberProfile(memberProfileRes.data);
+          setSmokingStatus(memberProfileRes.data.smokingStatus || "");
+          setQuitAttempts(memberProfileRes.data.quitAttempts || 0);
+          setExperienceLevel(memberProfileRes.data.experience_level || 0);
+          setPreviousAttempts(memberProfileRes.data.previousAttempts || "");
+        }
       } catch (err) {
         toast.error("Lỗi tải dữ liệu!");
       } finally {
@@ -501,6 +517,41 @@ const Dashboard = () => {
     }
   };
 
+  // Hàm cập nhật hồ sơ người dùng
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const profileData = {
+        memberId: memberProfile?.memberId,
+        smokingStatus,
+        quitAttempts: Number(quitAttempts),
+        experience_level: Number(experienceLevel),
+        previousAttempts,
+        // Không cần gửi createdAt/updatedAt, backend sẽ tự xử lý
+      };
+      if (memberProfile && memberProfile.memberId) {
+        // Sử dụng đúng endpoint PUT /MemberProfile/Update-MemberProfile/{memberId}
+        const res = await api.put(`/MemberProfile/Update-MemberProfile/${memberProfile.memberId}`, profileData);
+        setMemberProfile(res.data);
+        toast.success("Đã cập nhật hồ sơ!");
+      } else {
+        // Nếu chưa có, tạo mới bằng POST
+        const res = await api.post("/MemberProfile", profileData);
+        setMemberProfile(res.data);
+        toast.success("Đã tạo hồ sơ!");
+      }
+    } catch (err) {
+      console.error("Profile update error:", err, err.response?.data);
+      toast.error("Cập nhật hồ sơ thất bại! " + (err.response?.data?.message || ""));
+    }
+  };
+
+  // Hàm kiểm tra người dùng có ý định cai thuốc không
+  function canCreateGoalPlan() {
+    // Chỉ cho phép nếu đã nhập trạng thái hút thuốc (smokingStatus khác rỗng/null)
+    return smokingStatus && smokingStatus.trim() !== "";
+  }
+
   if (loading) return <div style={{ textAlign: "center", marginTop: 40 }}><span className="spinner-border"></span> Đang tải dữ liệu...</div>;
 
   return (
@@ -543,6 +594,11 @@ const Dashboard = () => {
             <li className="nav-item">
               <button className={`nav-link ${activeTab === "systemreport" ? "active" : ""}`} onClick={() => setActiveTab("systemreport")}>
                 <i className="fas fa-flag me-2"></i>Báo cáo hệ thống
+              </button>
+            </li>
+            <li className="nav-item">
+              <button className={`nav-link ${activeTab === "profile" ? "active" : ""}`} onClick={() => setActiveTab("profile")}>
+                <i className="fas fa-user me-2"></i>Hồ sơ cá nhân
               </button>
             </li>
           </ul>
@@ -865,81 +921,91 @@ const Dashboard = () => {
             {activeTab === "plan" && (
               <div>
                 <h3 className="fs-5 fw-semibold mb-3">Kế hoạch cai thuốc</h3>
-                {/* Hiển thị kế hoạch hiện tại */}
-                <div className="mb-4">
-                  <h5>Chi tiết kế hoạch hiện tại:</h5>
-                  <ul>
-                    <li><b>Mục tiêu số ngày không hút:</b> {plan?.goalDays || "Chưa đặt"} ngày</li>
-                    <li><b>Lý do bỏ thuốc:</b> {plan?.reason || "Chưa nhập"}</li>
-                    <li><b>Tần suất nhắc nhở:</b> {plan?.reminderFrequency || "Chưa chọn"}</li>
-                  </ul>
-                </div>
-                {/* Form chỉnh sửa kế hoạch */}
-                <form
-                  onSubmit={async e => {
-                    e.preventDefault();
-                    const newPlan = {
-                      goalDays: e.target.goalDays.value,
-                      reason: e.target.reason.value,
-                      reminderFrequency: e.target.reminderFrequency.value,
-                    };
-                    await handleUpdatePlan(newPlan);
-                  }}
-                  className="border rounded p-3 bg-light"
-                  style={{ maxWidth: 400 }}
-                >
-                  <h6>Cập nhật kế hoạch</h6>
-                  <div className="mb-2">
-                    <label>Mục tiêu số ngày:&nbsp;
-                      <input
-                        type="number"
-                        name="goalDays"
-                        min="1"
-                        defaultValue={plan?.goalDays || 60}
-                        required
-                        className="form-control"
-                      />
-                    </label>
+                {/* Nếu chưa nhập trạng thái hút thuốc, không cho tạo kế hoạch */}
+                {!canCreateGoalPlan() ? (
+                  <div className="alert alert-warning">
+                    <i className="fas fa-exclamation-circle me-2"></i>
+                    Bạn cần cập nhật <b>Trạng thái hút thuốc</b> trong <b>Hồ sơ cá nhân</b> trước khi tạo kế hoạch cai thuốc.
                   </div>
-                  <div className="mb-2">
-                    <label>Lý do bỏ thuốc:&nbsp;
-                      <input
-                        type="text"
-                        name="reason"
-                        defaultValue={plan?.reason || ""}
-                        required
-                        className="form-control"
-                      />
-                    </label>
-                  </div>
-                  <div className="mb-2">
-                    <label>Tần suất nhắc nhở:&nbsp;
-                      <select
-                        name="reminderFrequency"
-                        defaultValue={plan?.reminderFrequency || "daily"}
-                        className="form-control"
-                      >
-                        <option value="daily">Hàng ngày</option>
-                        <option value="weekly">Hàng tuần</option>
-                        <option value="monthly">Hàng tháng</option>
-                      </select>
-                    </label>
-                  </div>
-                  <button type="submit" className="btn btn-primary mt-2">Lưu kế hoạch</button>
-                </form>
+                ) : (
+                  <>
+                    {/* Hiển thị kế hoạch hiện tại */}
+                    <div className="mb-4">
+                      <h5>Chi tiết kế hoạch hiện tại:</h5>
+                      <ul>
+                        <li><b>Mục tiêu số ngày không hút:</b> {plan?.goalDays || "Chưa đặt"} ngày</li>
+                        <li><b>Lý do bỏ thuốc:</b> {plan?.reason || "Chưa nhập"}</li>
+                        <li><b>Tần suất nhắc nhở:</b> {plan?.reminderFrequency || "Chưa chọn"}</li>
+                      </ul>
+                    </div>
+                    {/* Form chỉnh sửa kế hoạch */}
+                    <form
+                      onSubmit={async e => {
+                        e.preventDefault();
+                        const newPlan = {
+                          goalDays: e.target.goalDays.value,
+                          reason: e.target.reason.value,
+                          reminderFrequency: e.target.reminderFrequency.value,
+                        };
+                        await handleUpdatePlan(newPlan);
+                      }}
+                      className="border rounded p-3 bg-light"
+                      style={{ maxWidth: 400 }}
+                    >
+                      <h6>Cập nhật kế hoạch</h6>
+                      <div className="mb-2">
+                        <label>Mục tiêu số ngày:&nbsp;
+                          <input
+                            type="number"
+                            name="goalDays"
+                            min="1"
+                            defaultValue={plan?.goalDays || 60}
+                            required
+                            className="form-control"
+                          />
+                        </label>
+                      </div>
+                      <div className="mb-2">
+                        <label>Lý do bỏ thuốc:&nbsp;
+                          <input
+                            type="text"
+                            name="reason"
+                            defaultValue={plan?.reason || ""}
+                            required
+                            className="form-control"
+                          />
+                        </label>
+                      </div>
+                      <div className="mb-2">
+                        <label>Tần suất nhắc nhở:&nbsp;
+                          <select
+                            name="reminderFrequency"
+                            defaultValue={plan?.reminderFrequency || "daily"}
+                            className="form-control"
+                          >
+                            <option value="daily">Hàng ngày</option>
+                            <option value="weekly">Hàng tuần</option>
+                            <option value="monthly">Hàng tháng</option>
+                          </select>
+                        </label>
+                      </div>
+                      <button type="submit" className="btn btn-primary mt-2">Lưu kế hoạch</button>
+                    </form>
 
-                {/* Danh sách mục tiêu của bạn */}
-                {memberGoals.length > 0 && (
-                  <div className="mt-4">
-                    <h5>Danh sách mục tiêu của bạn</h5>
-                    <ul>
-                      {memberGoals.map(goal => (
-                        <li key={goal.memberGoalId}>
-                          <b>Goal ID:</b> {goal.goalId} | <b>Status:</b> {goal.status}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                    {/* Danh sách mục tiêu của bạn */}
+                    {memberGoals.length > 0 && (
+                      <div className="mt-4">
+                        <h5>Danh sách mục tiêu của bạn</h5>
+                        <ul>
+                          {memberGoals.map(goal => (
+                            <li key={goal.memberGoalId}>
+                              <b>Goal ID:</b> {goal.goalId} | <b>Status:</b> {goal.status}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -1232,6 +1298,156 @@ const Dashboard = () => {
               <div>
                 <SystemReportForm />
                 <NotificationHistory />
+              </div>
+            )}
+            {activeTab === "profile" && (
+              <div>
+                <h3 className="fs-5 fw-semibold mb-3">Hồ sơ cá nhân</h3>
+                <p className="text-secondary mb-4">
+                  Cập nhật thông tin cá nhân về quá trình hút thuốc và cai thuốc của bạn.
+                </p>
+
+                <div className="row">
+                  <div className="col-md-6">
+                    <form onSubmit={handleProfileSubmit} className="mb-4">
+                      <div className="mb-3">
+                        <label className="form-label">
+                          <strong>Trạng thái hút thuốc:</strong>
+                          <input 
+                            className="form-control mt-1"
+                            value={smokingStatus} 
+                            onChange={e => setSmokingStatus(e.target.value)} 
+                            placeholder="Ví dụ: Đang cai thuốc, Hút thỉnh thoảng, Đã bỏ hoàn toàn..."
+                            required 
+                          />
+                        </label>
+                      </div>
+                      <div className="mb-3">
+                        <label className="form-label">
+                          <strong>Số lần thử cai:</strong>
+                          <input 
+                            type="number" 
+                            className="form-control mt-1"
+                            value={quitAttempts} 
+                            onChange={e => setQuitAttempts(e.target.value)} 
+                            min="0"
+                            required 
+                          />
+                        </label>
+                      </div>
+                      <div className="mb-3">
+                        <label className="form-label">
+                          <strong>Kinh nghiệm hút thuốc (năm):</strong>
+                          <input 
+                            type="number" 
+                            className="form-control mt-1"
+                            value={experienceLevel} 
+                            onChange={e => setExperienceLevel(e.target.value)} 
+                            min="0"
+                            required 
+                          />
+                        </label>
+                      </div>
+                      <div className="mb-3">
+                        <label className="form-label">
+                          <strong>Các lần thử cai trước đây:</strong>
+                          <textarea 
+                            className="form-control mt-1"
+                            rows="3"
+                            value={previousAttempts} 
+                            onChange={e => setPreviousAttempts(e.target.value)}
+                            placeholder="Mô tả các lần cai thuốc trước đây, thời gian, phương pháp, kết quả..."
+                          />
+                        </label>
+                      </div>
+                      <button type="submit" className="btn btn-primary">
+                        <i className="fas fa-save me-2"></i>Lưu hồ sơ
+                      </button>
+                    </form>
+                  </div>
+
+                  <div className="col-md-6">
+                    {memberProfile && (
+                      <div className="card">
+                        <div className="card-header bg-primary text-white">
+                          <h5 className="card-title mb-0">
+                            <i className="fas fa-user-circle me-2"></i>Thông tin hồ sơ hiện tại
+                          </h5>
+                        </div>
+                        <div className="card-body">
+                          <div className="mb-3">
+                            <strong>Trạng thái hút thuốc:</strong>
+                            <p className="text-muted mb-0">{memberProfile.smokingStatus || "Chưa cập nhật"}</p>
+                          </div>
+                          <div className="mb-3">
+                            <strong>Số lần thử cai:</strong>
+                            <p className="text-muted mb-0">{memberProfile.quitAttempts} lần</p>
+                          </div>
+                          <div className="mb-3">
+                            <strong>Kinh nghiệm hút thuốc:</strong>
+                            <p className="text-muted mb-0">{memberProfile.experience_level} năm</p>
+                          </div>
+                          <div className="mb-3">
+                            <strong>Các lần thử cai trước:</strong>
+                            <p className="text-muted mb-0">{memberProfile.previousAttempts || "Chưa có thông tin"}</p>
+                          </div>
+                          {memberProfile.createdAt && (
+                            <div className="mb-3">
+                              <strong>Ngày tạo hồ sơ:</strong>
+                              <p className="text-muted mb-0">{new Date(memberProfile.createdAt).toLocaleDateString('vi-VN')}</p>
+                            </div>
+                          )}
+                          {memberProfile.updatedAt && (
+                            <div className="mb-3">
+                              <strong>Cập nhật lần cuối:</strong>
+                              <p className="text-muted mb-0">{new Date(memberProfile.updatedAt).toLocaleDateString('vi-VN')}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!memberProfile && (
+                      <div className="alert alert-info">
+                        <i className="fas fa-info-circle me-2"></i>
+                        Bạn chưa có hồ sơ cá nhân. Hãy điền thông tin bên trái để tạo hồ sơ.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Gợi ý dựa trên hồ sơ */}
+                {memberProfile && (
+                  <div className="mt-5">
+                    <h4>Gợi ý dành cho bạn</h4>
+                    <div className="row g-3">
+                      {memberProfile.quitAttempts > 0 && (
+                        <div className="col-md-6">
+                          <div className="alert alert-warning">
+                            <strong>Kinh nghiệm từ những lần cai trước:</strong>
+                            <p className="mb-0">Bạn đã thử cai {memberProfile.quitAttempts} lần. Hãy phân tích những gì đã học được để cải thiện lần này.</p>
+                          </div>
+                        </div>
+                      )}
+                      {memberProfile.experience_level > 10 && (
+                        <div className="col-md-6">
+                          <div className="alert alert-info">
+                            <strong>Hút thuốc lâu năm:</strong>
+                            <p className="mb-0">Với {memberProfile.experience_level} năm hút thuốc, hãy kiên nhẫn và tìm kiếm hỗ trợ chuyên nghiệp nếu cần.</p>
+                          </div>
+                        </div>
+                      )}
+                      {memberProfile.quitAttempts === 0 && (
+                        <div className="col-md-6">
+                          <div className="alert alert-success">
+                            <strong>Lần đầu cai thuốc:</strong>
+                            <p className="mb-0">Đây là lần đầu bạn cai thuốc! Hãy chuẩn bị kỹ lưỡng và đặt mục tiêu rõ ràng.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
