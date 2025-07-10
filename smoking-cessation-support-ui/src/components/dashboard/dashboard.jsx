@@ -191,9 +191,8 @@ const Dashboard = () => {
       return;
     }
 
-    const logDate = new Date().toISOString().slice(0, 10);
     const body = {
-      logDate,
+      logDate: journalDate,
       cigarettesSmoked: Number(todayCigarettes),
       pricePerPack: Number(pricePerPack),
       cigarettesPerPack: Number(cigarettesPerPack), // BẮT BUỘC
@@ -655,18 +654,32 @@ const Dashboard = () => {
                       </button>
                       {showForm && (
                         <form onSubmit={handleSubmitProgress}>
-                          <label>
-                            Số điếu thuốc hút hôm nay:
-                            <input
-                              type="number"
-                              min="0"
-                              value={todayCigarettes}
-                              onChange={(e) => setTodayCigarettes(e.target.value)}
-                              required
-                              style={{ marginLeft: 8, width: 60 }}
-                            />
-                          </label>
-                          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
+                          <div className="mb-2">
+                            <label>
+                              Ngày ghi nhận:&nbsp;
+                              <input
+                                type="date"
+                                value={journalDate}
+                                onChange={e => setJournalDate(e.target.value)}
+                                required
+                                style={{ borderRadius: 6, border: "1px solid #ccc", padding: "4px 8px", width: 150 }}
+                              />
+                            </label>
+                          </div>
+                          <div className="mb-2">
+                            <label>
+                              Số điếu thuốc hút hôm nay:&nbsp;
+                              <input
+                                type="number"
+                                min="0"
+                                value={todayCigarettes}
+                                onChange={e => setTodayCigarettes(e.target.value)}
+                                required
+                                style={{ width: 80, marginLeft: 4 }}
+                              />
+                            </label>
+                          </div>
+                          <div className="mb-2" style={{ display: "flex", alignItems: "center" }}>
                             <label style={{ marginBottom: 0 }}>
                               Giá tiền/bao:&nbsp;
                               <input
@@ -681,7 +694,7 @@ const Dashboard = () => {
                             </label>
                             <span>VNĐ/bao</span>
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
+                          <div className="mb-2" style={{ display: "flex", alignItems: "center" }}>
                             <label style={{ marginBottom: 0 }}>
                               Số điếu/bao:&nbsp;
                               <input
@@ -986,7 +999,7 @@ const Dashboard = () => {
                     .filter(entry => !filterMonth || entry.date.startsWith(filterMonth))
                     .slice().reverse().map((entry, idx) => (
                       <div key={idx} className="border rounded p-2 mb-2 bg-light">
-                        <b>{entry.date}</b>:&nbsp;
+                        <b>{entry.logDate}</b>:&nbsp;
                         {editIdx === idx ? (
                           // --- FORM CẬP NHẬT NHẬT KÝ ---
                           <form
@@ -1027,9 +1040,9 @@ const Dashboard = () => {
                                   type="number"
                                   name="cigarettesSmoked"
                                   min="0"
-                                  defaultValue={entry.cigarettesSmoked}
                                   className="form-control"
                                   placeholder="Điếu hút"
+                                  defaultValue={entry.cigarettesSmoked}
                                   required
                                 />
                               </div>
@@ -1038,8 +1051,8 @@ const Dashboard = () => {
                                   type="number"
                                   name="pricePerPack"
                                   min="0"
-                                  defaultValue={entry.pricePerPack}
                                   className="form-control"
+                                  defaultValue={entry.pricePerPack}
                                   placeholder="Giá/bao"
                                   required
                                 />
@@ -1049,9 +1062,9 @@ const Dashboard = () => {
                                   type="number"
                                   name="cigarettesPerPack"
                                   min="1"
-                                  defaultValue={entry.cigarettesPerPack || 20}
                                   className="form-control"
                                   placeholder="Điếu/bao"
+                                  defaultValue={entry.cigarettesPerPack}
                                   required
                                 />
                               </div>
@@ -1081,21 +1094,37 @@ const Dashboard = () => {
                           </form>
                         ) : (
                           <>
-                            {entry.content}
-                            <button className="btn btn-sm btn-outline-primary ms-2" onClick={() => setEditIdx(idx)}>Sửa</button>
-                            <button className="btn btn-sm btn-outline-danger ms-1" onClick={async () => {
-                              if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
-                                try {
-                                  await api.delete(`/ProgressLog/DeleteByIdProgress-log/${entry.logId}`);
-                                  toast.success("Đã xóa nhật ký!");
-                                  // Reload lại nhật ký
-                                  const res = await api.get("/ProgressLog/GetProgress-logs");
-                                  setJournal(res.data);
-                                } catch {
-                                  toast.error("Xóa nhật ký thất bại!");
+                            <div>
+                              <b>Ngày:</b> {entry.logDate || entry.date} <br />
+                              <b>Số điếu:</b> {entry.cigarettesSmoked} &nbsp;
+                              <b>Giá/bao:</b> {entry.pricePerPack}đ &nbsp;
+                              <b>Số điếu/bao:</b> {entry.cigarettesPerPack} <br />
+                              <b>Cảm xúc:</b> {entry.mood || "-"} <br />
+                              <b>Ghi chú:</b> {entry.notes || entry.content || "-"}
+                            </div>
+                            <button
+                              className="btn btn-sm btn-outline-primary ms-2"
+                              onClick={() => setEditIdx(idx)}
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-danger ms-1"
+                              onClick={async () => {
+                                if (window.confirm("Bạn chắc chắn muốn xóa nhật ký này?")) {
+                                  try {
+                                    await api.delete(`/ProgressLog/DeleteByIdProgress-log/${entry.logId}`);
+                                    toast.success("Đã xóa nhật ký!");
+                                    const res = await api.get("/ProgressLog/GetProgress-logs");
+                                    setJournal(res.data);
+                                  } catch {
+                                    toast.error("Xóa nhật ký thất bại!");
+                                  }
                                 }
-                              }
-                            }}>Xóa</button>
+                              }}
+                            >
+                              Xóa
+                            </button>
                           </>
                         )}
                       </div>
