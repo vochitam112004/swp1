@@ -452,7 +452,7 @@ const Dashboard = () => {
 
   // Lấy mục tiêu hiện tại từ API khi load
   useEffect(() => {
-    api.get("/CurrentGoal/current-goal")
+    api.get("/CurrentGoal")
       .then(res => {
         console.log("CurrentGoal API result:", res.data);
         setCurrentGoal(res.data);
@@ -640,6 +640,11 @@ const Dashboard = () => {
                             <div><b>Tổng tiền đã chi:</b> {currentGoal.totalSpenMoney?.toLocaleString() || 0}đ</div>
                             <div><b>Tiền hôm nay:</b> {currentGoal.todaySpent?.toLocaleString() || 0}đ</div>
                             <div><b>Tiền hôm qua:</b> {currentGoal.yesterdaySpent?.toLocaleString() || 0}đ</div>
+                            <div><b>Ngày thứ:</b> {currentGoal.dayNumber} trong mục tiêu</div>
+                            <div><b>Các ngày thiếu nhật ký:</b> {Array.isArray(currentGoal.missingLogDates) && currentGoal.missingLogDates.length > 0
+                              ? currentGoal.missingLogDates.join(", ")
+                              : "Không có"}
+                            </div>
                           </div>
                         ) : (
                           <>Bạn đã hoàn thành {percent}% mục tiêu {plan?.goalDays || 60} ngày không thuốc lá</>
