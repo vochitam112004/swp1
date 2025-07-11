@@ -531,22 +531,36 @@ const Dashboard = () => {
         quitAttempts: Number(quitAttempts),
         experience_level: Number(experienceLevel),
         previousAttempts,
-        // Không cần gửi createdAt/updatedAt, backend sẽ tự xử lý
+        // Không gửi updatedAt, để backend tự xử lý
       };
+
       if (memberProfile && memberProfile.memberId) {
         // Sử dụng đúng endpoint PUT /MemberProfile/Update-MemberProfile/{memberId}
         const res = await api.put(`/MemberProfile/Update-MemberProfile/${memberProfile.memberId}`, profileData);
         setMemberProfile(res.data);
         toast.success("Đã cập nhật hồ sơ!");
       } else {
-        // Nếu chưa có, tạo mới bằng POST
-        const res = await api.post("/MemberProfile", profileData);
-        setMemberProfile(res.data);
-        toast.success("Đã tạo hồ sơ!");
+        // Tạo hồ sơ mới
+        try {
+          await api.post("/MemberProfile", profileData);
+          // Sau khi tạo thành công, fetch lại data
+          const res = await api.get("/MemberProfile");
+          setMemberProfile(res.data);
+          toast.success("Đã tạo hồ sơ!");
+        } catch (createError) {
+          if (createError.response?.status === 409) {
+            // Profile đã tồn tại, thử fetch lại
+            const res = await api.get("/MemberProfile");
+            setMemberProfile(res.data);
+            toast.info("Hồ sơ đã tồn tại. Dữ liệu đã được tải lại.");
+          } else {
+            throw createError;
+          }
+        }
       }
     } catch (err) {
       console.error("Profile update error:", err, err.response?.data);
-      toast.error("Cập nhật hồ sơ thất bại! " + (err.response?.data?.message || ""));
+      toast.error("Cập nhật hồ sơ thất bại! " + (err.response?.data || err.message || ""));
     }
   };
 
