@@ -29,7 +29,7 @@ export default function FeedbackForm({ onSubmitted }) {
     setLoading(true);
     try {
       await api.post("/Feedback/SubmitFeedback", {
-        type,
+        isType: type === "coach", // true: coach, false: general
         content: comment,
         rating,
       });
@@ -45,24 +45,48 @@ export default function FeedbackForm({ onSubmitted }) {
   };
 
   return (
-    <Box
-      component="form"
-      onSubmit={handleSubmit}
-      className="feedback-form-container"
-    >
+    <Box component="form" onSubmit={handleSubmit} className="feedback-form-container">
       <Typography variant="h6" className="feedback-form-title">
         Đánh giá & Nhận xét
       </Typography>
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel id="feedback-type-label">Loại đánh giá</InputLabel>
+      <FormControl fullWidth sx={{ mb: 2, mt: 4 }}>
+        <InputLabel id="feedback-type-label">
+          <span style={{ fontWeight: 600, color: "#1976d2" }}>
+            Loại đánh giá
+          </span>
+        </InputLabel>
         <Select
           labelId="feedback-type-label"
           value={type}
           label="Loại đánh giá"
           onChange={(e) => setType(e.target.value)}
+          sx={{
+            borderRadius: 2,
+            fontWeight: 500,
+            bgcolor: "#f5f6fa",
+            "& .MuiSelect-icon": { color: "#1976d2" },
+          }}
+          MenuProps={{
+            PaperProps: {
+              style: {
+                borderRadius: 12,
+                boxShadow: "0 4px 24px rgba(25,118,210,0.08)",
+              },
+            },
+          }}
         >
-          <MenuItem value="general">Đánh giá sử dụng</MenuItem>
-          <MenuItem value="coach">Đánh giá coach</MenuItem>
+          <MenuItem value="general">
+            <span style={{ color: "#1976d2", fontWeight: 500 }}>
+              <i className="fas fa-globe me-2"></i>
+              Đánh giá trải nghiệm hệ thống
+            </span>
+          </MenuItem>
+          <MenuItem value="coach">
+            <span style={{ color: "#d32f2f", fontWeight: 500 }}>
+              <i className="fas fa-user-tie me-2"></i>
+              Đánh giá dành cho Coach
+            </span>
+          </MenuItem>
         </Select>
       </FormControl>
       <Box className="feedback-form-rating">
@@ -79,12 +103,7 @@ export default function FeedbackForm({ onSubmitted }) {
         className="feedback-form-textfield"
         sx={{ mb: 2 }}
       />
-      <Button
-        type="submit"
-        variant="contained"
-        disabled={loading}
-        className="feedback-form-button"
-      >
+      <Button type="submit" variant="contained" disabled={loading} className="feedback-form-button">
         {loading ? "Đang gửi..." : "Gửi đánh giá"}
       </Button>
     </Box>

@@ -83,7 +83,9 @@ export default function BXH() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedData.map((user, idx) => {
+            {paginatedData
+            .sort((a, b) => b.score - a.score)
+            .map((user, idx) => {
               const actualRank = (page - 1) * rowsPerPage + idx + 1;
               return (
                 <TableRow

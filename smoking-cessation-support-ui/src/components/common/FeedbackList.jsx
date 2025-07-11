@@ -1,31 +1,31 @@
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Paper,
-  CircularProgress,
-} from "@mui/material";
+import { Box, Typography, Paper, CircularProgress } from "@mui/material";
 import api from "../../api/axios";
+import { Pagination } from "@mui/material";
 
 export default function FeedbackList({ refreshTrigger }) {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 4;
+
+  const paginatedFeedbacks = feedbacks.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
+
 
   useEffect(() => {
     setLoading(true);
     api
-      .get("/Feedback/GetFeedbacks")
+      .get("/Feedback/PublicSystemFeedbacks")
       .then((res) => {
         const list = Array.isArray(res.data) ? res.data : [];
-        const generalOnly = list.filter((fb) => fb.type === "general");
+        const generalOnly = list.filter((fb) => fb.isType === false);
         setFeedbacks(generalOnly);
       })
       .catch((err) => {
-        if (err.response?.status === 403) {
-          console.error("Bạn không có quyền xem feedback!");
-        } else {
-          console.error("Lỗi lấy feedback:", err);
-        }
+        console.error("Lỗi lấy feedback:", err);
         setFeedbacks([]);
       })
       .finally(() => setLoading(false));
@@ -47,9 +47,9 @@ export default function FeedbackList({ refreshTrigger }) {
       {feedbacks.length === 0 ? (
         <Typography>Chưa có đánh giá nào.</Typography>
       ) : (
-        feedbacks.map((fb, idx) => (
+        paginatedFeedbacks.map((fb, idx) => (
           <Paper key={idx} sx={{ p: 2, mb: 2 }}>
-            <Typography fontWeight={600}>Đánh giá sử dụng</Typography>
+            <Typography fontWeight={600}>Đánh giá trải nghiệm hệ thống</Typography>
             <Typography>
               <strong>{fb.disPlayName || "Ẩn danh"}</strong> - {fb.rating}⭐
             </Typography>
@@ -60,6 +60,14 @@ export default function FeedbackList({ refreshTrigger }) {
           </Paper>
         ))
       )}
+      <Box display="flex" justifyContent="center" mt={2}>
+        <Pagination
+          count={Math.ceil(feedbacks.length / rowsPerPage)}
+          page={page}
+          onChange={(_, value) => setPage(value)}
+          color="primary"
+        />
+      </Box>
     </Box>
   );
 }
