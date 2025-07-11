@@ -30,7 +30,7 @@ export default function BXH() {
       try {
         const [rankingRes, badgeRes] = await Promise.all([
           api.get("/Ranking/GetAllRankings"),
-          api.get("/Badge/GetAllBadge"),
+          api.get("/Badge/My-Badge"),
         ]);
         console.log("badgeRes:", badgeRes)
         console.log("rankingRes:", rankingRes)
@@ -79,59 +79,72 @@ export default function BXH() {
             <TableRow>
               <TableCell align="center" sx={{ fontWeight: 700 }}>Hạng</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>Thành viên</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Huy hiệu</TableCell>
               <TableCell align="center" sx={{ fontWeight: 700 }}>Số ngày không hút thuốc</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {paginatedData
-            .sort((a, b) => b.score - a.score)
-            .map((user, idx) => {
-              const actualRank = (page - 1) * rowsPerPage + idx + 1;
-              return (
-                <TableRow
-                  key={user.rankingId || idx}
-                  className={
-                    actualRank === 1
-                      ? "top1"
-                      : actualRank === 2
-                        ? "top2"
-                        : actualRank === 3
-                          ? "top3"
-                          : ""
-                  }
-                >
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>
-                    {getRankIcon(actualRank)}
-                  </TableCell>
-                  <TableCell>
-                    <Box display="flex" alignItems="center" gap={1.5}>
-                      <Avatar
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.userName || "Ẩn danh")}`}
-                        alt={user.userName || "Ẩn danh"}
-                      />
-                      <Box>
-                        <Typography fontWeight={600}>{user.userName || "Ẩn danh"}</Typography>
-                        <Box mt={0.5} display="flex" gap={0.5} flexWrap="wrap">
-                          {user.badges?.map((badge) => (
-                            <Avatar
-                              key={badge.badgeId}
-                              src={badge.iconUrl}
-                              alt={badge.name}
-                              sx={{ width: 24, height: 24 }}
-                              title={badge.name}
-                            />
-                          ))}
-                        </Box>
+              .sort((a, b) => b.score - a.score)
+              .map((user, idx) => {
+                const actualRank = (page - 1) * rowsPerPage + idx + 1;
+                return (
+                  <TableRow
+                    key={user.rankingId || idx}
+                    className={
+                      actualRank === 1
+                        ? "top1"
+                        : actualRank === 2
+                          ? "top2"
+                          : actualRank === 3
+                            ? "top3"
+                            : ""
+                    }
+                  >
+                    {/* Cột Hạng */}
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>
+                      {getRankIcon(actualRank)}
+                    </TableCell>
+
+                    {/* Cột Thành viên */}
+                    <TableCell>
+                      <Box display="flex" alignItems="center" gap={1.5}>
+                        <Avatar
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            user.userName || "Ẩn danh"
+                          )}`}
+                          alt={user.userName || "Ẩn danh"}
+                        />
+                        <Typography fontWeight={600}>
+                          {user.userName || "Ẩn danh"}
+                        </Typography>
                       </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography fontWeight={500}>{user.score} ngày</Typography>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    </TableCell>
+
+                    {/* 👉 Cột Huy hiệu riêng biệt */}
+                    <TableCell>
+                      <Box display="flex" gap={0.5} flexWrap="wrap">
+                        {user.badges?.map((badge) => (
+                          <Avatar
+                            key={badge.badgeId}
+                            src={badge.iconUrl}
+                            alt={badge.name}
+                            sx={{ width: 24, height: 24 }}
+                            title={badge.name}
+                          />
+                        ))}
+                      </Box>
+                    </TableCell>
+
+                    {/* Cột số ngày */}
+                    <TableCell align="center">
+                      <Typography fontWeight={500}>{user.score} ngày</Typography>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
+
         </Table>
       </Box>
 
