@@ -166,7 +166,7 @@ const Dashboard = () => {
         setCurrentGoal(currentGoalRes.data);
         setPlan(goalPlanRes.data || null);
         setMemberGoals(memberGoalRes.data);
-        
+
         // Set member profile data
         if (memberProfileRes.data) {
           setMemberProfile(memberProfileRes.data);
@@ -840,57 +840,79 @@ const Dashboard = () => {
 
                 {/* Bảng tin cộng đồng */}
                 <div className="mt-5">
-                  <h4>Bảng tin cộng đồng</h4>
-                  {(JSON.parse(localStorage.getItem("sharedBadges") || "[]")).reverse().map((item, idx) => {
-                    const encourages = JSON.parse(localStorage.getItem("encourages") || "{}");
-                    const comments = JSON.parse(localStorage.getItem("badgeComments") || "{}");
-                    return (
-                      <div key={idx} className="border rounded p-2 mb-2 bg-light">
-                        <b>{item.user}</b> đã chia sẻ huy hiệu <span className="text-primary">{item.badge}</span> lúc {item.time}
-                        <button
-                          className="btn btn-sm btn-outline-success ms-2"
-                          onClick={() => handleEncourage(idx)}
-                        >
-                          Động viên
-                        </button>
-                        <span className="ms-2 text-success">
-                          {encourages[idx] ? `${encourages[idx]} lượt động viên` : ""}
-                        </span>
-                        {/* Form bình luận */}
-                        <div className="mt-2">
-                          <input
-                            type="text"
-                            placeholder="Viết bình luận..."
-                            value={commentInputs[idx] || ""}
-                            onChange={e => setCommentInputs({ ...commentInputs, [idx]: e.target.value })}
-                            style={{ width: "70%", marginRight: 8 }}
-                          />
-                          <button
-                            className="btn btn-sm btn-primary"
-                            aria-label="Gửi bình luận"
-                            onClick={() => {
-                              if ((commentInputs[idx] || "").trim()) {
-                                handleAddComment(idx, commentInputs[idx]);
-                                setCommentInputs({ ...commentInputs, [idx]: "" }); // Xóa input sau khi gửi
-                              }
-                            }}
-                          >
-                            Gửi
-                          </button>
-                        </div>
-                        {/* Danh sách bình luận */}
-                        {comments[idx] && comments[idx].length > 0 && (
-                          <div className="mt-2">
-                            {comments[idx].map((c, cIdx) => (
-                              <div key={cIdx} className="small text-secondary">
-                                {c.text} <span className="text-muted">({c.time})</span>
+                  <h4 className="fw-bold mb-4"><i className="fas fa-users me-2"></i>Bảng tin cộng đồng</h4>
+                  <div className="row g-3">
+                    {(JSON.parse(localStorage.getItem("sharedBadges") || "[]")).reverse().map((item, idx) => {
+                      const encourages = JSON.parse(localStorage.getItem("encourages") || "{}");
+                      const comments = JSON.parse(localStorage.getItem("badgeComments") || "{}");
+                      return (
+                        <div key={idx} className="col-12 col-md-6 col-lg-4">
+                          <div className="card shadow-sm h-100">
+                            <div className="card-body">
+                              <div className="d-flex align-items-center mb-2">
+                                <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: "40px", height: "40px" }}>
+                                  <i className="fas fa-award text-warning fs-4"></i>
+                                </div>
+                                <div>
+                                  <b className="text-primary">{item.user}</b> đã chia sẻ huy hiệu <span className="fw-semibold">{item.badge}</span>
+                                  <div className="small text-muted">{item.time}</div>
+                                </div>
                               </div>
-                            ))}
+                              <div className="d-flex align-items-center mb-2">
+                                <button
+                                  className="btn btn-sm btn-outline-success"
+                                  onClick={() => handleEncourage(idx)}
+                                >
+                                  <i className="fas fa-thumbs-up me-1"></i>Động viên
+                                </button>
+                                <span className="ms-2 text-success small">
+                                  {encourages[idx] ? `${encourages[idx]} lượt động viên` : ""}
+                                </span>
+                              </div>
+                              {/* Form bình luận */}
+                              <div className="mb-2">
+                                <div className="input-group input-group-sm">
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Viết bình luận..."
+                                    value={commentInputs[idx] || ""}
+                                    onChange={e => setCommentInputs({ ...commentInputs, [idx]: e.target.value })}
+                                  />
+                                  <button
+                                    className="btn btn-primary"
+                                    aria-label="Gửi bình luận"
+                                    onClick={() => {
+                                      if ((commentInputs[idx] || "").trim()) {
+                                        handleAddComment(idx, commentInputs[idx]);
+                                        setCommentInputs({ ...commentInputs, [idx]: "" });
+                                      }
+                                    }}
+                                  >
+                                    <i className="fas fa-paper-plane"></i>
+                                  </button>
+                                </div>
+                              </div>
+                              {/* Danh sách bình luận */}
+                              {comments[idx] && comments[idx].length > 0 && (
+                                <div className="mt-2">
+                                  <div className="fw-semibold mb-1 text-secondary" style={{ fontSize: "0.95em" }}>Bình luận:</div>
+                                  <div style={{ maxHeight: 80, overflowY: "auto" }}>
+                                    {comments[idx].map((c, cIdx) => (
+                                      <div key={cIdx} className="small text-secondary border-bottom pb-1 mb-1">
+                                        <i className="fas fa-comment-dots me-1 text-primary"></i>
+                                        {c.text} <span className="text-muted">({c.time})</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Motivation */}
@@ -1325,48 +1347,48 @@ const Dashboard = () => {
                       <div className="mb-3">
                         <label className="form-label">
                           <strong>Trạng thái hút thuốc:</strong>
-                          <input 
+                          <input
                             className="form-control mt-1"
-                            value={smokingStatus} 
-                            onChange={e => setSmokingStatus(e.target.value)} 
+                            value={smokingStatus}
+                            onChange={e => setSmokingStatus(e.target.value)}
                             placeholder="Ví dụ: Đang cai thuốc, Hút thỉnh thoảng, Đã bỏ hoàn toàn..."
-                            required 
+                            required
                           />
                         </label>
                       </div>
                       <div className="mb-3">
                         <label className="form-label">
                           <strong>Số lần thử cai:</strong>
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             className="form-control mt-1"
-                            value={quitAttempts} 
-                            onChange={e => setQuitAttempts(e.target.value)} 
+                            value={quitAttempts}
+                            onChange={e => setQuitAttempts(e.target.value)}
                             min="0"
-                            required 
+                            required
                           />
                         </label>
                       </div>
                       <div className="mb-3">
                         <label className="form-label">
                           <strong>Kinh nghiệm hút thuốc (năm):</strong>
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             className="form-control mt-1"
-                            value={experienceLevel} 
-                            onChange={e => setExperienceLevel(e.target.value)} 
+                            value={experienceLevel}
+                            onChange={e => setExperienceLevel(e.target.value)}
                             min="0"
-                            required 
+                            required
                           />
                         </label>
                       </div>
                       <div className="mb-3">
                         <label className="form-label">
                           <strong>Các lần thử cai trước đây:</strong>
-                          <textarea 
+                          <textarea
                             className="form-control mt-1"
                             rows="3"
-                            value={previousAttempts} 
+                            value={previousAttempts}
                             onChange={e => setPreviousAttempts(e.target.value)}
                             placeholder="Mô tả các lần cai thuốc trước đây, thời gian, phương pháp, kết quả..."
                           />
@@ -1418,7 +1440,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {!memberProfile && (
                       <div className="alert alert-info">
                         <i className="fas fa-info-circle me-2"></i>

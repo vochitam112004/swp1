@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { Box, Rating, TextField, Button, Typography } from "@mui/material";
+import {
+  Box,
+  Rating,
+  TextField,
+  Button,
+  Typography,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
 import "../../css/Feedback.css";
@@ -20,8 +30,8 @@ export default function FeedbackForm({ onSubmitted }) {
     try {
       await api.post("/Feedback/SubmitFeedback", {
         type,
-        content: comment, // chỉ gửi nhận xét
-        rating,           // gửi số sao riêng
+        content: comment,
+        rating,
       });
       setComment("");
       setRating(5);
@@ -43,6 +53,18 @@ export default function FeedbackForm({ onSubmitted }) {
       <Typography variant="h6" className="feedback-form-title">
         Đánh giá & Nhận xét
       </Typography>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel id="feedback-type-label">Loại đánh giá</InputLabel>
+        <Select
+          labelId="feedback-type-label"
+          value={type}
+          label="Loại đánh giá"
+          onChange={(e) => setType(e.target.value)}
+        >
+          <MenuItem value="general">Đánh giá sử dụng</MenuItem>
+          <MenuItem value="coach">Đánh giá coach</MenuItem>
+        </Select>
+      </FormControl>
       <Box className="feedback-form-rating">
         <Typography mr={2}>Đánh giá:</Typography>
         <Rating value={rating} onChange={(_, v) => setRating(v)} />

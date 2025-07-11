@@ -11,28 +11,50 @@ import {
   Pagination,
 } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from '../../api/axios';
 import "../../css/BXH.css";
-
-const ranking = [
-  { name: "Nguyễn Thành Lợi", days: 365, avatar: "https://randomuser.me/api/portraits/men/32.jpg" },
-  { name: "Trần Đình Phong", days: 320, avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
-  { name: "Nguyễn Thanh Liêm", days: 290, avatar: "https://randomuser.me/api/portraits/men/75.jpg" },
-  { name: "Võ Chí Tâm", days: 250, avatar: "https://randomuser.me/api/portraits/men/45.jpg" },
-  { name: "Nguyễn Thanh Tú", days: 210, avatar: "https://randomuser.me/api/portraits/women/65.jpg" },
-  { name: "Phạm Minh Tâm", days: 180, avatar: "https://randomuser.me/api/portraits/men/85.jpg" },
-  { name: "Lê Thị Mai", days: 160, avatar: "https://randomuser.me/api/portraits/women/22.jpg" },
-  { name: "Trương Quốc Bảo", days: 140, avatar: "https://randomuser.me/api/portraits/men/99.jpg" },
-];
 
 const rowsPerPage = 5;
 
 export default function BXH() {
   const [page, setPage] = useState(1);
+  const [ranking, setRanking] = useState([]);
 
   const handleChangePage = (event, value) => {
     setPage(value);
   };
+
+  useEffect(() => {
+    const fetchRankingWithBadges = async () => {
+      try {
+        const [rankingRes, badgeRes] = await Promise.all([
+          api.get("/Ranking/GetAllRankings"),
+          api.get("/Badge/GetAllBadge"),
+        ]);
+        console.log("badgeRes:", badgeRes)
+        console.log("rankingRes:", rankingRes)
+
+        const rankingData = Array.isArray(rankingRes.data) ? rankingRes.data : [];
+        const badges = Array.isArray(badgeRes.data) ? badgeRes.data : [];
+
+        const rankingWithBadges = rankingData.map((user) => {
+          // Chọn huy hiệu mà điểm yêu cầu <= điểm của người dùng
+          const userBadges = badges.filter(
+            (badge) => badge.requiredScore <= user.score
+          );
+          return { ...user, badges: userBadges };
+        });
+
+        setRanking(rankingWithBadges);
+      } catch (error) {
+        console.error("Lỗi lấy bảng xếp hạng hoặc huy hiệu:", error);
+      }
+    };
+
+    fetchRankingWithBadges();
+  }, []);
+
 
   const getRankIcon = (rank) => {
     const colors = ["#FFD700", "#C0C0C0", "#CD7F32"];
@@ -42,21 +64,16 @@ export default function BXH() {
     return rank;
   };
 
-  // Tính dữ liệu trang hiện tại
-  const paginatedData = ranking.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  const paginatedData = ranking.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
 
   return (
     <div className="bxh-container">
       <div className="bxh-title">Bảng xếp hạng thành viên</div>
 
-      <div
-        component={Paper}
-        sx={{
-          borderRadius: 3,
-          boxShadow: 3,
-          overflowX: "auto",
-        }}
-      >
+      <Box component={Paper} sx={{ borderRadius: 3, boxShadow: 3, overflowX: "auto" }}>
         <Table className="bxh-table">
           <TableHead>
             <TableRow>
@@ -68,18 +85,17 @@ export default function BXH() {
           <TableBody>
             {paginatedData.map((user, idx) => {
               const actualRank = (page - 1) * rowsPerPage + idx + 1;
-
               return (
                 <TableRow
-                  key={user.name}
+                  key={user.rankingId || idx}
                   className={
                     actualRank === 1
                       ? "top1"
                       : actualRank === 2
-                      ? "top2"
-                      : actualRank === 3
-                      ? "top3"
-                      : ""
+                        ? "top2"
+                        : actualRank === 3
+                          ? "top3"
+                          : ""
                   }
                 >
                   <TableCell align="center" sx={{ fontWeight: 700 }}>
@@ -87,21 +103,37 @@ export default function BXH() {
                   </TableCell>
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={1.5}>
-                      <Avatar src={user.avatar} alt={user.name} />
-                      <Typography fontWeight={600}>{user.name}</Typography>
+                      <Avatar
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.userName || "Ẩn danh")}`}
+                        alt={user.userName || "Ẩn danh"}
+                      />
+                      <Box>
+                        <Typography fontWeight={600}>{user.userName || "Ẩn danh"}</Typography>
+                        <Box mt={0.5} display="flex" gap={0.5} flexWrap="wrap">
+                          {user.badges?.map((badge) => (
+                            <Avatar
+                              key={badge.badgeId}
+                              src={badge.iconUrl}
+                              alt={badge.name}
+                              sx={{ width: 24, height: 24 }}
+                              title={badge.name}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
                     </Box>
                   </TableCell>
                   <TableCell align="center">
-                    <Typography fontWeight={500}>{user.days} ngày</Typography>
+                    <Typography fontWeight={500}>{user.score} ngày</Typography>
                   </TableCell>
                 </TableRow>
               );
             })}
           </TableBody>
         </Table>
-      </div>
+      </Box>
 
-      {/* Phân trang */}
+      {/* Pagination */}
       <Box display="flex" justifyContent="center" mt={3}>
         <Pagination
           count={Math.ceil(ranking.length / rowsPerPage)}

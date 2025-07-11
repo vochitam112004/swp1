@@ -17,7 +17,6 @@ import BXH from "./components/dashboard/BXH";
 import About from "./components/common/About";
 import Profile from "./components/profile/Profile";
 import Payment from "./components/common/Payment";
-import FeedbackList from "./components/common/FeedbackList";
 import RequireAuth from "./components/auth/RequireAuth";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import CoachPage from "./components/coach/CoachPage";
@@ -126,7 +125,6 @@ function AppContent() {
               </RequireAuth>
             }
           />
-          <Route path="/feedbacks" element={<FeedbackList />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/admin"
