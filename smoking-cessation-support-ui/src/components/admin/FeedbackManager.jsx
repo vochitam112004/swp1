@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Modal,
   TextField,
   Typography,
   Rating,
@@ -11,17 +10,14 @@ import {
   Select,
   InputLabel,
   FormControl,
-  CircularProgress,
   Pagination,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
 
 export default function FeedbackManager() {
   const [feedbacks, setFeedbacks] = useState([]);
-  const [editing, setEditing] = useState(null);
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
   const [filterRating, setFilterRating] = useState("");
@@ -53,7 +49,6 @@ export default function FeedbackManager() {
     setFeedbacks([...generalList, ...coachList]);
   };
 
-
   useEffect(() => {
     fetchFeedbacks();
   }, []);
@@ -72,20 +67,6 @@ export default function FeedbackManager() {
     page * rowsPerPage
   );
 
-  const handleSaveEdit = async () => {
-    try {
-      await api.post(`/Feedback/UpdateFeedbackById/${editing.feedbackId}`, {
-        type: editing.isType ? "coach" : "general",
-        content: editing.content,
-      });
-      toast.success("Đã cập nhật feedback!");
-      setEditing(null);
-      fetchFeedbacks();
-    } catch {
-      toast.error("Cập nhật thất bại!");
-    }
-  };
-
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa feedback này?")) return;
     try {
@@ -99,9 +80,9 @@ export default function FeedbackManager() {
 
   const avgRating = filteredFeedbacks.length
     ? (
-      filteredFeedbacks.reduce((sum, f) => sum + Number(f.rating || 0), 0) /
-      filteredFeedbacks.length
-    ).toFixed(2)
+        filteredFeedbacks.reduce((sum, f) => sum + Number(f.rating || 0), 0) /
+        filteredFeedbacks.length
+      ).toFixed(2)
     : 0;
   const ratingCounts = [5, 4, 3, 2, 1].map(
     (r) => filteredFeedbacks.filter((fb) => fb.rating === r).length
@@ -180,7 +161,7 @@ export default function FeedbackManager() {
             }}
           >
             <Typography fontWeight={600}>
-              {fb.isType ? "Ẩn danh" : (fb.disPlayName || "Ẩn danh")} (
+              {fb.isType ? "Ẩn danh" : fb.disPlayName || "Ẩn danh"} (
               {fb.isType ? "Feedback dành cho Coach" : "Feedback trải nghiệm hệ thống"})
             </Typography>
             <Rating value={fb.rating} readOnly size="small" />
@@ -188,12 +169,6 @@ export default function FeedbackManager() {
             <Typography fontSize={12} color="text.secondary">
               {fb.submittedAt && new Date(fb.submittedAt).toLocaleString()}
             </Typography>
-            <IconButton
-              sx={{ position: "absolute", top: 8, right: 48 }}
-              onClick={() => setEditing({ ...fb })}
-            >
-              <EditIcon />
-            </IconButton>
             <IconButton
               sx={{ position: "absolute", top: 8, right: 8 }}
               color="error"
@@ -213,49 +188,6 @@ export default function FeedbackManager() {
           color="primary"
         />
       </Box>
-
-      <Modal open={!!editing} onClose={() => setEditing(null)}>
-        <Box
-          sx={{
-            p: 3,
-            bgcolor: "#fff",
-            borderRadius: 2,
-            minWidth: 320,
-            mx: "auto",
-            mt: "10%",
-          }}
-        >
-          <Typography variant="h6" mb={2}>
-            Chỉnh sửa Feedback
-          </Typography>
-          <Rating
-            value={editing?.rating || 0}
-            onChange={(_, v) =>
-              setEditing((e) => ({ ...e, rating: v || 0 }))
-            }
-          />
-          <TextField
-            label="Nhận xét"
-            value={editing?.content || ""}
-            onChange={(e) =>
-              setEditing((ed) => ({ ...ed, content: e.target.value }))
-            }
-            fullWidth
-            multiline
-            sx={{ my: 2 }}
-          />
-          <Button variant="contained" onClick={handleSaveEdit}>
-            Lưu
-          </Button>
-          <Button
-            variant="text"
-            onClick={() => setEditing(null)}
-            sx={{ ml: 2 }}
-          >
-            Hủy
-          </Button>
-        </Box>
-      </Modal>
     </Box>
   );
 }

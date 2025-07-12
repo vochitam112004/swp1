@@ -2,7 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
 
-  baseURL: "https://176b0c7bc5d0.ngrok-free.app/api",// Thay bằng base URL backend của bạn
+  baseURL: "https://883e38beab3a.ngrok-free.app/api",// Thay bằng base URL backend của bạn
 
 });
 
