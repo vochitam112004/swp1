@@ -15,7 +15,7 @@ export default function ForgotPassword() {
     if (!email) return toast.error("Vui lòng nhập email!");
     try {
       await api.post("/Auth/request-reset", { email }); // ⬅️ bạn đổi path theo backend
-      toast.success("Đã gửi mã OTP đến email!");
+      toast.success("Đã gửi mã OTP đến email!");  
       setStep(2);
     } catch {
       toast.error("Gửi OTP thất bại!");

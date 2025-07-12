@@ -11,10 +11,10 @@ import ManageCoach from "./ManageCoach";
 import UserManager from "./UserManager";
 import MembershipManager from "./MembershipManager";
 import FeedbackManager from "./FeedbackManager";
-import DashboardOverview from "./DashboardOverview";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import SystemReportManager from "./SystemReportManager";
+import BadgeManager from "./BadgeManager";
 
 
 export default function AdminPage() {
@@ -104,7 +104,7 @@ export default function AdminPage() {
           <Tab label="Quản lý người dùng" />
           <Tab label="Gói thành viên" />
           <Tab label="Phản hồi & Đánh giá" />
-          <Tab label="Thống kê hệ thống" />
+          <Tab label="Quản lí huy hiệu" />
           <Tab label="Báo cáo hệ thống" />
         </Tabs>
       </Paper>
@@ -113,7 +113,7 @@ export default function AdminPage() {
       {tab === 1 && <UserManager />}
       {tab === 2 && <MembershipManager />}
       {tab === 3 && <FeedbackManager />}
-      {tab === 4 && <DashboardOverview />}
+      {tab === 4 && <BadgeManager />}
       {tab === 5 && <SystemReportManager />}
     </Box>
   );
