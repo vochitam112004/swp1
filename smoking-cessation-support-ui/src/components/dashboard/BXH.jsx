@@ -30,7 +30,7 @@ export default function BXH() {
       try {
         const [rankingRes, badgeRes] = await Promise.all([
           api.get("/Ranking/GetAllRankings"),
-          api.get("/Badge/My-Badge"),
+          api.get("/Badge/GetAllBadge"),
         ]);
         console.log("badgeRes:", badgeRes)
         console.log("rankingRes:", rankingRes)

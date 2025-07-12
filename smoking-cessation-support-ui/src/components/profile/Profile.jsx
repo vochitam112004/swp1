@@ -22,15 +22,15 @@ export default function Profile() {
     email: "",
     phoneNumber: "",
     address: "",
-    experience_level: 1, // Thêm trường level
+    experience_level: 1,
   });
   const [history, setHistory] = useState([]);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [passwords, setPasswords] = useState({ old: "", new1: "", new2: "" });
+  const [badges, setBadges] = useState([]);
 
-  // Lấy profile khi load
   useEffect(() => {
     api.get("/MemberProfile")
       .then(res => setForm(f => ({
@@ -49,13 +49,26 @@ export default function Profile() {
   }, [user]);
 
   useEffect(() => {
-    if (user.userType != "Member") return;
+    if (user?.userType !== "Member") return;
+
     api.get("/UserMemberShipHistory/my-history")
       .then(res => setHistory(Array.isArray(res.data) ? res.data : []))
       .catch(() => toast.error("Không lấy được lịch sử gói thành viên!"));
+
+    api.get("/Badge/My-Badge")
+      .then((res) => {
+        const data = res.data;
+        // Nếu là mảng thì dùng luôn, nếu là object đơn thì convert thành mảng
+        if (Array.isArray(data)) {
+          setBadges(data);
+        } else if (data?.iconUrl) {
+          setBadges([data]); // để giữ badgeId, name, ...
+        }
+      })
+      .catch(() => toast.error("Không lấy được huy hiệu người dùng!"));
   }, [user]);
 
-  // Cập nhật profile
+
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     if (!form.displayName || !form.email) {
@@ -67,7 +80,7 @@ export default function Profile() {
       return;
     }
     try {
-      await api.put("/MemberProfile", form); // PUT nếu cập nhật
+      await api.put("/MemberProfile", form);
       toast.success("Cập nhật thông tin thành công!");
     } catch {
       toast.error("Cập nhật thất bại!");
@@ -94,7 +107,6 @@ export default function Profile() {
       toast.error("Mật khẩu mới không khớp!");
       return;
     }
-
     try {
       await api.post("/User/confirm-change-password", {
         oldPassword: passwords.old,
@@ -111,27 +123,25 @@ export default function Profile() {
   };
 
   const handleAvatarChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file || !file.type.startsWith("image/")) {
-    toast.error("Vui lòng chọn file ảnh!");
-    return;
-  }
-  try {
-    // 1. Upload ảnh lên server để lấy URL
-    const formData = new FormData();
-    formData.append("file", file);
-    const uploadRes = await api.post("/Upload/image", formData);
-    const imageUrl = uploadRes.data.url;
-    if (!imageUrl) throw new Error("Không lấy được URL ảnh!");
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh!");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await api.post("/Upload/image", formData);
+      const imageUrl = uploadRes.data.url;
+      if (!imageUrl) throw new Error("Không lấy được URL ảnh!");
 
-    // 2. Gửi URL ảnh lên API cập nhật profile
-    const updateRes = await api.put("/User/My-Update", { avatarUrl: imageUrl });
-    setProfile({ ...profile, avatarUrl: imageUrl });
-    toast.success("Cập nhật ảnh đại diện thành công!");
-  } catch (err) {
-    toast.error("Cập nhật ảnh đại diện thất bại!");
-  }
-};
+      await api.put("/User/My-Update", { avatarUrl: imageUrl });
+      setProfile({ ...profile, avatarUrl: imageUrl });
+      toast.success("Cập nhật ảnh đại diện thành công!");
+    } catch (err) {
+      toast.error("Cập nhật ảnh đại diện thất bại!");
+    }
+  };
 
   if (!profile) return <div>Đang tải...</div>;
 
@@ -278,20 +288,37 @@ export default function Profile() {
         )}
 
         {user?.userType === "Member" && (
-          <Box className="membership-history" sx={{ mt: 6 }}>
-          <Typography className="membership-history-title">Lịch sử gói thành viên</Typography>
-          {history.length === 0 ? (
-            <Typography className="membership-history-empty">Chưa có lịch sử.</Typography>
-          ) : (
-            <ul className="membership-history-list">
-              {history.map((h, idx) => (
-                <li key={idx}>
-                  {h.planName} ({new Date(h.startDate).toLocaleDateString("vi-VN")} - {h.endDate ? new Date(h.endDate).toLocaleDateString("vi-VN") : "Hiện tại"})
-                </li>
-              ))}
-            </ul>
-          )}
-        </Box>
+          <>
+            <Box className="badge-section" sx={{ mt: 6 }}>
+              <Typography className="membership-history-title">Huy hiệu của bạn</Typography>
+              {badges.length === 0 ? (
+                <Typography className="membership-history-empty">Chưa có huy hiệu nào.</Typography>
+              ) : (
+                <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
+                  {badges.map((b, idx) => (
+                    <Box key={b.badgeId || idx} sx={{ textAlign: "center", width: 100 }}>
+                      <img src={b.iconUrl} alt={b.name} width={50} height={50} />
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+
+            <Box className="membership-history" sx={{ mt: 6 }}>
+              <Typography className="membership-history-title">Lịch sử gói thành viên</Typography>
+              {history.length === 0 ? (
+                <Typography className="membership-history-empty">Chưa có lịch sử.</Typography>
+              ) : (
+                <ul className="membership-history-list">
+                  {history.map((h, idx) => (
+                    <li key={idx}>
+                      {h.planName} ({new Date(h.startDate).toLocaleDateString("vi-VN")} - {h.endDate ? new Date(h.endDate).toLocaleDateString("vi-VN") : "Hiện tại"})
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Box>
+          </>
         )}
       </Paper>
     </Box>
