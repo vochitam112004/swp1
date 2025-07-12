@@ -272,7 +272,7 @@ const Dashboard = () => {
       });
       toast.success("Đã lưu nhật ký!");
       // Sau khi lưu thành công, reload lại nhật ký
-      const res = await api.get("/ProgressLog/GetProgress-log");
+      const res = await api.get("/ProgressLog/GetProgress-logs");
       setJournal(res.data);
       setJournalEntry("");
     } catch {
@@ -427,7 +427,7 @@ const Dashboard = () => {
   useEffect(() => {
     async function fetchProgressLogs() {
       try {
-        const res = await api.get("/ProgressLog/GetProgress-log");
+        const res = await api.get("/ProgressLog/GetProgress-logs");
         setProgressLogs(res.data);
       } catch {
         setProgressLogs([]);
@@ -440,7 +440,7 @@ const Dashboard = () => {
     try {
       await api.post("/ProgressLog/CreateProgress-log", logData);
       const [logsRes, goalRes] = await Promise.all([
-        api.get("/ProgressLog/GetProgress-log"),
+        api.get("/ProgressLog/GetProgress-logs"),
         api.get("/CurrentGoal"),
       ]);
       setProgressLogs(logsRes.data);
@@ -454,7 +454,7 @@ const Dashboard = () => {
   const handleDeleteProgressLog = async (logId) => {
     try {
       await api.delete(`/ProgressLog/DeleteByIdProgress-log/${logId}`);
-      const res = await api.get("/ProgressLog/GetProgress-log");
+      const res = await api.get("/ProgressLog/GetProgress-logs");
       setProgressLogs(res.data);
       toast.success("Đã xóa nhật ký!");
     } catch {
