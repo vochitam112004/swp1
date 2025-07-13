@@ -512,16 +512,18 @@ const Dashboard = () => {
       return;
     }
     try {
-      await api.put("/GoalPlan/Update-GoalPlan", {
-        ...newPlan,
-        goalPlanId: plan.goalPlanId,
-      });
-      const res = await api.get("/GoalPlan/current-goal");
-      setPlan(res.data[0] || null);
-      toast.success("Đã cập nhật kế hoạch!");
-    } catch {
-      toast.error("Cập nhật kế hoạch thất bại!");
-    }
+    await api.put("/GoalPlan/Update-GoalPlan", {
+      ...newPlan,
+      goalPlanId: plan.goalPlanId,
+    });
+    const res = await api.get("/GoalPlan/current-goal");
+    console.log("API trả về kế hoạch:", res.data); // Thêm dòng này để kiểm tra dữ liệu trả về
+    setPlan(res.data[0] || null);
+    toast.success("Đã cập nhật kế hoạch!");
+  } catch (err) {
+    toast.error("Cập nhật kế hoạch thất bại!");
+    console.error("Lỗi cập nhật kế hoạch:", err);
+  }
   };
 
   // Hàm tạo mới GoalPlan qua API
