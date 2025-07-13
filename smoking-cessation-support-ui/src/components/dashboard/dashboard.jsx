@@ -16,6 +16,7 @@ import { saveAs } from "file-saver";
 import api from "../../api/axios";
 import SystemReportForm from "../common/SystemReportForm";
 import NotificationHistory from "./NotificationHistory";
+import { useAuth } from "../auth/AuthContext";
 
 ChartJS.register(
   CategoryScale,
@@ -144,6 +145,9 @@ const Dashboard = () => {
   const [experienceLevel, setExperienceLevel] = useState(0);
   const [previousAttempts, setPreviousAttempts] = useState("");
   const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
+  const [appointments, setAppointments] = useState([]);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchAll() {
@@ -241,6 +245,21 @@ const Dashboard = () => {
       toast.error(err.response?.data?.message || "Lỗi kết nối API!");
     }
   };
+
+  const fetchAppointments = async () => {
+    try {
+      const res = await api.get("/Appointment/GetAppointments");
+      setAppointments(res.data);
+    } catch {
+      toast.error("Lấy lịch hẹn thất bại!");
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "appointment") {
+      fetchAppointments();
+    }
+  }, [activeTab]);
 
   // Lấy nhật ký từ API khi load
   useEffect(() => {
@@ -617,6 +636,11 @@ const Dashboard = () => {
             <li className="nav-item">
               <button className={`nav-link ${activeTab === "profile" ? "active" : ""}`} onClick={() => setActiveTab("profile")}>
                 <i className="fas fa-user me-2"></i>Hồ sơ cá nhân
+              </button>
+            </li>
+            <li className="nav-item">
+              <button className={`nav-link ${activeTab === "appointment" ? "active" : ""}`} onClick={() => setActiveTab("appointment")}>
+                <i className="fas fa-calendar-alt me-2"></i>Lên lịch hẹn
               </button>
             </li>
           </ul>
@@ -1496,6 +1520,84 @@ const Dashboard = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            {activeTab === "appointment" && (
+              <div className="row">
+                <div className="col-md-6">
+                  <h5>Tạo lịch hẹn mới</h5>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+
+                      const formData = {
+                        stagerId: user?.userId,
+                        appointmentDate: e.target.appointmentDate.value,
+                        startTime: e.target.startTime.value,
+                        endTime: e.target.endTime.value,
+                        status: "Đang chờ",
+                        notes: e.target.notes.value,
+                        createdAt: new Date().toISOString(),
+                        meetingLink: e.target.meetingLink.value || "",
+                      };
+
+                      try {
+                        await api.post("/Appointment/CreateAppointment", formData);
+                        toast.success("Đã tạo lịch hẹn!");
+                        e.target.reset(); // Xoá form sau khi tạo
+                        fetchAppointments(); // Gọi lại danh sách lịch hẹn
+                      }  catch (err) {
+  console.error("Appointment error:", err.response?.data || err.message, err);
+  toast.error("Tạo lịch hẹn thất bại! " + (err.response?.data?.message || err.message || ""));
+}
+
+                    }}
+                    className="border rounded p-3 bg-light"
+                  >
+                    <div className="mb-2">
+                      <label>Ngày hẹn</label>
+                      <input type="date" name="appointmentDate" className="form-control" required />
+                    </div>
+                    <div className="mb-2">
+                      <label>Bắt đầu</label>
+                      <input type="time" name="startTime" className="form-control" required />
+                    </div>
+                    <div className="mb-2">
+                      <label>Kết thúc</label>
+                      <input type="time" name="endTime" className="form-control" required />
+                    </div>
+                    <div className="mb-2">
+                      <label>Ghi chú</label>
+                      <textarea name="notes" className="form-control" rows={2} />
+                    </div>
+                    <div className="mb-2">
+                      <label>Link họp (tuỳ chọn)</label>
+                      <input type="text" name="meetingLink" className="form-control" />
+                    </div>
+                    <button type="submit" className="btn btn-primary">Lưu lịch hẹn</button>
+                  </form>
+                </div>
+
+                <div className="col-md-6">
+                  <h5>Danh sách lịch hẹn</h5>
+                  {appointments.length === 0 ? (
+                    <div className="text-secondary">Chưa có lịch hẹn.</div>
+                  ) : (
+                    <ul className="list-group">
+                      {appointments.slice().reverse().map((item) => (
+                        <li key={item.appointmentId} className="list-group-item">
+                          <div><b>Ngày:</b> {item.appointmentDate}</div>
+                          <div><b>Giờ:</b> {item.startTime} - {item.endTime}</div>
+                          <div><b>Ghi chú:</b> {item.notes || "Không có"}</div>
+                          <div><b>Trạng thái:</b> {item.status}</div>
+                          {item.meetingLink && (
+                            <div><a href={item.meetingLink} target="_blank" rel="noopener noreferrer">Link họp</a></div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             )}
           </div>
