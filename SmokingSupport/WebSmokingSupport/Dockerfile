@@ -10,7 +10,8 @@ WORKDIR /src
 # Vì WebSmokingSupport.csproj nằm trong thư mục con WebSmokingSupport, nên đường dẫn là WebSmokingSupport/WebSmokingSupport.csproj
 COPY WebSmokingSupport/WebSmokingSupport.csproj ./WebSmokingSupport/
 
-# Chạy lệnh restore các package NuGet cho dự án WebSmokingSupport.
+# Chạy lệnh restore các package NuGet cho dự án WebSmokingSupport. da fix
+
 # Đảm bảo lệnh này tham chiếu đúng đến file .csproj đã được copy vào container.
 RUN dotnet restore WebSmokingSupport/WebSmokingSupport.csproj
 
