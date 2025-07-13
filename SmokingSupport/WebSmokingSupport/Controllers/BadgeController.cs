@@ -13,7 +13,7 @@ namespace WebSmokingSupport.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
+    [Authorize]
     public class BadgeController : ControllerBase
     {
         private readonly QuitSmokingSupportContext _context;
@@ -26,7 +26,7 @@ namespace WebSmokingSupport.Controllers
             _rankingService = rankingService;
         }
         [HttpGet("My-Badge")]
-        //[Authorize(Roles = "Member")]
+        [Authorize(Roles = "Member")]
         public async Task<ActionResult<DTOBadgeForRead>> GetMyBadge()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -56,7 +56,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(badgeResponse);
         }
         [HttpGet("GetAllBadge")]
-        //[Authorize(Roles = "Member, Coach, Admin")] 
+        [Authorize(Roles = "Member, Coach, Admin")]
         public async Task<ActionResult<IEnumerable<DTOBadgeForRead>>> GetAllBadges()
         {
             try
@@ -85,7 +85,7 @@ namespace WebSmokingSupport.Controllers
         }
 
         [HttpGet("{id:int}")]
-        //[Authorize(Roles = "Member, Coach, Admin")]
+        [Authorize(Roles = "Member, Coach, Admin")]
         public async Task<ActionResult<DTOBadgeForRead>> GetBadgeById(int id)
         {
             try
@@ -112,7 +112,7 @@ namespace WebSmokingSupport.Controllers
             }
         }
         [HttpPost("Create-Badge")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateBadge([FromBody] DTOBadgeForCreate dto)
         {
             if (dto == null)
@@ -156,7 +156,7 @@ namespace WebSmokingSupport.Controllers
             }
         }
         [HttpPut("Update-BadgeByBadgeId/{Badgeid}")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<DTOBadgeForRead>> UpdateBadge(int Badgeid, [FromBody] DTOBadgeForUpdate dto)
         {
             var badge = await _badgeRepository.GetByIdAsync(Badgeid);
@@ -181,7 +181,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(updatedBadge);
         }
         [HttpDelete("Delete-BadgeByBadgeId/{Badgeid}")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteBadgeById(int Badgeid)
         {
             var badge = await _badgeRepository.GetByIdAsync(Badgeid);
