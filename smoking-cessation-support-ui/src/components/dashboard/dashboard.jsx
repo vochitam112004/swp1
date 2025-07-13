@@ -1001,6 +1001,14 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <>
+                   {/* Hiển thị trạng thái hoàn thành kế hoạch */}
+        <div className="alert alert-info">
+          {plan?.goalDays && progress.daysNoSmoke >= plan.goalDays
+            ? "Chúc mừng! Bạn đã hoàn thành kế hoạch cai thuốc 🎉"
+            : plan?.goalDays
+              ? `Bạn đã không hút thuốc ${progress.daysNoSmoke}/${plan.goalDays} ngày.`
+              : "Bạn chưa đặt mục tiêu số ngày không hút thuốc."}
+        </div>
                     {/* Hiển thị kế hoạch hiện tại */}
                     <div className="mb-4">
                       <h5>Chi tiết kế hoạch hiện tại:</h5>
