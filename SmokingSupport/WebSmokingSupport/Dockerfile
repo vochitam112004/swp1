@@ -10,8 +10,7 @@ WORKDIR /src
 # Vì WebSmokingSupport.csproj nằm trong thư mục con WebSmokingSupport, nên đường dẫn là WebSmokingSupport/WebSmokingSupport.csproj
 COPY WebSmokingSupport/WebSmokingSupport.csproj ./WebSmokingSupport/
 
-# Chạy lệnh restore các package NuGet cho dự án WebSmokingSupport. da fix
-
+# Chạy lệnh restore các package NuGet cho dự án WebSmokingSupport.
 # Đảm bảo lệnh này tham chiếu đúng đến file .csproj đã được copy vào container.
 RUN dotnet restore WebSmokingSupport/WebSmokingSupport.csproj
 
@@ -22,7 +21,8 @@ COPY . .
 # Chạy lệnh publish ứng dụng WebSmokingSupport.
 # Đảm bảo lệnh này tham chiếu đúng đến thư mục dự án chính.
 # WORKDIR hiện tại là /src, nên đường dẫn đến dự án là WebSmokingSupport/.
-RUN dotnet publish WebSmokingSupport/WebSmokingSupport.csproj -c Release -o /app/publish
+# Thêm --no-restore để tránh restore lại nếu đã restore ở trên.
+RUN dotnet publish WebSmokingSupport/WebSmokingSupport.csproj -c Release -o /app/publish --no-restore
 
 # Sử dụng runtime image để chạy ứng dụng
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
