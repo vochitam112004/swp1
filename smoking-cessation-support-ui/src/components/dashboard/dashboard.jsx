@@ -17,6 +17,7 @@ import api from "../../api/axios";
 import SystemReportForm from "../common/SystemReportForm";
 import NotificationHistory from "./NotificationHistory";
 import { useAuth } from "../auth/AuthContext";
+import PlanTab from './plantab'; // Import PlanTab 
 
 ChartJS.register(
   CategoryScale,
@@ -138,7 +139,6 @@ const Dashboard = () => {
   // Thêm state cho mục tiêu hiện tại từ API
   const [currentGoal, setCurrentGoal] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [memberGoals, setMemberGoals] = useState([]);
   const [memberProfile, setMemberProfile] = useState(null);
   const [smokingStatus, setSmokingStatus] = useState("");
   const [quitAttempts, setQuitAttempts] = useState(0);
@@ -157,19 +157,16 @@ const Dashboard = () => {
           progressLogRes,
           currentGoalRes,
           goalPlanRes,
-          memberGoalRes,
           memberProfileRes
         ] = await Promise.all([
           api.get("/ProgressLog/GetProgress-logs"),
           api.get("/CurrentGoal"),
           api.get("/GoalPlan/current-goal"),
-          api.get("/MemberGoal"),
           api.get("/MemberProfile")
         ]);
         setProgressLogs(progressLogRes.data);
         setCurrentGoal(currentGoalRes.data);
         setPlan(goalPlanRes.data || null);
-        setMemberGoals(memberGoalRes.data);
 
         // Set member profile data
         if (memberProfileRes.data) {
@@ -498,13 +495,6 @@ const Dashboard = () => {
       .catch(() => setCurrentGoal(null));
   }, []);
 
-  // Lấy danh sách MemberGoal khi load
-  useEffect(() => {
-    api.get("/MemberGoal")
-      .then(res => setMemberGoals(res.data))
-      .catch(() => setMemberGoals([]));
-  }, []);
-
   // Hàm cập nhật GoalPlan qua API
   const handleUpdatePlan = async (newPlan) => {
     if (!plan) {
@@ -519,7 +509,13 @@ const Dashboard = () => {
     const res = await api.get("/GoalPlan/current-goal");
     console.log("API trả về kế hoạch:", res.data); // Thêm dòng này để kiểm tra dữ liệu trả về
     setPlan(res.data[0] || null);
-    toast.success("Đã cập nhật kế hoạch!");
+    toast.success("Đã cập nhật kế hoạch chung!");
+    
+    // Chuyển đến tab plan để hiển thị lộ trình chi tiết
+    setTimeout(() => {
+      setActiveTab("plan");
+      toast.info("Đã chuyển đến tab Kế hoạch để xem lộ trình chi tiết!");
+    }, 1000);
   } catch (err) {
     toast.error("Cập nhật kế hoạch thất bại!");
     console.error("Lỗi cập nhật kế hoạch:", err);
@@ -584,12 +580,6 @@ const Dashboard = () => {
       toast.error("Cập nhật hồ sơ thất bại! " + (err.response?.data || err.message || ""));
     }
   };
-
-  // Hàm kiểm tra người dùng có ý định cai thuốc không
-  function canCreateGoalPlan() {
-    // Chỉ cho phép nếu đã nhập trạng thái hút thuốc (smokingStatus khác rỗng/null)
-    return smokingStatus && smokingStatus.trim() !== "";
-  }
 
   if (loading) return <div style={{ textAlign: "center", marginTop: 40 }}><span className="spinner-border"></span> Đang tải dữ liệu...</div>;
 
@@ -774,9 +764,14 @@ const Dashboard = () => {
                               ? currentGoal.missingLogDates.join(", ")
                               : "Không có"}
                             </div>
+                            <div className="mt-2 p-2 bg-info bg-opacity-10 rounded">
+                              <small><i className="fas fa-info-circle me-1"></i>
+                                <b>Kế hoạch chung:</b> Tất cả thành viên cùng theo kế hoạch {plan?.goalDays || 60} ngày
+                              </small>
+                            </div>
                           </div>
                         ) : (
-                          <>Bạn đã hoàn thành {percent}% mục tiêu {plan?.goalDays || 60} ngày không thuốc lá</>
+                          <>Bạn đang theo kế hoạch chung: {percent}% hoàn thành mục tiêu {plan?.goalDays || 60} ngày không thuốc lá</>
                         )}
                       </div>
                       <button className="btn btn-primary mt-3" onClick={() => setShowForm(!showForm)}>
@@ -852,7 +847,7 @@ const Dashboard = () => {
                 <div className="mt-5">
                   <h3 className="fs-5 fw-semibold mb-3">Thành tích gần đây</h3>
                   <div className="row g-3">
-                    {getAchievedBadges(progress).map((badge, idx) => (
+                    {getAchievedBadges(progress).map((badge) => (
                       <div className="col-6 col-sm-4 col-md-2" key={badge.key}>
                         <div className="bg-warning bg-opacity-10 p-3 rounded-3 shadow-sm text-center">
                           <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: "48px", height: "48px" }}>
@@ -995,99 +990,25 @@ const Dashboard = () => {
             {activeTab === "plan" && (
               <div>
                 <h3 className="fs-5 fw-semibold mb-3">Kế hoạch cai thuốc</h3>
-                {/* Nếu chưa nhập trạng thái hút thuốc, không cho tạo kế hoạch */}
-                {!canCreateGoalPlan() ? (
+                {/* Kiểm tra trạng thái hút thuốc trước khi cho phép tạo kế hoạch */}
+                {!smokingStatus || smokingStatus.trim() === "" ? (
                   <div className="alert alert-warning">
                     <i className="fas fa-exclamation-circle me-2"></i>
                     Bạn cần cập nhật <b>Trạng thái hút thuốc</b> trong <b>Hồ sơ cá nhân</b> trước khi tạo kế hoạch cai thuốc.
+                    <br />
+                    <button 
+                      className="btn btn-primary mt-2"
+                      onClick={() => setActiveTab("profile")}
+                    >
+                      <i className="fas fa-user me-2"></i>Đi đến Hồ sơ cá nhân
+                    </button>
                   </div>
                 ) : (
-                  <>
-                   {/* Hiển thị trạng thái hoàn thành kế hoạch */}
-        <div className="alert alert-info">
-          {plan?.goalDays && progress.daysNoSmoke >= plan.goalDays
-            ? "Chúc mừng! Bạn đã hoàn thành kế hoạch cai thuốc 🎉"
-            : plan?.goalDays
-              ? `Bạn đã không hút thuốc ${progress.daysNoSmoke}/${plan.goalDays} ngày.`
-              : "Bạn chưa đặt mục tiêu số ngày không hút thuốc."}
-        </div>
-                    {/* Hiển thị kế hoạch hiện tại */}
-                    <div className="mb-4">
-                      <h5>Chi tiết kế hoạch hiện tại:</h5>
-                      <ul>
-                        <li><b>Mục tiêu số ngày không hút:</b> {plan?.goalDays || "Chưa đặt"} ngày</li>
-                        <li><b>Lý do bỏ thuốc:</b> {plan?.reason || "Chưa nhập"}</li>
-                        <li><b>Tần suất nhắc nhở:</b> {plan?.reminderFrequency || "Chưa chọn"}</li>
-                      </ul>
-                    </div>
-                    {/* Form chỉnh sửa kế hoạch */}
-                    <form
-                      onSubmit={async e => {
-                        e.preventDefault();
-                        const newPlan = {
-                          goalDays: e.target.goalDays.value,
-                          reason: e.target.reason.value,
-                          reminderFrequency: e.target.reminderFrequency.value,
-                        };
-                        await handleUpdatePlan(newPlan);
-                      }}
-                      className="border rounded p-3 bg-light"
-                      style={{ maxWidth: 400 }}
-                    >
-                      <h6>Cập nhật kế hoạch</h6>
-                      <div className="mb-2">
-                        <label>Mục tiêu số ngày:&nbsp;
-                          <input
-                            type="number"
-                            name="goalDays"
-                            min="1"
-                            defaultValue={plan?.goalDays || 60}
-                            required
-                            className="form-control"
-                          />
-                        </label>
-                      </div>
-                      <div className="mb-2">
-                        <label>Lý do bỏ thuốc:&nbsp;
-                          <input
-                            type="text"
-                            name="reason"
-                            defaultValue={plan?.reason || ""}
-                            required
-                            className="form-control"
-                          />
-                        </label>
-                      </div>
-                      <div className="mb-2">
-                        <label>Tần suất nhắc nhở:&nbsp;
-                          <select
-                            name="reminderFrequency"
-                            defaultValue={plan?.reminderFrequency || "daily"}
-                            className="form-control"
-                          >
-                            <option value="daily">Hàng ngày</option>
-                            <option value="weekly">Hàng tuần</option>
-                            <option value="monthly">Hàng tháng</option>
-                          </select>
-                        </label>
-                      </div>
-                      <button type="submit" className="btn btn-primary mt-2">Lưu kế hoạch</button>
-                    </form>
-
-                    {/* Danh sách mục tiêu của bạn */}
-                    {memberGoals.length > 0 && (
-                      <div className="mt-4">
-                        <h5>Danh sách mục tiêu của bạn</h5>
-                        <ul>
-                          {memberGoals.map(goal => (
-                            <li key={goal.memberGoalId}>
-                              <b>Goal ID:</b> {goal.goalId} | <b>Status:</b> {goal.status}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </>
+                  <PlanTab 
+                    plan={plan}
+                    progress={progress}
+                    onUpdatePlan={handleUpdatePlan}
+                  />
                 )}
               </div>
             )}
@@ -1305,7 +1226,7 @@ const Dashboard = () => {
               <div>
                 <h3 className="fs-5 fw-semibold mb-3">Thành tích & Huy hiệu</h3>
                 <div className="row g-3">
-                  {getAchievedBadges(progress).map((badge, idx) => (
+                  {getAchievedBadges(progress).map((badge) => (
                     <div className="col-6 col-sm-4 col-md-2" key={badge.key}>
                       <div className="bg-warning bg-opacity-10 p-3 rounded-3 shadow-sm text-center">
                         <div className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: "48px", height: "48px" }}>
