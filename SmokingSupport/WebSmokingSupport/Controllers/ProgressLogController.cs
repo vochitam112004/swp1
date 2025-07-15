@@ -72,7 +72,8 @@ namespace WebSmokingSupport.Controllers
 
             int memberId = member.MemberId;
 
-            var today = DateOnly.FromDateTime(DateTime.Today);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+
             var goalPlan = await _context.GoalPlans
                     .Where(g =>
                         g.MemberId == memberId &&
@@ -82,6 +83,12 @@ namespace WebSmokingSupport.Controllers
                     .OrderByDescending(g => g.StartDate)
                     .FirstOrDefaultAsync();
             if (goalPlan == null) return BadRequest("No active goal plan found for this period.");
+
+            if (dto.LogDate < goalPlan.StartDate || dto.LogDate > goalPlan.TargetQuitDate)
+            {
+                return BadRequest("Log date must be within the goal plan period.");
+            }
+
 
             var log = new ProgressLog
             {
