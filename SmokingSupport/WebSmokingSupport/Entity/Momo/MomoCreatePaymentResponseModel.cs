@@ -1,6 +1,6 @@
 ﻿namespace WebSmokingSupport.Entity.Momo
 {
-    public class Momo
+    public class MomoCreatePaymentResponseModel
     {
     }
 }
