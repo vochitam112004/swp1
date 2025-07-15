@@ -40,14 +40,24 @@ namespace WebSmokingSupport.Controllers
             return Ok(comments);
         }
         [HttpPost("Create-Comment")]
-        [Authorize("Coach,Admin,Member")]
+        [Authorize(Roles ="Coach,Admin,Member")]
         public async Task<ActionResult<DTOCommunityInteractionForRead>> CreateCommunityInteraction([FromBody] DTOCommunityInteractionForCreate dto)
         {
             var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            int userId = int.Parse(currentUserIdClaim);
-            var newCommunityInteraction = new CommunityInteraction
+            if (string.IsNullOrEmpty(currentUserIdClaim))
             {
-                PostId = userId,
+                return Unauthorized("User not authenticated.");
+            }
+            int userId = int.Parse(currentUserIdClaim);
+             var post = await _context.CommunityPosts.FindAsync(dto.PostId);
+            if (post == null)
+            {
+                return NotFound("Post not found.");
+            }
+
+                var newCommunityInteraction = new CommunityInteraction
+            {
+                PostId =dto.PostId,
                 UserId = userId,
                 CommentContent = dto.CommentContent,
                 CommentedAt = DateTime.UtcNow,
