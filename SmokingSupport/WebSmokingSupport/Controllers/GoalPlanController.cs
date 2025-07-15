@@ -49,7 +49,7 @@ namespace WebSmokingSupport.Controllers
 
                 isCurrentGoal = currentGoal.isCurrentGoal,
                 PersonalMotivation = currentGoal.PersonalMotivation,
-                UseTemplate = currentGoal.UseTemplate
+                
             };
 
             return Ok(response);
@@ -76,7 +76,7 @@ namespace WebSmokingSupport.Controllers
                 TargetQuitDate = g.TargetQuitDate,
                 isCurrentGoal = g.isCurrentGoal,
                 PersonalMotivation = g.PersonalMotivation,
-                UseTemplate = g.UseTemplate
+              
             });
 
             return Ok(response);
@@ -136,7 +136,7 @@ namespace WebSmokingSupport.Controllers
                     StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     TargetQuitDate = goalPlanDto.TargetQuitDate,
                     PersonalMotivation = goalPlanDto.PersonalMotivation,
-                    UseTemplate = goalPlanDto.UseTemplate,
+                   
                     isCurrentGoal = true, // Đặt là current goal
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -153,7 +153,7 @@ namespace WebSmokingSupport.Controllers
                     StartDate = newGoalPlan.StartDate,
                     TargetQuitDate = newGoalPlan.TargetQuitDate,
                     PersonalMotivation = newGoalPlan.PersonalMotivation,
-                    UseTemplate = newGoalPlan.UseTemplate,
+                   
                     isCurrentGoal = newGoalPlan.isCurrentGoal, 
                 };
 
@@ -216,8 +216,6 @@ namespace WebSmokingSupport.Controllers
             if (goalPlanDto.TargetQuitDate.HasValue)
                 existingGoalPlan.TargetQuitDate = goalPlanDto.TargetQuitDate.Value;
 
-            if (goalPlanDto.UseTemplate.HasValue)
-                existingGoalPlan.UseTemplate = goalPlanDto.UseTemplate.Value;
 
             // Cho phép cập nhật trạng thái isCurrentGoal nếu truyền vào (có thể là false)
             if (goalPlanDto.isCurrentGoal.HasValue)
@@ -234,7 +232,7 @@ namespace WebSmokingSupport.Controllers
                 TargetQuitDate = existingGoalPlan.TargetQuitDate,
                 isCurrentGoal = existingGoalPlan.isCurrentGoal,
                 PersonalMotivation = existingGoalPlan.PersonalMotivation,
-                UseTemplate = existingGoalPlan.UseTemplate
+               
             };
 
             return Ok(goalPlanResponse);

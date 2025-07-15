@@ -16,7 +16,6 @@ public partial class GoalPlan
     public DateOnly? StartDate { get; set; }
     public DateOnly? TargetQuitDate { get; set; }
     public string? PersonalMotivation { get; set; }
-    public bool? UseTemplate { get; set; }
     public bool? isCurrentGoal { get; set; } = true;
     public DateTime CreatedAt { get; set; } // Added property
     public DateTime? UpdatedAt { get; set; } // Added property

@@ -278,8 +278,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.StartDate).HasColumnName("start_date").HasColumnType("date");
             entity.Property(e => e.TargetQuitDate).HasColumnName("target_quit_date").HasColumnType("date");
             entity.Property(e => e.PersonalMotivation).HasColumnName("personal_motivation").HasMaxLength(500);
-            entity.Property(e => e.UseTemplate).HasColumnName("use_template");
-
+            
         
             entity.Property(e => e.isCurrentGoal)
                   .HasColumnName("is_current_goal") 
