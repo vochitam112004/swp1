@@ -44,7 +44,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(RankingResponse);
         }
         [HttpGet("GetAllRankings")]
-        [Authorize(Roles = "Admin ,Coach ,Member")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<DTORankingForRead>>> GetAllRanking()
         {
             var rankings = await _context.Rankings
@@ -64,7 +64,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(rankingResponses);
         }
         [HttpGet("GetRankingById/{userid}")]
-        [Authorize(Roles = "Admin ,Coach ,Member")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetRankingById(int userid)
         {
             var ranking = await _context.Rankings
@@ -83,7 +83,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(rankingResponse);
         }
         [HttpGet("GetRankingByTop/{count:int?}")]
-        [Authorize(Roles = "Admin ,Coach ,Member")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetTopRankings(int count = 10)
         {
             var topRankings = await _context.Rankings
@@ -105,6 +105,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(rankingResponses);
         }
         [HttpDelete("DeleteRanking/{id}")]
+        [Authorize(Roles ="Member ,Coach, Admin")]
         public async Task<IActionResult> DeleteRanking(int id)
         {
             var ranking = await _rankingRepository.GetByIdAsync(id);

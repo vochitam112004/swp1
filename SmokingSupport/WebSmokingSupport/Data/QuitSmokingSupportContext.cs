@@ -64,8 +64,11 @@ public partial class QuitSmokingSupportContext : DbContext
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=LAPTOP-F3S9SQ2M;Database=QuitSmokingSupport;Trusted_Connection=True;TrustServerCertificate=True;");
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.UseCollation("Vietnamese_CI_AS"); // ✅ thêm cấu hình hỗ trợ tiếng Việt
+
         modelBuilder.Entity<AdminProfile>(entity =>
         {
             entity.HasKey(e => e.AdminId).HasName("PK__AdminPro__43AA4141CBF17DDA");
@@ -77,7 +80,7 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasColumnName("admin_id");
             entity.Property(e => e.PermissionLevel)
                 .HasMaxLength(20)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ đổi thành true để lưu tiếng Việt
                 .HasColumnName("permission_level");
 
             entity.HasOne(d => d.Admin)
@@ -100,14 +103,14 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasColumnName("end_time");
             entity.Property(e => e.MemberId).HasColumnName("member_id");
             entity.Property(e => e.Notes)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ cho phép ghi chú bằng tiếng Việt
                 .HasColumnName("notes");
             entity.Property(e => e.StartTime)
                 .HasColumnType("time")
                 .HasColumnName("start_time");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ hỗ trợ trạng thái tiếng Việt
                 .HasColumnName("status");
 
             entity.HasOne(d => d.Coach).WithMany(p => p.Appointments)
@@ -127,15 +130,15 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.BadgeId).HasColumnName("badge_id");
             entity.Property(e => e.Description)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ mô tả tiếng Việt
                 .HasColumnName("description");
             entity.Property(e => e.IconUrl)
                 .HasMaxLength(255)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ hỗ trợ URL có ký tự tiếng Việt (nếu cần)
                 .HasColumnName("icon_url");
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ tên huy hiệu tiếng Việt
                 .HasColumnName("name");
         });
 
@@ -147,7 +150,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.MessageId).HasColumnName("message_id");
             entity.Property(e => e.Content)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ nội dung chat tiếng Việt
                 .HasColumnName("content");
             entity.Property(e => e.IsRead).HasColumnName("is_read");
             entity.Property(e => e.ReceiverId).HasColumnName("receiver_id");
@@ -161,7 +164,6 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasForeignKey(d => d.ReceiverId)
                 .HasConstraintName("FK__ChatMessa__recei__440B1D61")
                 .OnDelete(DeleteBehavior.Cascade);
-                
 
             entity.HasOne(d => d.Sender)
                 .WithMany(p => p.ChatMessageSenders)
@@ -180,7 +182,7 @@ public partial class QuitSmokingSupportContext : DbContext
                 .ValueGeneratedNever()
                 .HasColumnName("coach_id");
             entity.Property(e => e.Specialization)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ chuyên môn bằng tiếng Việt
                 .HasColumnName("specialization");
 
             entity
@@ -199,7 +201,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.InteractionId).HasColumnName("interaction_id");
             entity.Property(e => e.CommentContent)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ bình luận tiếng Việt
                 .HasColumnName("comment_content");
             entity.Property(e => e.CommentedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -225,7 +227,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.PostId).HasColumnName("post_id");
             entity.Property(e => e.Content)
-                .IsUnicode(false)
+                .IsUnicode(true) // ✅ nội dung bài viết tiếng Việt
                 .HasColumnName("content");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -240,6 +242,7 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasConstraintName("FK_CommunityPost_User");
         });
 
+
         modelBuilder.Entity<Feedback>(entity =>
         {
             entity.HasKey(e => e.FeedbackId).HasName("PK__Feedback__7A6B2B8CCBD004F2");
@@ -248,7 +251,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.FeedbackId).HasColumnName("feedback_id");
             entity.Property(e => e.Content)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("content");
             entity.Property(e => e.SubmittedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -256,7 +259,7 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasColumnName("submitted_at");
             entity.Property(e => e.isType)
                 .HasMaxLength(20)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("is_type");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
@@ -337,7 +340,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.MemberId).HasColumnName("member_id");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("status");
 
             entity.HasOne(d => d.GoalPlan).WithMany(p => p.MemberGoals)
@@ -410,7 +413,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.MemberId).HasColumnName("member_id");
             entity.Property(e => e.Type)
                 .HasMaxLength(20)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("type");
 
             entity.HasOne(d => d.Member).WithMany(p => p.Notifications)
@@ -458,10 +461,10 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.Mood)
                 .HasMaxLength(50)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("mood");
             entity.Property(e => e.Notes)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("notes");
             entity.Property(e => e.CigarettesPerPack)
                 .HasColumnName("cigarettes_per_pack");
@@ -595,7 +598,7 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasColumnName("details");
             entity.Property(e => e.ReportType)
                 .HasMaxLength(20)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("report_type");
             entity.Property(e => e.ReportedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -617,7 +620,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.TriggerId).HasColumnName("trigger_id");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("name");
         });
 
@@ -630,7 +633,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.Address)
                 .HasMaxLength(255)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("address");
             entity.Property(e => e.AvatarUrl)
                 .HasMaxLength(255)
@@ -642,11 +645,11 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasColumnName("created_at");
             entity.Property(e => e.DisplayName)
                 .HasMaxLength(100)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("display_name");
             entity.Property(e => e.Email)
                 .HasMaxLength(100)
-                .IsUnicode(false)
+                .IsUnicode(true)
                 .HasColumnName("email");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.PasswordHash)

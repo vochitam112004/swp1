@@ -17,10 +17,19 @@ using Microsoft.OpenApi.Models;
                 var builder = WebApplication.CreateBuilder(args);
 
                 // Add services to the container.
-                builder.Services.AddControllers();
+                builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+             {
+                 
+             });
 
-                // Add Swagger + JWT config
-                builder.Services.AddEndpointsApiExplorer();
+            builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+            {
+                options.SerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+            });
+
+            // Add Swagger + JWT config
+            builder.Services.AddEndpointsApiExplorer();
                 builder.Services.AddSwaggerGen(c =>
                 {
                     c.SwaggerDoc("v1", new OpenApiInfo

@@ -22,6 +22,7 @@ namespace WebSmokingSupport.Controllers
             _context = context;
         }
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<DTOCommunityPostForRead>>> GetCommunityPosts()
         {
             var posts = await _context.CommunityPosts
