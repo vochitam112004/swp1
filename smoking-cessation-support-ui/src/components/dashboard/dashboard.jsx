@@ -178,7 +178,7 @@ const Dashboard = () => {
           setPreviousAttempts(memberProfileRes.data.previousAttempts || "");
         }
       } catch (err) {
-        toast.error("Lỗi tải dữ liệu!");
+        console.log(err)
       } finally {
         setLoading(false);
       }
@@ -1470,36 +1470,38 @@ const Dashboard = () => {
                       e.preventDefault();
 
                       const formData = {
-                        stagerId: user?.userId,
+                        memberId: user?.userId,
+                        coachId: Number(e.target.coachId.value),
                         appointmentDate: e.target.appointmentDate.value,
                         startTime: e.target.startTime.value,
                         endTime: e.target.endTime.value,
                         status: "Đang chờ",
-                        notes: e.target.notes.value,
+                        notes: e.target.notes.value || "",
                         createdAt: new Date().toISOString(),
-                        meetingLink: e.target.meetingLink.value || "",
-                        coachUserName: e.target.username.value,
+                        meetingLink: e.target.meetingLink.value || ""
                       };
+
+                      console.log("GỬI DỮ LIỆU:", formData); // 👈 xem dữ liệu trước khi gửi
 
                       try {
                         await api.post("/Appointment/CreateAppointment", formData);
                         toast.success("Đã tạo lịch hẹn!");
-                        e.target.reset(); // Xoá form sau khi tạo
-                        fetchAppointments(); // Gọi lại danh sách lịch hẹn
+                        e.target.reset();
+                        fetchAppointments();
                       } catch (err) {
-                        console.error("Appointment error:", err.response?.data || err.message, err);
-                        toast.error("Tạo lịch hẹn thất bại! " + (err.response?.data?.message || err.message || ""));
+                        console.error("Appointment error:", err.response?.data || err.message);
+                        toast.error("Tạo lịch hẹn thất bại!");
                       }
-
                     }}
-                    className="border rounded p-3 bg-light"
                   >
                     <div className="mb-2">
                       <label>Chọn Coach</label>
-                      <select name="coachUserName" className="form-control" required>
+                      <select name="coachId" className="form-control" required>
                         <option value="">-- Chọn coach --</option>
-                        {coachList.map((c, idx) => (
-                          <option key={idx} value={c}>{c}</option>
+                        {coachList.map((coach) => (
+                          <option key={coach.userId} value={coach.userId}>
+                            {coach.displayName}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -1508,16 +1510,16 @@ const Dashboard = () => {
                       <input type="date" name="appointmentDate" className="form-control" required />
                     </div>
                     <div className="mb-2">
-                      <label>Bắt đầu</label>
+                      <label>Giờ bắt đầu</label>
                       <input type="time" name="startTime" className="form-control" required />
                     </div>
                     <div className="mb-2">
-                      <label>Kết thúc</label>
+                      <label>Giờ kết thúc</label>
                       <input type="time" name="endTime" className="form-control" required />
                     </div>
                     <div className="mb-2">
                       <label>Ghi chú</label>
-                      <textarea name="notes" className="form-control" rows={2} />
+                      <textarea name="notes" className="form-control" rows="2" />
                     </div>
                     <div className="mb-2">
                       <label>Link họp (tuỳ chọn)</label>
