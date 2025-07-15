@@ -8,8 +8,6 @@ public partial class Ranking
     public int RankingId { get; set; }
 
     public int? UserId { get; set; }
-    public int Level { get; set; } // Level of the ranking
-
     public int? Score { get; set; }
 
     public DateTime? LastUpdated { get; set; }

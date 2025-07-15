@@ -36,7 +36,6 @@ namespace WebSmokingSupport.Controllers
             {
                 RankingId = Rankings.RankingId,
                 UserId = Rankings.UserId,
-                Level = Rankings.Level,
                 Score = Rankings.Score,
                 LastUpdated = Rankings.LastUpdated,
                 UserName = Rankings.User?.DisplayName ?? "Unknown"
@@ -56,7 +55,6 @@ namespace WebSmokingSupport.Controllers
             {
                 RankingId = r.RankingId,
                 UserId = r.UserId,
-                Level = r.Level,
                 Score = r.Score,
                 LastUpdated = r.LastUpdated,
                 UserName = r.User?.DisplayName ?? "Unknown"
@@ -75,7 +73,6 @@ namespace WebSmokingSupport.Controllers
             {
                 RankingId = ranking.RankingId,
                 UserId = ranking.UserId,
-                Level = ranking.Level,
                 Score = ranking.Score,
                 LastUpdated = ranking.LastUpdated,
                 UserName = ranking.User?.DisplayName ?? "Unknown"
@@ -97,7 +94,7 @@ namespace WebSmokingSupport.Controllers
             {
                 RankingId = r.RankingId,
                 UserId = r.UserId,
-                Level = r.Level,
+
                 Score = r.Score,
                 LastUpdated = r.LastUpdated,
                 UserName = r.User?.DisplayName ?? "Unknown"
