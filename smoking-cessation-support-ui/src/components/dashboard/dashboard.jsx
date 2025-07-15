@@ -146,6 +146,7 @@ const Dashboard = () => {
   const [previousAttempts, setPreviousAttempts] = useState("");
   const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
   const [appointments, setAppointments] = useState([]);
+  const [coachList, setCoachList] = useState([]);
 
   const { user } = useAuth();
 
@@ -242,6 +243,13 @@ const Dashboard = () => {
       toast.error(err.response?.data?.message || "Lỗi kết nối API!");
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+    api.get("/ChatMessage/available-contacts")
+      .then(res => setCoachList(res.data || []))
+      .catch(() => toast.error("Không lấy được danh sách coach!"));
+  }, [user]);
 
   const fetchAppointments = async () => {
     try {
@@ -502,24 +510,24 @@ const Dashboard = () => {
       return;
     }
     try {
-    await api.put("/GoalPlan/Update-GoalPlan", {
-      ...newPlan,
-      goalPlanId: plan.goalPlanId,
-    });
-    const res = await api.get("/GoalPlan/current-goal");
-    console.log("API trả về kế hoạch:", res.data); // Thêm dòng này để kiểm tra dữ liệu trả về
-    setPlan(res.data[0] || null);
-    toast.success("Đã cập nhật kế hoạch chung!");
-    
-    // Chuyển đến tab plan để hiển thị lộ trình chi tiết
-    setTimeout(() => {
-      setActiveTab("plan");
-      toast.info("Đã chuyển đến tab Kế hoạch để xem lộ trình chi tiết!");
-    }, 1000);
-  } catch (err) {
-    toast.error("Cập nhật kế hoạch thất bại!");
-    console.error("Lỗi cập nhật kế hoạch:", err);
-  }
+      await api.put("/GoalPlan/Update-GoalPlan", {
+        ...newPlan,
+        goalPlanId: plan.goalPlanId,
+      });
+      const res = await api.get("/GoalPlan/current-goal");
+      console.log("API trả về kế hoạch:", res.data); // Thêm dòng này để kiểm tra dữ liệu trả về
+      setPlan(res.data[0] || null);
+      toast.success("Đã cập nhật kế hoạch chung!");
+
+      // Chuyển đến tab plan để hiển thị lộ trình chi tiết
+      setTimeout(() => {
+        setActiveTab("plan");
+        toast.info("Đã chuyển đến tab Kế hoạch để xem lộ trình chi tiết!");
+      }, 1000);
+    } catch (err) {
+      toast.error("Cập nhật kế hoạch thất bại!");
+      console.error("Lỗi cập nhật kế hoạch:", err);
+    }
   };
 
   // Hàm tạo mới GoalPlan qua API
@@ -996,7 +1004,7 @@ const Dashboard = () => {
                     <i className="fas fa-exclamation-circle me-2"></i>
                     Bạn cần cập nhật <b>Trạng thái hút thuốc</b> trong <b>Hồ sơ cá nhân</b> trước khi tạo kế hoạch cai thuốc.
                     <br />
-                    <button 
+                    <button
                       className="btn btn-primary mt-2"
                       onClick={() => setActiveTab("profile")}
                     >
@@ -1004,7 +1012,7 @@ const Dashboard = () => {
                     </button>
                   </div>
                 ) : (
-                  <PlanTab 
+                  <PlanTab
                     plan={plan}
                     progress={progress}
                     onUpdatePlan={handleUpdatePlan}
@@ -1470,6 +1478,7 @@ const Dashboard = () => {
                         notes: e.target.notes.value,
                         createdAt: new Date().toISOString(),
                         meetingLink: e.target.meetingLink.value || "",
+                        coachUserName: e.target.username.value,
                       };
 
                       try {
@@ -1477,14 +1486,23 @@ const Dashboard = () => {
                         toast.success("Đã tạo lịch hẹn!");
                         e.target.reset(); // Xoá form sau khi tạo
                         fetchAppointments(); // Gọi lại danh sách lịch hẹn
-                      }  catch (err) {
-  console.error("Appointment error:", err.response?.data || err.message, err);
-  toast.error("Tạo lịch hẹn thất bại! " + (err.response?.data?.message || err.message || ""));
-}
+                      } catch (err) {
+                        console.error("Appointment error:", err.response?.data || err.message, err);
+                        toast.error("Tạo lịch hẹn thất bại! " + (err.response?.data?.message || err.message || ""));
+                      }
 
                     }}
                     className="border rounded p-3 bg-light"
                   >
+                    <div className="mb-2">
+                      <label>Chọn Coach</label>
+                      <select name="coachUserName" className="form-control" required>
+                        <option value="">-- Chọn coach --</option>
+                        {coachList.map((c, idx) => (
+                          <option key={idx} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="mb-2">
                       <label>Ngày hẹn</label>
                       <input type="date" name="appointmentDate" className="form-control" required />

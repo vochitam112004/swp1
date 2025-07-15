@@ -7,49 +7,41 @@ import { toast } from "react-toastify";
 import { useAuth } from "../auth/AuthContext";
 import "../../css/Profile.css";
 
-const LEVELS = [
-  { value: 1, label: "Mới bắt đầu" },
-  { value: 2, label: "Đã từng thử cai thuốc" },
-  { value: 3, label: "Đã cai được một thời gian" },
-];
-
 export default function Profile() {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [edit, setEdit] = useState(false);
-  const [form, setForm] = useState({
-    displayName: "",
-    email: "",
-    phoneNumber: "",
-    address: "",
-    experience_level: 1,
-  });
+  const [form, setForm] = useState(null);
   const [history, setHistory] = useState([]);
+  const [badges, setBadges] = useState([]);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [passwords, setPasswords] = useState({ old: "", new1: "", new2: "" });
-  const [badges, setBadges] = useState([]);
 
   useEffect(() => {
-    api.get("/MemberProfile")
-      .then(res => setForm(f => ({
-        ...f,
-        ...res.data,
-        experience_level: res.data.experience_level || 1,
-      })))
+    api.get("/User")
+      .then(res => {
+        const u = res.data;
+        const mapped = {
+          username: u.userName,
+          displayName: u.displayName,
+          avatarUrl: u.avatarUrl,
+          email: u.email,
+          phoneNumber: u.phoneNumber,
+          address: u.address,
+          userType: u.userType,
+          createdAt: u.createdAt,
+          isActive: u.isActive,
+        };
+        setProfile(mapped);
+        setForm(mapped);
+      })
       .catch(() => toast.error("Không lấy được profile!"));
   }, []);
 
   useEffect(() => {
-    if (user) {
-      setProfile(user);
-      setForm(user);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user?.userType !== "Member") return;
+    if (!user || user.userType !== "Member") return;
 
     api.get("/UserMemberShipHistory/my-history")
       .then(res => setHistory(Array.isArray(res.data) ? res.data : []))
@@ -58,32 +50,58 @@ export default function Profile() {
     api.get("/Badge/My-Badge")
       .then((res) => {
         const data = res.data;
-        // Nếu là mảng thì dùng luôn, nếu là object đơn thì convert thành mảng
         if (Array.isArray(data)) {
           setBadges(data);
         } else if (data?.iconUrl) {
-          setBadges([data]); // để giữ badgeId, name, ...
+          setBadges([data]);
         }
       })
-      .catch(() => toast.error("Không lấy được huy hiệu người dùng!"));
+      .catch(() => toast.error("Không lấy được huy hiệu!"));
   }, [user]);
-
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    if (!form.displayName || !form.email) {
-      toast.error("Vui lòng điền đầy đủ thông tin!");
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(form.email)) {
-      toast.error("Email không hợp lệ!");
-      return;
-    }
+
+    const body = {
+      userName: form.username,
+      displayName: form.displayName,
+      avatarUrl: form.avatarUrl,
+      email: form.email,
+      phoneNumber: form.phoneNumber,
+      address: form.address,
+      isActive: form.isActive ?? true,
+    };
+
     try {
-      await api.put("/MemberProfile", form);
+      await api.put("/User/My-Update", body);
       toast.success("Cập nhật thông tin thành công!");
+      setProfile({ ...profile, ...form });
+      setEdit(false);
     } catch {
       toast.error("Cập nhật thất bại!");
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const res = await api.put("/User/My-Update", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const imageUrl = res.data.avatarUrl || form.avatarUrl;
+      setProfile({ ...profile, avatarUrl: imageUrl });
+      setForm(f => ({ ...f, avatarUrl: imageUrl }));
+      toast.success("Cập nhật ảnh đại diện thành công!");
+    } catch {
+      toast.error("Cập nhật ảnh đại diện thất bại!");
     }
   };
 
@@ -122,35 +140,17 @@ export default function Profile() {
     }
   };
 
-  const handleAvatarChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !file.type.startsWith("image/")) {
-      toast.error("Vui lòng chọn file ảnh!");
-      return;
-    }
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const uploadRes = await api.post("/Upload/image", formData);
-      const imageUrl = uploadRes.data.url;
-      if (!imageUrl) throw new Error("Không lấy được URL ảnh!");
-
-      await api.put("/User/My-Update", { avatarUrl: imageUrl });
-      setProfile({ ...profile, avatarUrl: imageUrl });
-      toast.success("Cập nhật ảnh đại diện thành công!");
-    } catch (err) {
-      toast.error("Cập nhật ảnh đại diện thất bại!");
-    }
-  };
-
-  if (!profile) return <div>Đang tải...</div>;
+  if (!profile || !form) return <div>Đang tải...</div>;
 
   return (
     <Box className="profile-container">
       <Paper className="profile-paper" elevation={6}>
         <Box className="profile-avatar-container">
           <Avatar
-            src={profile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username)}`}
+            src={
+              profile.avatarUrl ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.displayName || profile.username)}`
+            }
             className="profile-avatar"
           />
           <label>
@@ -226,16 +226,6 @@ export default function Profile() {
               onChange={e => setForm({ ...form, address: e.target.value })}
               fullWidth
             />
-            <label>Kinh nghiệm cai thuốc:</label>
-            <select
-              value={form.experience_level}
-              onChange={e => setForm(f => ({ ...f, experience_level: Number(e.target.value) }))}
-              className="form-control"
-            >
-              {LEVELS.map(l => (
-                <option key={l.value} value={l.value}>{l.label}</option>
-              ))}
-            </select>
             <Box sx={{ mt: 2 }}>
               <Button type="submit" variant="contained">Lưu</Button>
               <Button variant="outlined" onClick={() => setEdit(false)} sx={{ ml: 2 }}>Hủy</Button>
@@ -288,38 +278,37 @@ export default function Profile() {
         )}
 
         {user?.userType === "Member" && (
-          <>
-            <Box className="badge-section" sx={{ mt: 6 }}>
-              <Typography className="membership-history-title">Huy hiệu của bạn</Typography>
-              {badges.length === 0 ? (
-                <Typography className="membership-history-empty">Chưa có huy hiệu nào.</Typography>
-              ) : (
-                <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
-                  {badges.map((b, idx) => (
-                    <Box key={b.badgeId || idx} sx={{ textAlign: "center", width: 100 }}>
-                      <img src={b.iconUrl} alt={b.name} width={50} height={50} />
-                    </Box>
-                  ))}
-                </Box>
-              )}
-            </Box>
-
-            <Box className="membership-history" sx={{ mt: 6 }}>
-              <Typography className="membership-history-title">Lịch sử gói thành viên</Typography>
-              {history.length === 0 ? (
-                <Typography className="membership-history-empty">Chưa có lịch sử.</Typography>
-              ) : (
-                <ul className="membership-history-list">
-                  {history.map((h, idx) => (
-                    <li key={idx}>
-                      {h.planName} ({new Date(h.startDate).toLocaleDateString("vi-VN")} - {h.endDate ? new Date(h.endDate).toLocaleDateString("vi-VN") : "Hiện tại"})
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Box>
-          </>
+          <Box sx={{ mt: 6 }}>
+            <Typography className="membership-history-title">Huy hiệu của bạn</Typography>
+            {badges.length === 0 ? (
+              <Typography className="membership-history-empty">Chưa có huy hiệu nào.</Typography>
+            ) : (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mt: 2 }}>
+                {badges.map((b, idx) => (
+                  <Box key={b.badgeId || idx} sx={{ textAlign: 'center', width: 100 }}>
+                    <img src={b.iconUrl} alt={b.name} width={50} height={50} />
+                    <Typography variant="body2" fontWeight={600}>{b.name}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
         )}
+
+        <Box className="membership-history" sx={{ mt: 6 }}>
+          <Typography className="membership-history-title">Lịch sử gói thành viên</Typography>
+          {history.length === 0 ? (
+            <Typography className="membership-history-empty">Chưa có lịch sử.</Typography>
+          ) : (
+            <ul className="membership-history-list">
+              {history.map((h, idx) => (
+                <li key={idx}>
+                  {h.planName} ({new Date(h.startDate).toLocaleDateString("vi-VN")} - {h.endDate ? new Date(h.endDate).toLocaleDateString("vi-VN") : "Hiện tại"})
+                </li>
+              ))}
+            </ul>
+          )}
+        </Box>
       </Paper>
     </Box>
   );
