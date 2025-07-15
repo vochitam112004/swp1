@@ -200,6 +200,10 @@ namespace WebSmokingSupport.Controllers
             {
                 return NotFound("User not found.");
             }
+            var messages = _context.ChatMessages
+            .Where(c => c.SenderId == userId || c.ReceiverId == userId);
+
+            _context.ChatMessages.RemoveRange(messages);
             await _userRepository.RemoveAsync(user);  
             return NoContent();
         }
