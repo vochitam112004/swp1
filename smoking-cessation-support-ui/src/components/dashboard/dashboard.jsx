@@ -18,6 +18,7 @@ import SystemReportForm from "../common/SystemReportForm";
 import NotificationHistory from "./NotificationHistory";
 import { useAuth } from "../auth/AuthContext";
 import PlanTab from './plantab'; // Import PlanTab 
+import { useNavigate } from "react-router-dom";
 
 ChartJS.register(
   CategoryScale,
@@ -146,8 +147,64 @@ const Dashboard = () => {
   const [previousAttempts, setPreviousAttempts] = useState("");
   const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
   const [appointments, setAppointments] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [coaches, setCoaches] = useState([]);
 
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const plan = JSON.parse(localStorage.getItem("membershipPlan") || "{}");
+
+    // Nếu không có gói hoặc không active => redirect
+    if (!plan || !plan.isActive) {
+      toast.warning("Bạn cần mua gói thành viên để sử dụng Dashboard.");
+      navigate("/membership"); // Trang mua gói
+    }
+  }, []);
+
+
+  useEffect(() => {
+    async function fetchCurrentUser() {
+      try {
+        const res = await api.get("/User");
+        setCurrentUser(res.data);
+      } catch {
+        toast.error("Không thể lấy thông tin người dùng!");
+      }
+    }
+
+    async function fetchCoaches() {
+      try {
+        const res = await api.get("/ChatMessage/available-contacts"); // ✅ dùng đúng API Coach
+        setCoaches(res.data);
+      } catch {
+        toast.error("Không lấy được danh sách Coach!");
+      }
+    }
+
+    fetchCurrentUser();
+    fetchCoaches();
+  }, []);
+
+
+
+  const fetchAppointments = async () => {
+    try {
+      const res = await api.get("/Appointment/GetAppointments");
+      setAppointments(res.data);
+    } catch {
+      toast.error("Lấy lịch hẹn thất bại!");
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "appointment") {
+      fetchAppointments();
+    }
+  }, [activeTab]);
+
+
 
   useEffect(() => {
     async function fetchAll() {
@@ -184,6 +241,8 @@ const Dashboard = () => {
     }
     fetchAll();
   }, []); // <-- chỉ chạy khi mount
+
+
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = async (e) => {
@@ -242,21 +301,6 @@ const Dashboard = () => {
       toast.error(err.response?.data?.message || "Lỗi kết nối API!");
     }
   };
-
-  const fetchAppointments = async () => {
-    try {
-      const res = await api.get("/Appointment/GetAppointments");
-      setAppointments(res.data);
-    } catch {
-      toast.error("Lấy lịch hẹn thất bại!");
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === "appointment") {
-      fetchAppointments();
-    }
-  }, [activeTab]);
 
   // Lấy nhật ký từ API khi load
   useEffect(() => {
@@ -502,24 +546,24 @@ const Dashboard = () => {
       return;
     }
     try {
-    await api.put("/GoalPlan/Update-GoalPlan", {
-      ...newPlan,
-      goalPlanId: plan.goalPlanId,
-    });
-    const res = await api.get("/GoalPlan/current-goal");
-    console.log("API trả về kế hoạch:", res.data); // Thêm dòng này để kiểm tra dữ liệu trả về
-    setPlan(res.data[0] || null);
-    toast.success("Đã cập nhật kế hoạch chung!");
-    
-    // Chuyển đến tab plan để hiển thị lộ trình chi tiết
-    setTimeout(() => {
-      setActiveTab("plan");
-      toast.info("Đã chuyển đến tab Kế hoạch để xem lộ trình chi tiết!");
-    }, 1000);
-  } catch (err) {
-    toast.error("Cập nhật kế hoạch thất bại!");
-    console.error("Lỗi cập nhật kế hoạch:", err);
-  }
+      await api.put("/GoalPlan/Update-GoalPlan", {
+        ...newPlan,
+        goalPlanId: plan.goalPlanId,
+      });
+      const res = await api.get("/GoalPlan/current-goal");
+      console.log("API trả về kế hoạch:", res.data); // Thêm dòng này để kiểm tra dữ liệu trả về
+      setPlan(res.data[0] || null);
+      toast.success("Đã cập nhật kế hoạch chung!");
+
+      // Chuyển đến tab plan để hiển thị lộ trình chi tiết
+      setTimeout(() => {
+        setActiveTab("plan");
+        toast.info("Đã chuyển đến tab Kế hoạch để xem lộ trình chi tiết!");
+      }, 1000);
+    } catch (err) {
+      toast.error("Cập nhật kế hoạch thất bại!");
+      console.error("Lỗi cập nhật kế hoạch:", err);
+    }
   };
 
   // Hàm tạo mới GoalPlan qua API
@@ -996,7 +1040,7 @@ const Dashboard = () => {
                     <i className="fas fa-exclamation-circle me-2"></i>
                     Bạn cần cập nhật <b>Trạng thái hút thuốc</b> trong <b>Hồ sơ cá nhân</b> trước khi tạo kế hoạch cai thuốc.
                     <br />
-                    <button 
+                    <button
                       className="btn btn-primary mt-2"
                       onClick={() => setActiveTab("profile")}
                     >
@@ -1004,7 +1048,7 @@ const Dashboard = () => {
                     </button>
                   </div>
                 ) : (
-                  <PlanTab 
+                  <PlanTab
                     plan={plan}
                     progress={progress}
                     onUpdatePlan={handleUpdatePlan}
@@ -1461,11 +1505,17 @@ const Dashboard = () => {
                     onSubmit={async (e) => {
                       e.preventDefault();
 
+                      const coachId = e.target.coachId.value;
+                      if (!coachId) {
+                        toast.error("Bạn phải chọn một Coach!");
+                        return;
+                      }
+
                       const formData = {
-                        stagerId: user?.userId,
+                        stagerId: parseInt(coachId), // ✅ đúng field name theo backend
                         appointmentDate: e.target.appointmentDate.value,
-                        startTime: e.target.startTime.value,
-                        endTime: e.target.endTime.value,
+                        startTime: e.target.startTime.value + ":00",
+                        endTime: e.target.endTime.value + ":00",
                         status: "Đang chờ",
                         notes: e.target.notes.value,
                         createdAt: new Date().toISOString(),
@@ -1473,18 +1523,31 @@ const Dashboard = () => {
                       };
 
                       try {
-                        await api.post("/Appointment/CreateAppointment", formData);
+                        await api.post("/Appointment/CreateAppointment", formData); // ✅ không bọc trong dto
                         toast.success("Đã tạo lịch hẹn!");
-                        e.target.reset(); // Xoá form sau khi tạo
-                        fetchAppointments(); // Gọi lại danh sách lịch hẹn
-                      }  catch (err) {
-  console.error("Appointment error:", err.response?.data || err.message, err);
-  toast.error("Tạo lịch hẹn thất bại! " + (err.response?.data?.message || err.message || ""));
-}
-
+                        e.target.reset();
+                        fetchAppointments();
+                      } catch (err) {
+                        console.error("Appointment error:", err.response?.data || err.message);
+                        toast.error("Tạo lịch hẹn thất bại!");
+                        if (err.response?.data?.errors) {
+                          console.table(err.response.data.errors);
+                        }
+                      }
                     }}
                     className="border rounded p-3 bg-light"
                   >
+                    <div className="mb-2">
+                      <label>Chọn coach</label>
+                      <select name="coachId" className="form-control" required>
+                        <option value="">-- Chọn một coach --</option>
+                        {coaches.map(coach => (
+                          <option key={coach.coachId} value={coach.coachId}>
+                            {coach.displayName || coach.username}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="mb-2">
                       <label>Ngày hẹn</label>
                       <input type="date" name="appointmentDate" className="form-control" required />
@@ -1531,6 +1594,7 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
+
           </div>
         </div>
       </div>
