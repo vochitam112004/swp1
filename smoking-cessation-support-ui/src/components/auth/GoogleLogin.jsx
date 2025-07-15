@@ -21,7 +21,7 @@ const GoogleLoginComponent = () => {
       const loginRes = await api.post("/Auth/google-login", { idToken });
       const token = loginRes.data.token;
       const userFromLogin = loginRes.data.user;
-
+    
       if (!token || !userFromLogin) {
         toast.error("Đăng nhập thất bại!");
         return;
@@ -40,26 +40,9 @@ const GoogleLoginComponent = () => {
 
       localStorage.setItem("authToken", token);
       localStorage.setItem("user", JSON.stringify(userData));
-
-      // 🔍 GỌI API kiểm tra membership
-      try {
-        const membershipRes = await api.get("/UserMemberShipHistory/my-history", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const activeMembership = membershipRes.data.find(p => p.status === "active");
-        if (activeMembership) {
-          localStorage.setItem("membership", JSON.stringify(activeMembership));
-        } else {
-          localStorage.removeItem("membership");
-        }
-      } catch (membershipErr) {
-        console.error("Không thể lấy lịch sử membership", membershipErr);
-        localStorage.removeItem("membership");
-      }
-
       login(userData);
       toast.success("Đăng nhập thành công!");
-      navigate("/dashboard");
+      navigate("/membership");
     } catch (error) {
       console.error("Lỗi khi đăng nhập Google:", error?.response?.data || error.message);
       toast.error("Đăng nhập Google thất bại!");

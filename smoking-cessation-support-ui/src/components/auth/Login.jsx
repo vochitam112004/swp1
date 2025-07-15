@@ -31,19 +31,6 @@ export default function Login() {
     setShowPassword((prev) => !prev);
   };
 
-  const fetchMembershipPlan = async () => {
-    try {
-      const res = await api.get("/UserMemberShipHistory/my-history");
-      const currentPlan = res.data?.find(p => p.isActive);
-      localStorage.setItem("membershipPlan", JSON.stringify(currentPlan || {}));
-      return currentPlan || null;
-    } catch (err) {
-      localStorage.setItem("membershipPlan", JSON.stringify({}));
-      console.log(err);
-      return null;
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.username || !form.password) {
@@ -81,18 +68,7 @@ export default function Login() {
       localStorage.setItem("authToken", response.data.token);
       localStorage.setItem("user", JSON.stringify(userData));
       login(userData);
-
-      const plan = await fetchMembershipPlan();
       toast.success("Đăng nhập thành công!");
-
-      // 👉 Kiểm tra membership cho user thường
-      if (u.userType === "Member" && !plan) {
-        toast.warning("Bạn cần mua gói thành viên để sử dụng Dashboard.");
-        navigate("/membership"); // Chuyển sang trang mua gói
-        return;
-      }
-
-      // 👉 Điều hướng theo role
       switch (u.userType) {
         case "Admin":
           navigate("/admin");
@@ -110,7 +86,7 @@ export default function Login() {
     }
   };
 
-
+  // ✅ Nếu đã đăng nhập, hiện avatar và nút đăng xuất
   if (user) {
     return (
       <Box className="auth-bg" sx={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
@@ -140,9 +116,72 @@ export default function Login() {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", fontFamily: 'Poppins, sans-serif' }}>
-      {/* UI omitted for brevity */}
-      <Box sx={{ flex: 1, background: "#f4f7f9", display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
-        <Box sx={{ width: "100%", maxWidth: 400, background: "#fff", p: 4, borderRadius: 5, boxShadow: 4 }}>
+      {/* ✅ Bên trái: Hình nền với overlay và lời chào */}
+      <Box
+        sx={{
+          flex: 1,
+          backgroundImage: 'linear-gradient(rgba(43, 180, 227, 0.4), rgba(43, 180, 227, 0.4)), url("/images/backgroup_login.jpg")',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          color: "#fff",
+          display: { xs: 'none', md: 'flex' }, // ✅ Ẩn trên thiết bị nhỏ
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+          p: 4,
+        }}
+      >
+        <Typography variant="h4" fontWeight="bold" mb={2} color="#ffffff">
+          Chào mừng bạn đến với nền tảng hỗ trợ cai nghiện thuốc lá
+        </Typography>
+        <Typography variant="body1" mb={3}>
+          Bạn chưa có tài khoản?
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#00c6a2", // ✅ Nút xanh ngọc
+            color: "#fff",
+            fontWeight: "bold",
+            px: 4,
+            py: 1,
+            borderRadius: 9999,
+            boxShadow: 3,
+            transition: "all 0.3s ease",
+            '&:hover': {
+              backgroundColor: "#00dfb6",
+              transform: "scale(1.05)"
+            },
+          }}
+          onClick={() => navigate("/register")}
+        >
+          Đăng ký ngay
+        </Button>
+      </Box>
+
+      {/* ✅ Bên phải: Form đăng nhập hiện đại */}
+      <Box
+        sx={{
+          flex: 1,
+          background: "#f4f7f9",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2,
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 400,
+            background: "#fff",
+            p: 4,
+            borderRadius: 5,
+            boxShadow: 4,
+          }}
+        >
           <Typography variant="h5" fontWeight={700} mb={2} color="#1e1e1e" align="center">
             Đăng nhập
           </Typography>
@@ -162,8 +201,8 @@ export default function Login() {
                   </InputAdornment>
                 ),
                 style: {
-                  background: "#f5f7fb",
-                  borderRadius: 10,
+                  background: "#f5f7fb", // ✅ Nền input sáng
+                  borderRadius: 10,       // ✅ Bo góc input
                 },
               }}
             />
@@ -210,7 +249,7 @@ export default function Login() {
                 type="submit"
                 variant="contained"
                 sx={{
-                  backgroundColor: "#2b7de9",
+                  backgroundColor: "#2b7de9", // ✅ Màu chính
                   fontWeight: "bold",
                   borderRadius: 9999,
                   boxShadow: 2,
