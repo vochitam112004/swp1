@@ -144,6 +144,37 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          {/* Catch-all route for 404 - must be last */}
+          <Route path="*" element={
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              minHeight: '60vh',
+              textAlign: 'center'
+            }}>
+              <h1 style={{ fontSize: '3rem', color: '#666', marginBottom: '1rem' }}>404</h1>
+              <h2 style={{ color: '#888', marginBottom: '2rem' }}>Trang không tìm thấy</h2>
+              <p style={{ color: '#999', marginBottom: '2rem' }}>
+                Xin lỗi, trang bạn đang tìm kiếm không tồn tại.
+              </p>
+              <button 
+                onClick={() => window.location.href = '/'}
+                style={{
+                  background: '#1976d2',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                Về trang chủ
+              </button>
+            </div>
+          } />
         </Routes>
       </div>
 

@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: smoking-cessation-support-ui
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    publishDir: dist
+    envVars:
+      - key: NODE_VERSION
+        value: 18
