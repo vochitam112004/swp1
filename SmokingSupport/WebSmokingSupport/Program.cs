@@ -94,6 +94,8 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+            builder.Services.AddScoped<IMomoService, MomoService>();
+
             builder.Services.AddMemoryCache();
             builder.Services.AddCors(options =>
             {
