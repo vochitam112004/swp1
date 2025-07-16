@@ -1,6 +1,6 @@
 ﻿namespace WebSmokingSupport.Entity
 {
-    public class Momo
+    public class OrderInfoModel
     {
     }
 }

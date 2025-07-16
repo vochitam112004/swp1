@@ -1,6 +1,12 @@
-﻿namespace WebSmokingSupport.Service.Momo
+﻿using WebSmokingSupport.Entity;
+using WebSmokingSupport.Entity.Momo;
+
+namespace WebSmokingSupport.Service.Momo
 {
-    public class IMomoService
+    public interface IMomoService
     {
+        Task<MomoCreatePaymentResponseModel> CreatePaymentMomo(OrderInfoModel model);
+        MomoExecuteResponseModel PaymentExecuteAsync(IQueryCollection collection);
+
     }
 }
