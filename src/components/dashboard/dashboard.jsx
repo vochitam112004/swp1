@@ -1,5 +1,5 @@
 // Có thể là giao diện chính người dùng.
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { Line } from "react-chartjs-2";
 import {
@@ -138,7 +138,7 @@ const Dashboard = () => {
   const [plan, setPlan] = useState(null);
   // Thêm state cho mục tiêu hiện tại từ API
   const [currentGoal, setCurrentGoal] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [memberProfile, setMemberProfile] = useState(null);
   const [smokingStatus, setSmokingStatus] = useState("");
   const [quitAttempts, setQuitAttempts] = useState(0);
@@ -147,44 +147,67 @@ const Dashboard = () => {
   const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
   const [appointments, setAppointments] = useState([]);
   const [coachList, setCoachList] = useState([]);
+  const fetchedRef = useRef(false);
 
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const { loadings } = useAuth();
+
+  const fetchProfile = async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.get("/MemberProfile");
+      console.log("📦 MemberProfile:", res.data);
+      if (res.data && res.data.memberId) {
+        setMemberProfile(res.data);
+        setSmokingStatus(res.data.smokingStatus || "");
+        setQuitAttempts(res.data.quitAttempts || 0);
+        setExperienceLevel(res.data.experience_level || 0);
+        setPreviousAttempts(res.data.previousAttempts || "");
+      } else {
+        toast.warn("Không tìm thấy hồ sơ cá nhân.");
+      }
+    } catch (err) {
+      console.error("❌ Lỗi khi fetch MemberProfile:", err);
+      toast.error("Lỗi khi tải hồ sơ cá nhân: " + (err.response?.data?.message || err.message));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!loading && user && !fetchedRef.current) {
+      fetchedRef.current = true;
+      fetchProfile();
+    }
+  }, [user, loading]);
 
   useEffect(() => {
     async function fetchAll() {
-      setLoading(true);
+      setIsLoading(true);
       try {
         const [
           progressLogRes,
           currentGoalRes,
           goalPlanRes,
-          memberProfileRes
         ] = await Promise.all([
           api.get("/ProgressLog/GetProgress-logs"),
           api.get("/CurrentGoal"),
           api.get("/GoalPlan/current-goal"),
-          api.get("/MemberProfile")
         ]);
+
         setProgressLogs(progressLogRes.data);
         setCurrentGoal(currentGoalRes.data);
         setPlan(goalPlanRes.data || null);
-
-        // Set member profile data
-        if (memberProfileRes.data) {
-          setMemberProfile(memberProfileRes.data);
-          setSmokingStatus(memberProfileRes.data.smokingStatus || "");
-          setQuitAttempts(memberProfileRes.data.quitAttempts || 0);
-          setExperienceLevel(memberProfileRes.data.experience_level || 0);
-          setPreviousAttempts(memberProfileRes.data.previousAttempts || "");
-        }
       } catch (err) {
-        console.log(err)
+        console.error("❌ Lỗi khi fetch dữ liệu:", err);
+        toast.error("Lỗi khi tải dữ liệu: " + (err.response?.data?.message || err.message));
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     }
+
     fetchAll();
-  }, []); // <-- chỉ chạy khi mount
+  }, []);
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = async (e) => {
@@ -549,47 +572,31 @@ const Dashboard = () => {
   // Hàm cập nhật hồ sơ người dùng
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const profileData = {
-        memberId: memberProfile?.memberId,
-        smokingStatus,
-        quitAttempts: Number(quitAttempts),
-        experience_level: Number(experienceLevel),
-        previousAttempts,
-        // Không gửi updatedAt, để backend tự xử lý
-      };
+    const profileData = {
+      smokingStatus,
+      quitAttempts: Number(quitAttempts),
+      experience_level: Number(experienceLevel),
+      previousAttempts,
+    };
 
+    try {
       if (memberProfile && memberProfile.memberId) {
-        // Sử dụng đúng endpoint PUT /MemberProfile/Update-MemberProfile/{memberId}
-        const res = await api.put(`/MemberProfile/Update-MemberProfile/${memberProfile.memberId}`, profileData);
-        setMemberProfile(res.data);
+        await api.put(`/MemberProfile/Update-MemberProfile/${memberProfile.memberId}`, profileData);
         toast.success("Đã cập nhật hồ sơ!");
       } else {
-        // Tạo hồ sơ mới
-        try {
-          await api.post("/MemberProfile", profileData);
-          // Sau khi tạo thành công, fetch lại data
-          const res = await api.get("/MemberProfile");
-          setMemberProfile(res.data);
-          toast.success("Đã tạo hồ sơ!");
-        } catch (createError) {
-          if (createError.response?.status === 409) {
-            // Profile đã tồn tại, thử fetch lại
-            const res = await api.get("/MemberProfile");
-            setMemberProfile(res.data);
-            toast.info("Hồ sơ đã tồn tại. Dữ liệu đã được tải lại.");
-          } else {
-            throw createError;
-          }
-        }
+        await api.post("/MemberProfile", profileData);
+        toast.success("Đã tạo hồ sơ mới!");
       }
+      // ✅ Luôn fetch lại sau khi cập nhật
+      fetchProfile();
     } catch (err) {
-      console.error("Profile update error:", err, err.response?.data);
-      toast.error("Cập nhật hồ sơ thất bại! " + (err.response?.data || err.message || ""));
+      console.error("❌ Profile update error:", err);
+      toast.error("Cập nhật hồ sơ thất bại: " + (err.response?.data?.message || err.message));
     }
   };
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: 40 }}><span className="spinner-border"></span> Đang tải dữ liệu...</div>;
+  if (isLoading) return <div className="text-center mt-4">Đang tải hồ sơ...</div>;
+
 
   return (
     <div className="bg-white py-5">
@@ -1312,7 +1319,7 @@ const Dashboard = () => {
               </div>
             )}
             {activeTab === "profile" && (
-              <div>
+              <div className="container">
                 <h3 className="fs-5 fw-semibold mb-3">Hồ sơ cá nhân</h3>
                 <p className="text-secondary mb-4">
                   Cập nhật thông tin cá nhân về quá trình hút thuốc và cai thuốc của bạn.
@@ -1378,7 +1385,7 @@ const Dashboard = () => {
                   </div>
 
                   <div className="col-md-6">
-                    {memberProfile && (
+                    {memberProfile ? (
                       <div className="card">
                         <div className="card-header bg-primary text-white">
                           <h5 className="card-title mb-0">
@@ -1416,9 +1423,7 @@ const Dashboard = () => {
                           )}
                         </div>
                       </div>
-                    )}
-
-                    {!memberProfile && (
+                    ) : (
                       <div className="alert alert-info">
                         <i className="fas fa-info-circle me-2"></i>
                         Bạn chưa có hồ sơ cá nhân. Hãy điền thông tin bên trái để tạo hồ sơ.
@@ -1427,7 +1432,6 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                {/* Gợi ý dựa trên hồ sơ */}
                 {memberProfile && (
                   <div className="mt-5">
                     <h4>Gợi ý dành cho bạn</h4>
@@ -1468,20 +1472,35 @@ const Dashboard = () => {
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault();
+                      if (loadings || !memberProfile || !memberProfile.memberId) {
+                        toast.error("Không thể tạo lịch hẹn. Hồ sơ cá nhân chưa có hoặc chưa đầy đủ!");
+                        return;
+                      }
+
+                      const start = e.target.startTime.value;
+                      const end = e.target.endTime.value;
+
+                      if (start >= end) {
+                        toast.error("Giờ kết thúc phải sau giờ bắt đầu!");
+                        return;
+                      }
 
                       const formData = {
-                        memberId: user?.userId,
-                        coachId: Number(e.target.coachId.value),
+                        stagerId: memberProfile.memberId,
                         appointmentDate: e.target.appointmentDate.value,
-                        startTime: e.target.startTime.value,
-                        endTime: e.target.endTime.value,
+                        startTime: start,
+                        endTime: end,
                         status: "Đang chờ",
                         notes: e.target.notes.value || "",
                         createdAt: new Date().toISOString(),
-                        meetingLink: e.target.meetingLink.value || ""
                       };
 
-                      console.log("GỬI DỮ LIỆU:", formData); // 👈 xem dữ liệu trước khi gửi
+                      const meetingLink = e.target.meetingLink.value?.trim();
+                      if (meetingLink) {
+                        formData.meetingLink = meetingLink;
+                      }
+
+                      console.log("GỬI DỮ LIỆU:", formData);
 
                       try {
                         await api.post("/Appointment/CreateAppointment", formData);

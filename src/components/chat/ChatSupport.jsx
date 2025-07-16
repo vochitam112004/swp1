@@ -59,7 +59,6 @@ const ChatSupport = ({ targetUserId, onClose }) => {
         setCoaches(coachRes.data);
       } catch (err) {
         console.log(err)
-        toast.error("Không tải được danh sách huấn luyện viên!");
       }
     }
 
