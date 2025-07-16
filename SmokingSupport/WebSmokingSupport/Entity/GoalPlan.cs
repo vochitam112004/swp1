@@ -24,7 +24,5 @@ public partial class GoalPlan
     public virtual MemberProfile? Member { get; set; } // MemberId is nullable, so Member can be nullable (consider if MemberId should be [Required])
 
     // << XÓA: public ProgressLog? ProgressLog { get; set; } >> Đây là thừa, bạn đã có ICollection bên dưới
-
-    public virtual ICollection<MemberGoal> MemberGoals { get; set; } = new List<MemberGoal>();
-    public virtual ICollection<ProgressLog> ProgressLogs { get; set; } = new List<ProgressLog>(); // 
+    public virtual ICollection<ProgressLog> ProgressLogs { get; set; } = new List<ProgressLog>(); // st<Member
 }

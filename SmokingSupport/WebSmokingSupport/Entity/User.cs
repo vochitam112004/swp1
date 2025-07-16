@@ -29,7 +29,6 @@ public partial class User
 
     public DateTime? UpdatedAt { get; set; }
 
-    public virtual AdminProfile? AdminProfile { get; set; }
 
     public virtual ICollection<ChatMessage> ChatMessageReceivers { get; set; } = new List<ChatMessage>();
 

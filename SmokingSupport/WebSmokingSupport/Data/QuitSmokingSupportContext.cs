@@ -16,8 +16,6 @@ public partial class QuitSmokingSupportContext : DbContext
     {
     }
 
-    public virtual DbSet<AdminProfile> AdminProfiles { get; set; }
-
     public virtual DbSet<Appointment> Appointments { get; set; }
 
     public virtual DbSet<Badge> Badges { get; set; }
@@ -33,10 +31,6 @@ public partial class QuitSmokingSupportContext : DbContext
     public virtual DbSet<Feedback> Feedbacks { get; set; }
 
     public virtual DbSet<GoalPlan> GoalPlans { get; set; }
-
-    public virtual DbSet<GoalTemplate> GoalTemplates { get; set; }
-
-    public virtual DbSet<MemberGoal> MemberGoals { get; set; }
 
     public virtual DbSet<MemberProfile> MemberProfiles { get; set; }
 
@@ -65,28 +59,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.UseCollation("Vietnamese_CI_AS"); // ✅ thêm cấu hình hỗ trợ tiếng Việt
-
-        modelBuilder.Entity<AdminProfile>(entity =>
-        {
-            entity.HasKey(e => e.AdminId).HasName("PK__AdminPro__43AA4141CBF17DDA");
-
-            entity.ToTable("AdminProfile");
-
-            entity.Property(e => e.AdminId)
-                .ValueGeneratedNever()
-                .HasColumnName("admin_id");
-            entity.Property(e => e.PermissionLevel)
-                .HasMaxLength(20)
-                .IsUnicode(true) // ✅ đổi thành true để lưu tiếng Việt
-                .HasColumnName("permission_level");
-
-            entity.HasOne(d => d.Admin)
-                .WithOne(p => p.AdminProfile)
-                .HasForeignKey<AdminProfile>(d => d.AdminId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK__AdminProf__admin__60A75C0F");
-        });
+        modelBuilder.UseCollation("Vietnamese_CI_AS"); // hỗ trợ tiếng Việt
 
         modelBuilder.Entity<Appointment>(entity =>
         {
@@ -306,47 +279,6 @@ public partial class QuitSmokingSupportContext : DbContext
                   .WithOne(pl => pl.GoalPlan)      // ProgressLog có một GoalPlan
                   .HasForeignKey(pl => pl.GoalPlanId) // Khóa ngoại GoalPlanId là trong ProgressLog
                   .OnDelete(DeleteBehavior.SetNull); // Yêu cầu ProgressLog.GoalPlanId là nullable
-
-            // Mối quan hệ GoalPlan - MemberGoal (1-N)
-            entity.HasMany(gp => gp.MemberGoals) // GoalPlan có nhiều MemberGoal
-                  .WithOne(mg => mg.GoalPlan)      // MemberGoal có một GoalPlan
-                  .HasForeignKey(mg => mg.GoalPlanId) // Khóa ngoại GoalPlanId là trong MemberGoal
-                  .OnDelete(DeleteBehavior.SetNull); // Yêu cầu MemberGoal.GoalPlanId là nullable
-        });
-
-        modelBuilder.Entity<GoalTemplate>(entity =>
-        {
-            entity.HasKey(e => e.TemplateId).HasName("PK__GoalTemp__BE44E07923FB669E");
-
-            entity.ToTable("GoalTemplate");
-
-            entity.Property(e => e.TemplateId).HasColumnName("template_id");
-            entity.Property(e => e.Description)
-                .IsUnicode(false)
-                .HasColumnName("description");
-        });
-
-        modelBuilder.Entity<MemberGoal>(entity =>
-        {
-            entity.HasKey(e => e.MemberGoalId).HasName("PK__MemberGo__378ADBCECEB612BF");
-
-            entity.ToTable("MemberGoal");
-
-            entity.Property(e => e.MemberGoalId).HasColumnName("member_goal_id");
-            entity.Property(e => e.GoalPlanId).HasColumnName("goal_id");
-            entity.Property(e => e.MemberId).HasColumnName("member_id");
-            entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .IsUnicode(true)
-                .HasColumnName("status");
-
-            entity.HasOne(d => d.GoalPlan).WithMany(p => p.MemberGoals)
-                .HasForeignKey(d => d.GoalPlanId)
-                .HasConstraintName("FK__MemberGoa__goal___33D4B598");
-
-            entity.HasOne(d => d.Member).WithMany(p => p.MemberGoals)
-                .HasForeignKey(d => d.MemberId)
-                .HasConstraintName("FK__MemberGoa__membe__32E0915F");
         });
 
         modelBuilder.Entity<MemberProfile>(entity =>

@@ -23,7 +23,7 @@ public partial class MemberProfile
 
     public virtual ICollection<GoalPlan> GoalPlans { get; set; } = new List<GoalPlan>(); 
     public virtual User User { get; set; } = null!; 
-    public virtual ICollection<MemberGoal> MemberGoals { get; set; } = new List<MemberGoal>();
+ 
     public virtual ICollection<MemberTrigger> MemberTriggers { get; set; } = new List<MemberTrigger>();
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
