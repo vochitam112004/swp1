@@ -15,8 +15,5 @@ namespace WebSmokingSupport.Entity
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
 
-        public ICollection<UserMembershipPayment> Payments { get; set; } = new List<UserMembershipPayment>();
-        public virtual ICollection<UserMembershipHistory> UserHistories { get; set; } = new List<UserMembershipHistory>();
-
     }
 }

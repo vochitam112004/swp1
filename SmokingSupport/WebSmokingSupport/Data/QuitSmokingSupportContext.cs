@@ -56,8 +56,6 @@ public partial class QuitSmokingSupportContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<MembershipPlan> MembershipPlans { get; set; }
-    public virtual DbSet<UserMembershipPayment> UserMembershipPayments { get; set; }
-    public virtual DbSet<UserMembershipHistory> UserMembershipHistories { get; set;  }
     public virtual DbSet<UserBadge> UserBadges { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -498,49 +496,7 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__Ranking__user_id__571DF1D5");
         });
-        modelBuilder.Entity<UserMembershipPayment>(entity =>
-        {
-            entity.HasKey(e => e.PaymentId); 
-            entity.Property(e => e.PaymentId)
-                  .HasColumnName("payment_id")
-                  .ValueGeneratedOnAdd(); 
-            entity.Property(e => e.UserId)
-                  .HasColumnName("user_id")
-                  .IsRequired(); 
-            entity.Property(e => e.PlanId)
-                  .HasColumnName("plan_id")
-                  .IsRequired(); 
-            entity.Property(e => e.PaymentDate)
-                  .HasColumnName("payment_date")
-                  .HasColumnType("datetime")
-                  .HasDefaultValueSql("GETUTCDATE()")
-                  .IsRequired();
-            entity.Property(e => e.ExpirationDate)
-                  .HasColumnName("expiration_date")
-                  .HasColumnType("datetime")
-                  .IsRequired();
-            entity.Property(e => e.Amount)
-                  .HasColumnName("amount")
-                  .HasColumnType("decimal(18,2)")
-                  .IsRequired();
-            entity.Property(e => e.PaymentStatus)
-                  .HasColumnName("payment_status")
-                  .HasMaxLength(50)
-                  .IsUnicode(false) 
-                  .IsRequired();
-            entity.Property(e => e.TransactionId)
-                  .HasColumnName("transaction_id")
-                  .HasMaxLength(255)
-                  .IsUnicode(false); 
-            entity.HasOne(ump => ump.User) 
-                  .WithMany(u => u.UserMembershipPayments) 
-                  .HasForeignKey(ump => ump.UserId) 
-                  .OnDelete(DeleteBehavior.Cascade); 
-            entity.HasOne(ump => ump.Plan) 
-                  .WithMany(pl => pl.Payments) 
-                  .HasForeignKey(ump => ump.PlanId)
-                  .OnDelete(DeleteBehavior.Restrict); 
-        });
+       
         OnModelCreatingPartial(modelBuilder);
 
         modelBuilder.Entity<MembershipPlan>(entity =>
@@ -571,19 +527,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.UpdatedAt)
                   .HasColumnName("updated_at")
                   .HasColumnType("datetime"); 
-            entity.HasMany(mp => mp.UserHistories)
-                  .WithOne(umh => umh.Plan)
-                  .HasForeignKey(umh => umh.PlanId)
-                  .OnDelete(DeleteBehavior.SetNull);
         });
-
-        modelBuilder.Entity<UserMembershipHistory>()
-             .HasKey(h => h.HistoryId); 
-        modelBuilder.Entity<UserMembershipHistory>()
-            .HasOne(h => h.User)
-            .WithMany()
-            .HasForeignKey(h => h.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<SystemReport>(entity =>
         {

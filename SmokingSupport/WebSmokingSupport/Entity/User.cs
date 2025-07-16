@@ -51,6 +51,5 @@ public partial class User
 
     public virtual ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
     public virtual ICollection<CommunityPost> CommunityPosts { get; set; } = new List<CommunityPost>();
-    public virtual ICollection<UserMembershipPayment> UserMembershipPayments { get; set; } = new List<UserMembershipPayment>();
 
 }
