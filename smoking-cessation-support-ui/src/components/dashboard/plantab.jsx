@@ -82,24 +82,42 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // Kiểm tra ngày kết thúc
+    if (!formData.expectedDate) {
+      toast.error("Xin hãy nhập ngày kết thúc");
+      return;
+    }
+
     try {
-      // Cập nhật kế hoạch chung thông qua parent component
-      const newPlan = {
-        goalDays: parseInt(formData.goalDays),
-        reason: formData.reason,
-        reminderFrequency: 'daily', // Mặc định hàng ngày
-        stages: formData.stages,
-        support: formData.support,
-        startDate: formData.startDate,
-        expectedDate: formData.expectedDate
-      };
-      
-      // Gọi function onUpdatePlan từ parent để cập nhật common plan
+      let newPlan;
+      if (!plan) {
+        // Ngày bắt đầu tự động lấy ngày hiện tại
+        newPlan = {
+          goalDays: parseInt(formData.goalDays),
+          reason: formData.reason,
+          reminderFrequency: 'daily',
+          stages: formData.stages,
+          support: formData.support,
+          startDate: new Date().toISOString().split('T')[0], // Ngày hiện tại
+          expectedDate: formData.expectedDate
+        };
+      } else {
+        // Nếu đã có kế hoạch, truyền cả hai ngày
+        newPlan = {
+          goalDays: parseInt(formData.goalDays),
+          reason: formData.reason,
+          reminderFrequency: 'daily',
+          stages: formData.stages,
+          support: formData.support,
+          startDate: formData.startDate,
+          expectedDate: formData.expectedDate
+        };
+      }
+
       await onUpdatePlan(newPlan);
-      
+
       toast.success("Đã lưu kế hoạch chi tiết!");
-      
     } catch (error) {
       toast.error("Lưu kế hoạch thất bại!");
       console.error(error);
@@ -225,31 +243,38 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
               </div>
 
               <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    <i className="fas fa-calendar-plus me-1 text-primary"></i>
-                    Ngày bắt đầu *
-                  </label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.startDate}
-                    onChange={(e) => handleInputChange('startDate', e.target.value)}
-                    required
-                  />
-                </div>
+                {/* Chỉ hiển thị trường ngày bắt đầu nếu đã có kế hoạch */}
+                {plan && (
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">
+                      <i className="fas fa-calendar-plus me-1 text-primary"></i>
+                      Ngày bắt đầu *
+                    </label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={formData.startDate}
+                      readOnly
+                      style={{ backgroundColor: "#f5f5f5" }}
+                    />
+                  </div>
+                )}
 
                 <div className="mb-3">
                   <label className="form-label fw-semibold">
                     <i className="fas fa-calendar-check me-1 text-success"></i>
-                    Ngày dự kiến hoàn thành
+                    Ngày dự kiến hoàn thành *
                   </label>
                   <input
                     type="date"
                     className="form-control"
                     value={formData.expectedDate}
                     onChange={(e) => handleInputChange('expectedDate', e.target.value)}
+                    required
                   />
+                  {!formData.expectedDate && (
+                    <div className="text-danger mt-1">Xin hãy nhập ngày kết thúc</div>
+                  )}
                 </div>
 
                 <div className="mb-3">
@@ -308,7 +333,7 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
                 <p><strong>Tần suất nhắc nhở:</strong> {plan.reminderFrequency || "Hàng ngày"}</p>
               </div>
               <div className="col-md-6">
-                <p><strong>Ngày bắt đầu:</strong> {plan.startDate ? new Date(plan.startDate).toLocaleDateString('vi-VN') : "Chưa xác định"}</p>
+                {/* Luôn hiển thị ngày dự kiến hoàn thành */}
                 <p><strong>Ngày dự kiến:</strong> {plan.expectedDate ? new Date(plan.expectedDate).toLocaleDateString('vi-VN') : "Chưa xác định"}</p>
                 <p><strong>Áp dụng cho:</strong> Tất cả thành viên cộng đồng</p>
               </div>
