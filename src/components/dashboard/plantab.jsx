@@ -10,7 +10,7 @@ const samplePlan = {
   goalDays: 30
 };
 
-const PlanTab = ({ plan, progress, onUpdatePlan }) => {
+const PlanTab = ({ plan, progress, onUpdatePlan, onCreatePlan }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [planStatus, setPlanStatus] = useState(""); 
   const [formData, setFormData] = useState(() => {
@@ -34,6 +34,27 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
   });
 
   // Lấy kế hoạch và tiến trình từ API khi load
+  // Kiểm tra xem kế hoạch đã hoàn thành hay chưa
+  const isPlanCompleted = () => {
+    if (!plan || !progress) return false;
+    
+    const daysNoSmoke = progress.daysNoSmoke || 0;
+    
+    // Tính số ngày mục tiêu từ StartDate và TargetQuitDate
+    let goalDays = 60; // default
+    if (plan.StartDate && plan.TargetQuitDate) {
+      const startDate = new Date(plan.StartDate);
+      const targetDate = new Date(plan.TargetQuitDate);
+      goalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+    } else if (plan.startDate && plan.targetQuitDate) {
+      const startDate = new Date(plan.startDate);
+      const targetDate = new Date(plan.targetQuitDate);
+      goalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+    }
+    
+    return daysNoSmoke >= goalDays;
+  };
+
   // Cập nhật trạng thái kế hoạch
   useEffect(() => {
     if (!plan || !progress) {
@@ -42,7 +63,18 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
     }
     
     const daysNoSmoke = progress.daysNoSmoke || 0;
-    const goalDays = plan.goalDays || 60;
+    
+    // Tính số ngày mục tiêu từ StartDate và TargetQuitDate
+    let goalDays = 60; // default
+    if (plan.StartDate && plan.TargetQuitDate) {
+      const startDate = new Date(plan.StartDate);
+      const targetDate = new Date(plan.TargetQuitDate);
+      goalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+    } else if (plan.startDate && plan.targetQuitDate) {
+      const startDate = new Date(plan.startDate);
+      const targetDate = new Date(plan.targetQuitDate);
+      goalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+    }
     
     if (daysNoSmoke >= goalDays) {
       setPlanStatus("🎉 Hoàn thành kế hoạch cai thuốc!");
@@ -55,12 +87,20 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
   useEffect(() => {
     if (plan) {
       const newFormData = {
-        reason: plan.reason || '',
-        stages: plan.stages || '',
-        startDate: plan.startDate ? plan.startDate.split('T')[0] : '',
-        expectedDate: plan.expectedDate ? plan.expectedDate.split('T')[0] : '',
-        support: plan.support || '',
-        goalDays: plan.goalDays || 30
+        reason: plan.personalMotivation || plan.PersonalMotivation || '',
+        stages: '', // Backend không lưu trường này, để trống
+        startDate: plan.startDate || plan.StartDate ? (plan.startDate || plan.StartDate).split ? (plan.startDate || plan.StartDate).split('T')[0] : new Date(plan.startDate || plan.StartDate).toISOString().split('T')[0] : '',
+        expectedDate: plan.targetQuitDate || plan.TargetQuitDate ? (plan.targetQuitDate || plan.TargetQuitDate).split ? (plan.targetQuitDate || plan.TargetQuitDate).split('T')[0] : new Date(plan.targetQuitDate || plan.TargetQuitDate).toISOString().split('T')[0] : '',
+        support: '', // Backend không lưu trường này, để trống
+        goalDays: (() => {
+          // Tính goalDays từ startDate và targetQuitDate (ưu tiên field mới)
+          if ((plan.startDate || plan.StartDate) && (plan.targetQuitDate || plan.TargetQuitDate)) {
+            const startDate = new Date(plan.startDate || plan.StartDate);
+            const targetDate = new Date(plan.targetQuitDate || plan.TargetQuitDate);
+            return Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+          }
+          return 30; // default
+        })()
       };
       setFormData(newFormData);
       // Lưu vào localStorage
@@ -80,6 +120,24 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
     setModalVisible(true);
   };
 
+  const handleCreateNewPlan = () => {
+    // Reset form với ngày bắt đầu là hôm nay
+    const today = new Date().toISOString().split('T')[0];
+    const newFormData = {
+      reason: '',
+      stages: '',
+      startDate: today,
+      expectedDate: '',
+      support: '',
+      goalDays: 30
+    };
+    
+    setFormData(newFormData);
+    localStorage.setItem('planTabFormData', JSON.stringify(newFormData));
+    
+    toast.info("Đã khởi tạo form tạo kế hoạch mới. Ngày bắt đầu được đặt là hôm nay.");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -89,37 +147,53 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
       return;
     }
 
+    // Kiểm tra nếu là kế hoạch mới và kế hoạch cũ đã hoàn thành
+    const isCompleted = isPlanCompleted();
+    const isNewPlan = !plan || isCompleted;
+
     try {
       let newPlan;
-      if (!plan) {
-        // Ngày bắt đầu tự động lấy ngày hiện tại
+      if (isNewPlan) {
+        // Tạo kế hoạch mới - mapping theo API backend
         newPlan = {
-          goalDays: parseInt(formData.goalDays),
-          reason: formData.reason,
-          reminderFrequency: 'daily',
-          stages: formData.stages,
-          support: formData.support,
-          startDate: new Date().toISOString().split('T')[0], // Ngày hiện tại
-          expectedDate: formData.expectedDate
+          TargetQuitDate: formData.expectedDate, // Mapping expectedDate -> TargetQuitDate
+          PersonalMotivation: formData.reason,   // Mapping reason -> PersonalMotivation
+          isCurrentGoal: true
+
+
+
+
         };
+        
+        // Gọi hàm tạo mới
+        await onCreatePlan(newPlan);
+        toast.success(isCompleted ? "Đã tạo kế hoạch mới sau khi hoàn thành kế hoạch trước!" : "Đã tạo kế hoạch chi tiết mới!");
       } else {
-        // Nếu đã có kế hoạch, truyền cả hai ngày
+        // Cập nhật kế hoạch hiện có - mapping theo API backend
         newPlan = {
-          goalDays: parseInt(formData.goalDays),
-          reason: formData.reason,
-          reminderFrequency: 'daily',
-          stages: formData.stages,
-          support: formData.support,
-          startDate: formData.startDate,
-          expectedDate: formData.expectedDate
+          TargetQuitDate: formData.expectedDate, // Mapping expectedDate -> TargetQuitDate
+          PersonalMotivation: formData.reason,   // Mapping reason -> PersonalMotivation
+          isCurrentGoal: true
+
+
+
+
         };
+        
+        // Gọi hàm cập nhật
+        await onUpdatePlan(newPlan);
+        toast.success("Đã cập nhật kế hoạch chi tiết!");
       }
 
-      await onUpdatePlan(newPlan);
 
-      toast.success("Đã lưu kế hoạch chi tiết!");
+
+
     } catch (error) {
-      toast.error("Lưu kế hoạch thất bại!");
+      if (isNewPlan) {
+        toast.error("Tạo kế hoạch thất bại!");
+      } else {
+        toast.error("Cập nhật kế hoạch thất bại!");
+      }
       console.error(error);
     }
   };
@@ -157,10 +231,20 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
       <div className="alert alert-info mb-4">
         <div className="d-flex align-items-center">
           <i className="fas fa-chart-line me-2 fs-4"></i>
-          <div>
+          <div className="flex-grow-1">
             <strong>Trạng thái hiện tại:</strong>
             <div className="mt-1">{planStatus}</div>
           </div>
+          {/* Nút tạo kế hoạch mới khi đã hoàn thành */}
+          {isPlanCompleted() && (
+            <button 
+              className="btn btn-success btn-sm ms-3"
+              onClick={handleCreateNewPlan}
+            >
+              <i className="fas fa-plus me-1"></i>
+              Tạo kế hoạch mới
+            </button>
+          )}
         </div>
       </div>
 
@@ -170,13 +254,41 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
           <div className="d-flex justify-content-between align-items-center mb-2">
             <span className="small text-muted">Tiến độ hoàn thành</span>
             <span className="small fw-bold">
-              {Math.round(((progress.daysNoSmoke || 0) / (plan.goalDays || 60)) * 100)}%
+              {(() => {
+                // Tính goalDays từ startDate và targetQuitDate (ưu tiên field mới)
+                let goalDays = 60; // default
+                if (plan.startDate && plan.targetQuitDate) {
+                  const startDate = new Date(plan.startDate);
+                  const targetDate = new Date(plan.targetQuitDate);
+                  goalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+                } else if (plan.StartDate && plan.TargetQuitDate) {
+                  const startDate = new Date(plan.StartDate);
+                  const targetDate = new Date(plan.TargetQuitDate);
+                  goalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+                }
+                return Math.round(((progress.daysNoSmoke || 0) / goalDays) * 100);
+              })()}%
             </span>
           </div>
           <div className="progress" style={{ height: '8px' }}>
             <div 
               className="progress-bar bg-success" 
-              style={{ width: `${Math.min(((progress.daysNoSmoke || 0) / (plan.goalDays || 60)) * 100, 100)}%` }}
+              style={{ 
+                width: `${(() => {
+                  // Tính goalDays từ startDate và targetQuitDate (ưu tiên field mới)
+                  let goalDays = 60; // default
+                  if (plan.startDate && plan.targetQuitDate) {
+                    const startDate = new Date(plan.startDate);
+                    const targetDate = new Date(plan.targetQuitDate);
+                    goalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+                  } else if (plan.StartDate && plan.TargetQuitDate) {
+                    const startDate = new Date(plan.StartDate);
+                    const targetDate = new Date(plan.TargetQuitDate);
+                    goalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+                  }
+                  return Math.min(((progress.daysNoSmoke || 0) / goalDays) * 100, 100);
+                })()}%` 
+              }}
             ></div>
           </div>
         </div>
@@ -187,10 +299,16 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
         <div className="card-header bg-light">
           <h5 className="card-title mb-0">
             <i className="fas fa-edit me-2"></i>
-            Chi tiết kế hoạch cai thuốc
+            {isPlanCompleted() ? "Tạo kế hoạch mới" : "Chi tiết kế hoạch cai thuốc"}
           </h5>
         </div>
         <div className="card-body">
+          {isPlanCompleted() && (
+            <div className="alert alert-success mb-3">
+              <i className="fas fa-party-horn me-2"></i>
+              <strong>Chúc mừng!</strong> Bạn đã hoàn thành kế hoạch trước đó. Hãy tạo kế hoạch mới để tiếp tục hành trình cai thuốc của mình!
+            </div>
+          )}
           <form onSubmit={handleSubmit}>
             <div className="row">
               <div className="col-md-6">
@@ -243,22 +361,28 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
               </div>
 
               <div className="col-md-6">
-                {/* Chỉ hiển thị trường ngày bắt đầu nếu đã có kế hoạch */}
-                {plan && (
-                  <div className="mb-3">
-                    <label className="form-label fw-semibold">
-                      <i className="fas fa-calendar-plus me-1 text-primary"></i>
-                      Ngày bắt đầu *
-                    </label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={formData.startDate}
-                      readOnly
-                      style={{ backgroundColor: "#f5f5f5" }}
-                    />
-                  </div>
-                )}
+                {/* Hiển thị ngày bắt đầu - readonly khi có kế hoạch, có thể chỉnh khi tạo mới */}
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    <i className="fas fa-calendar-plus me-1 text-primary"></i>
+                    Ngày bắt đầu *
+                  </label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={formData.startDate}
+                    onChange={(e) => handleInputChange('startDate', e.target.value)}
+                    readOnly={plan && !isPlanCompleted()}
+                    style={{ backgroundColor: (plan && !isPlanCompleted()) ? "#f5f5f5" : "white" }}
+                    required
+                  />
+                  {isPlanCompleted() && (
+                    <div className="form-text text-success">
+                      <i className="fas fa-info-circle me-1"></i>
+                      Ngày bắt đầu được đặt mặc định là hôm nay cho kế hoạch mới
+                    </div>
+                  )}
+                </div>
 
                 <div className="mb-3">
                   <label className="form-label fw-semibold">
@@ -301,7 +425,7 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
             <div className="d-flex gap-2 mt-4">
               <button type="submit" className="btn btn-primary">
                 <i className="fas fa-save me-2"></i>
-                Lưu kế hoạch chi tiết
+                {!plan || isPlanCompleted() ? "Tạo kế hoạch chi tiết" : "Cập nhật kế hoạch chi tiết"}
               </button>
               <button 
                 type="button" 
@@ -328,13 +452,13 @@ const PlanTab = ({ plan, progress, onUpdatePlan }) => {
           <div className="card-body">
             <div className="row">
               <div className="col-md-6">
-                <p><strong>Mục tiêu:</strong> {plan.goalDays || 60} ngày không hút thuốc</p>
-                <p><strong>Lý do:</strong> {plan.reason || "Vì sức khỏe và tương lai tốt đẹp"}</p>
-                <p><strong>Tần suất nhắc nhở:</strong> {plan.reminderFrequency || "Hàng ngày"}</p>
+                <p><strong>Động lực cá nhân:</strong> {plan.personalMotivation || plan.PersonalMotivation || "Vì sức khỏe và tương lai tốt đẹp"}</p>
+                <p><strong>Ngày bắt đầu:</strong> {plan.startDate || plan.StartDate ? new Date(plan.startDate || plan.StartDate).toLocaleDateString('vi-VN') : "Chưa xác định"}</p>
+                <p><strong>Trạng thái:</strong> {plan.isCurrentGoal ? "Đang hoạt động" : "Không hoạt động"}</p>
               </div>
               <div className="col-md-6">
-                {/* Luôn hiển thị ngày dự kiến hoàn thành */}
-                <p><strong>Ngày dự kiến:</strong> {plan.expectedDate ? new Date(plan.expectedDate).toLocaleDateString('vi-VN') : "Chưa xác định"}</p>
+                <p><strong>Ngày mục tiêu:</strong> {plan.targetQuitDate || plan.TargetQuitDate ? new Date(plan.targetQuitDate || plan.TargetQuitDate).toLocaleDateString('vi-VN') : "Chưa xác định"}</p>
+
                 <p><strong>Áp dụng cho:</strong> Tất cả thành viên cộng đồng</p>
               </div>
             </div>

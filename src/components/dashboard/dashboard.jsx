@@ -1,5 +1,5 @@
 // Có thể là giao diện chính người dùng.
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Line } from "react-chartjs-2";
 import {
@@ -118,7 +118,9 @@ const Dashboard = () => {
 
 
   // Thêm state cho lịch sử tiến trình và số lần tái nghiện
-  const [quitHistory, setQuitHistory] = useState(() => safeParse("quitHistory", []));
+  const [quitHistory] = useState(() => safeParse("quitHistory", []));
+  const [planHistory, setPlanHistory] = useState([]); // Lịch sử kế hoạch từ API
+  const [_encourages, setEncourages] = useState(() => safeParse("encourages", {})); // Thêm state encourages
   const [todayCigarettes, setTodayCigarettes] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -129,16 +131,14 @@ const Dashboard = () => {
     return new Date().toISOString().slice(0, 10);
   });
   const [pricePerPack, setPricePerPack] = useState(() => localStorage.getItem("pricePerPack") || "");
-  const [comments, setComments] = useState(() => safeParse("badgeComments", {}));
   const [editIdx, setEditIdx] = useState(null);
-  const [editContent, setEditContent] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
   const [progressLogs, setProgressLogs] = useState([]);
   const [progress, setProgress] = useState({ daysNoSmoke: 0, moneySaved: 0, health: 0 });
   const [plan, setPlan] = useState(null);
   // Thêm state cho mục tiêu hiện tại từ API
   const [currentGoal, setCurrentGoal] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [memberProfile, setMemberProfile] = useState(null);
   const [smokingStatus, setSmokingStatus] = useState("");
   const [quitAttempts, setQuitAttempts] = useState(0);
@@ -147,67 +147,44 @@ const Dashboard = () => {
   const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
   const [appointments, setAppointments] = useState([]);
   const [coachList, setCoachList] = useState([]);
-  const fetchedRef = useRef(false);
 
-  const { user, loading } = useAuth();
-  const { loadings } = useAuth();
-
-  const fetchProfile = async () => {
-    setIsLoading(true);
-    try {
-      const res = await api.get("/MemberProfile");
-      console.log("📦 MemberProfile:", res.data);
-      if (res.data && res.data.memberId) {
-        setMemberProfile(res.data);
-        setSmokingStatus(res.data.smokingStatus || "");
-        setQuitAttempts(res.data.quitAttempts || 0);
-        setExperienceLevel(res.data.experience_level || 0);
-        setPreviousAttempts(res.data.previousAttempts || "");
-      } else {
-        toast.warn("Không tìm thấy hồ sơ cá nhân.");
-      }
-    } catch (err) {
-      console.error("❌ Lỗi khi fetch MemberProfile:", err);
-      toast.error("Lỗi khi tải hồ sơ cá nhân: " + (err.response?.data?.message || err.message));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!loading && user && !fetchedRef.current) {
-      fetchedRef.current = true;
-      fetchProfile();
-    }
-  }, [user, loading]);
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchAll() {
-      setIsLoading(true);
+      setLoading(true);
       try {
         const [
           progressLogRes,
           currentGoalRes,
           goalPlanRes,
+          memberProfileRes
         ] = await Promise.all([
           api.get("/ProgressLog/GetProgress-logs"),
           api.get("/CurrentGoal"),
           api.get("/GoalPlan/current-goal"),
+          api.get("/MemberProfile")
         ]);
-
         setProgressLogs(progressLogRes.data);
         setCurrentGoal(currentGoalRes.data);
         setPlan(goalPlanRes.data || null);
+
+        // Set member profile data
+        if (memberProfileRes.data) {
+          setMemberProfile(memberProfileRes.data);
+          setSmokingStatus(memberProfileRes.data.smokingStatus || "");
+          setQuitAttempts(memberProfileRes.data.quitAttempts || 0);
+          setExperienceLevel(memberProfileRes.data.experience_level || 0);
+          setPreviousAttempts(memberProfileRes.data.previousAttempts || "");
+        }
       } catch (err) {
-        console.error("❌ Lỗi khi fetch dữ liệu:", err);
-        toast.error("Lỗi khi tải dữ liệu: " + (err.response?.data?.message || err.message));
+        console.log(err)
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     }
-
     fetchAll();
-  }, []);
+  }, []); // <-- chỉ chạy khi mount
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = async (e) => {
@@ -382,7 +359,7 @@ const Dashboard = () => {
   }
 
   // Thêm các state và hàm xử lý động viên, bình luận
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [_forceUpdate, setForceUpdate] = useState(0);
   const [commentInputs, setCommentInputs] = useState({});
 
   function handleEncourage(idx) {
@@ -399,7 +376,6 @@ const Dashboard = () => {
     if (!commentsObj[idx]) commentsObj[idx] = [];
     commentsObj[idx].push({ text: comment, time: new Date().toLocaleString() });
     localStorage.setItem("badgeComments", JSON.stringify(commentsObj));
-    setComments(commentsObj); // cập nhật state comments
     setForceUpdate(f => f + 1);
   }
 
@@ -431,9 +407,7 @@ const Dashboard = () => {
       if (e.key === "encourages") {
         setEncourages(JSON.parse(e.newValue || "{}"));
       }
-      if (e.key === "badgeComments") {
-        setComments(JSON.parse(e.newValue || "{}"));
-      }
+      // Badge comments không cần thiết nữa vì dùng API
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -444,10 +418,24 @@ const Dashboard = () => {
   // const goalDays = plan.goalDays || 60;
   // const frequency = plan.reminderFrequency || "daily"; // Thêm dòng này
 
+  // Tính goalDays từ plan
+  const getGoalDays = () => {
+    if (plan && plan.startDate && plan.targetQuitDate) {
+      const startDate = new Date(plan.startDate);
+      const targetDate = new Date(plan.targetQuitDate);
+      return Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+    } else if (plan && plan.StartDate && plan.TargetQuitDate) {
+      const startDate = new Date(plan.StartDate);
+      const targetDate = new Date(plan.TargetQuitDate);
+      return Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+    }
+    return 60; // default
+  };
+
   // Tính phần trăm hoàn thành mục tiêu (ưu tiên currentGoal nếu có)
   const percent = currentGoal && currentGoal.totalDays
     ? Math.min(Math.round((currentGoal.smokeFreeDays / currentGoal.totalDays) * 100), 100)
-    : Math.min(Math.round((progress.daysNoSmoke / (plan?.goalDays || 60)) * 100), 100);
+    : Math.min(Math.round((progress.daysNoSmoke / getGoalDays()) * 100), 100);
 
   // Tính strokeDashoffset cho vòng tròn SVG
   const circleLength = 2 * Math.PI * 40; // r=40
@@ -455,9 +443,9 @@ const Dashboard = () => {
 
   // Tính toán thống kê nâng cao
   const allStreaks = [...quitHistory.map(h => h.daysNoSmoke), progress.daysNoSmoke];
-  const maxStreak = Math.max(...allStreaks, 0);
-  const relapseCount = quitHistory.length;
-  const totalMoneySaved = quitHistory.reduce((sum, h) => sum + (h.moneySaved || 0), 0) + progress.moneySaved;
+  const _maxStreak = Math.max(...allStreaks, 0);
+  const _relapseCount = quitHistory.length;
+  const _totalMoneySaved = quitHistory.reduce((sum, h) => sum + (h.moneySaved || 0), 0) + progress.moneySaved;
 
   // Thêm danh sách bài viết mẫu
   const TIPS = [
@@ -483,7 +471,7 @@ const Dashboard = () => {
     fetchProgressLogs();
   }, []);
 
-  const handleAddProgressLog = async (logData) => {
+  const _handleAddProgressLog = async (logData) => {
     try {
       await api.post("/ProgressLog/CreateProgress-log", logData);
       const [logsRes, goalRes] = await Promise.all([
@@ -498,7 +486,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteProgressLog = async (logId) => {
+  const _handleDeleteProgressLog = async (logId) => {
     try {
       await api.delete(`/ProgressLog/DeleteByIdProgress-log/${logId}`);
       const res = await api.get("/ProgressLog/GetProgress-logs");
@@ -511,9 +499,56 @@ const Dashboard = () => {
 
   // Lấy kế hoạch từ API khi load
   useEffect(() => {
-    api.get("/GoalPlan/all-goals")
-      .then(res => setPlan(res.data[0] || null))
-      .catch(() => setPlan(null));
+    // Thử nhiều endpoint có thể
+    const tryGetGoalPlan = async () => {
+      try {
+        // Thử endpoint mới - current-goal
+        const res = await api.get("/GoalPlan/current-goal");
+        console.log("GoalPlan API response (current-goal):", res.data);
+        setPlan(res.data || null);
+      } catch (err1) {
+        console.log("Endpoint current-goal failed, trying GetCurrentGoal...");
+        try {
+          // Thử endpoint cũ - GetCurrentGoal  
+          const res = await api.get("/GoalPlan/GetCurrentGoal");
+          console.log("GoalPlan API response (GetCurrentGoal):", res.data);
+          setPlan(res.data || null);
+        } catch (err2) {
+          console.log("Endpoint GetCurrentGoal failed, trying all-goals...");
+          try {
+            // Thử endpoint all-goals và lấy goal hiện tại
+            const res = await api.get("/GoalPlan/all-goals");
+            console.log("GoalPlan API response (all-goals):", res.data);
+            // Tìm goal hiện tại trong danh sách
+            if (Array.isArray(res.data)) {
+              const currentPlan = res.data.find(p => p.isCurrentGoal === true);
+              setPlan(currentPlan || null);
+            } else {
+              setPlan(res.data || null);
+            }
+          } catch (err3) {
+            console.log("Endpoint all-goals failed, trying base endpoint...");
+            try {
+              // Thử endpoint cũ
+              const res = await api.get("/GoalPlan");
+              console.log("GoalPlan API response (base):", res.data);
+              // Có thể trả về array, lấy phần tử đầu tiên có isCurrentGoal = true
+              if (Array.isArray(res.data)) {
+                const currentPlan = res.data.find(p => p.isCurrentGoal === true);
+                setPlan(currentPlan || null);
+              } else {
+                setPlan(res.data || null);
+              }
+            } catch (err4) {
+              console.error("Tất cả endpoint GoalPlan đều thất bại:", { err1, err2, err3, err4 });
+              setPlan(null);
+            }
+          }
+        }
+      }
+    };
+
+    tryGetGoalPlan();
   }, []);
 
   // Lấy mục tiêu hiện tại từ API khi load
@@ -526,77 +561,222 @@ const Dashboard = () => {
       .catch(() => setCurrentGoal(null));
   }, []);
 
+  // Fetch lịch sử kế hoạch từ API khi component mount
+  useEffect(() => {
+    const fetchPlanHistory = async () => {
+      try {
+        const response = await api.get("/GoalPlan/all-goals");
+        console.log("Plan history API response:", response.data);
+
+        if (Array.isArray(response.data)) {
+          // Lọc chỉ lấy những kế hoạch không phải current goal để làm lịch sử
+          const historyPlans = response.data.filter(plan => !plan.isCurrentGoal);
+          setPlanHistory(historyPlans);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy lịch sử kế hoạch:", error);
+        // Fallback về localStorage nếu API thất bại
+        const localHistory = JSON.parse(localStorage.getItem('planHistory') || '[]');
+        setPlanHistory(localHistory);
+      }
+    };
+
+    fetchPlanHistory();
+  }, []);
+
+  // Function để refresh lại lịch sử kế hoạch từ API
+  const _refreshPlanHistory = async () => {
+    try {
+      const response = await api.get("/GoalPlan/all-goals");
+      console.log("Refreshed plan history:", response.data);
+
+      if (Array.isArray(response.data)) {
+        // Lọc chỉ lấy những kế hoạch không phải current goal để làm lịch sử
+        const historyPlans = response.data.filter(plan => !plan.isCurrentGoal);
+        setPlanHistory(historyPlans);
+      }
+    } catch (error) {
+      console.error("Lỗi khi refresh lịch sử kế hoạch:", error);
+    }
+  };
+
   // Hàm cập nhật GoalPlan qua API
   const handleUpdatePlan = async (newPlan) => {
     if (!plan) {
-      toast.error("Không tìm thấy kế hoạch để cập nhật.");
-      return;
+      // Nếu không có plan thì gọi tạo mới thay vì báo lỗi
+      toast.info("Chưa có kế hoạch hiện tại. Sẽ tạo kế hoạch mới.");
+      return handleCreatePlan(newPlan);
     }
     try {
-      await api.put("/GoalPlan/Update-GoalPlan", {
-        ...newPlan,
-        goalPlanId: plan.goalPlanId,
-      });
-      const res = await api.get("/GoalPlan/current-goal");
-      console.log("API trả về kế hoạch:", res.data); // Thêm dòng này để kiểm tra dữ liệu trả về
-      setPlan(res.data[0] || null);
-      toast.success("Đã cập nhật kế hoạch chung!");
+      // Cập nhật kế hoạch qua API PUT
+      const updateData = {
+        targetQuitDate: newPlan.TargetQuitDate,
+        personalMotivation: newPlan.PersonalMotivation,
+        isCurrentGoal: newPlan.isCurrentGoal
+      };
 
-      // Chuyển đến tab plan để hiển thị lộ trình chi tiết
-      setTimeout(() => {
-        setActiveTab("plan");
-        toast.info("Đã chuyển đến tab Kế hoạch để xem lộ trình chi tiết!");
-      }, 1000);
+      await api.put(`/GoalPlan/Update-GoalPlan`, updateData);
+
+      // Reload lại plan từ API sau khi update thành công - thử nhiều endpoint
+      try {
+        const res = await api.get("/GoalPlan/current-goal");
+        setPlan(res.data || null);
+      } catch {
+        try {
+          const res = await api.get("/GoalPlan/GetCurrentGoal");
+          setPlan(res.data || null);
+        } catch {
+          console.log("Không reload được plan sau update");
+        }
+      }
+
+      console.log("API trả về kế hoạch:", plan);
+      toast.success("Đã cập nhật kế hoạch!");
     } catch (err) {
-      toast.error("Cập nhật kế hoạch thất bại!");
       console.error("Lỗi cập nhật kế hoạch:", err);
+      // Nếu update thất bại (có thể API không tồn tại), thử tạo mới
+      toast.info("Cập nhật thất bại, sẽ tạo kế hoạch mới.");
+      handleCreatePlan(newPlan);
     }
   };
 
   // Hàm tạo mới GoalPlan qua API
   const handleCreatePlan = async (newPlan) => {
-    if (plan) {
-      toast.error("Bạn đã có kế hoạch. Hãy xóa kế hoạch cũ trước khi tạo mới.");
-      return;
-    }
     try {
-      await api.post("/GoalPlan", newPlan);
-      const res = await api.get("/GoalPlan/current-goal");
-      setPlan(res.data[0] || null);
+      // Lưu kế hoạch cũ vào lịch sử nếu có
+      if (plan && progress) {
+        const completedPlan = {
+          ...plan,
+          completedDate: new Date().toISOString(),
+          finalProgress: {
+            daysNoSmoke: progress.daysNoSmoke,
+            moneySaved: progress.moneySaved,
+            health: progress.health
+          }
+        };
+
+        // Lưu vào localStorage hoặc có thể gửi lên API nếu backend hỗ trợ
+        const planHistory = JSON.parse(localStorage.getItem('planHistory') || '[]');
+        planHistory.push(completedPlan);
+        localStorage.setItem('planHistory', JSON.stringify(planHistory));
+        setPlanHistory(planHistory); // Cập nhật state để re-render
+
+        console.log("Đã lưu kế hoạch cũ vào lịch sử:", completedPlan);
+        toast.success("Đã lưu kế hoạch cũ vào lịch sử!");
+      }
+
+      // Tạo kế hoạch mới với cấu trúc đúng theo API
+      const createData = {
+        targetQuitDate: newPlan.TargetQuitDate,
+        personalMotivation: newPlan.PersonalMotivation,
+        isCurrentGoal: newPlan.isCurrentGoal
+      };
+
+      const response = await api.post("/GoalPlan", createData);
+      console.log("Create plan response:", response.data);
+
+      // Reload lại plan từ API sau khi tạo thành công - thử nhiều endpoint
+      try {
+        const res = await api.get("/GoalPlan/current-goal");
+        setPlan(res.data || null);
+      } catch {
+        try {
+          const res = await api.get("/GoalPlan/GetCurrentGoal");
+          setPlan(res.data || null);
+        } catch {
+          // Fallback: lấy từ response của create
+          setPlan(response.data || null);
+        }
+      }
+
+      // Reload lại lịch sử kế hoạch sau khi tạo thành công
+      try {
+        const historyResponse = await api.get("/GoalPlan/all-goals");
+        if (Array.isArray(historyResponse.data)) {
+          const historyPlans = historyResponse.data.filter(plan => !plan.isCurrentGoal);
+          setPlanHistory(historyPlans);
+        }
+      } catch (error) {
+        console.error("Lỗi khi reload lịch sử kế hoạch:", error);
+      }
+
       toast.success("Đã tạo kế hoạch mới!");
-    } catch {
+    } catch (err) {
       toast.error("Tạo kế hoạch mới thất bại!");
+      console.error("Lỗi tạo kế hoạch:", err);
+      if (err.response?.data) {
+        console.error("Backend error details:", err.response.data);
+      }
     }
   };
 
   // Hàm cập nhật hồ sơ người dùng
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    const profileData = {
-      smokingStatus,
-      quitAttempts: Number(quitAttempts),
-      experience_level: Number(experienceLevel),
-      previousAttempts,
-    };
-
     try {
+      const profileData = {
+        memberId: memberProfile?.memberId,
+        smokingStatus,
+        quitAttempts: Number(quitAttempts),
+        experience_level: Number(experienceLevel),
+        previousAttempts,
+        // Không gửi updatedAt, để backend tự xử lý
+      };
+
       if (memberProfile && memberProfile.memberId) {
-        await api.put(`/MemberProfile/Update-MemberProfile/${memberProfile.memberId}`, profileData);
+        // Sử dụng đúng endpoint PUT /MemberProfile/Update-MemberProfile/{memberId}
+        const res = await api.put(`/MemberProfile/Update-MemberProfile/${memberProfile.memberId}`, profileData);
+        setMemberProfile(res.data);
         toast.success("Đã cập nhật hồ sơ!");
       } else {
-        await api.post("/MemberProfile", profileData);
-        toast.success("Đã tạo hồ sơ mới!");
+        // Tạo hồ sơ mới
+        try {
+          await api.post("/MemberProfile", profileData);
+          // Sau khi tạo thành công, fetch lại data
+          const res = await api.get("/MemberProfile");
+          setMemberProfile(res.data);
+          toast.success("Đã tạo hồ sơ!");
+        } catch (createError) {
+          if (createError.response?.status === 409) {
+            // Profile đã tồn tại, thử fetch lại
+            const res = await api.get("/MemberProfile");
+            setMemberProfile(res.data);
+            toast.info("Hồ sơ đã tồn tại. Dữ liệu đã được tải lại.");
+          } else {
+            throw createError;
+          }
+        }
       }
-      // ✅ Luôn fetch lại sau khi cập nhật
-      fetchProfile();
     } catch (err) {
-      console.error("❌ Profile update error:", err);
-      toast.error("Cập nhật hồ sơ thất bại: " + (err.response?.data?.message || err.message));
+      console.error("Profile update error:", err, err.response?.data);
+      toast.error("Cập nhật hồ sơ thất bại! " + (err.response?.data || err.message || ""));
     }
   };
 
-  if (isLoading) return <div className="text-center mt-4">Đang tải hồ sơ...</div>;
+  // Fetch lịch sử kế hoạch từ API khi component mount
+  useEffect(() => {
+    const fetchPlanHistory = async () => {
+      try {
+        const response = await api.get("/GoalPlan/all-goals");
+        console.log("Plan history API response:", response.data);
 
+        if (Array.isArray(response.data)) {
+          // Lọc chỉ lấy những kế hoạch không phải current goal để làm lịch sử
+          const historyPlans = response.data.filter(plan => !plan.isCurrentGoal);
+          setPlanHistory(historyPlans);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy lịch sử kế hoạch:", error);
+        // Fallback về localStorage nếu API thất bại
+        const localHistory = JSON.parse(localStorage.getItem('planHistory') || '[]');
+        setPlanHistory(localHistory);
+      }
+    };
+
+    fetchPlanHistory();
+  }, []);
+
+  if (loading) return <div style={{ textAlign: "center", marginTop: 40 }}><span className="spinner-border"></span> Đang tải dữ liệu...</div>;
 
   return (
     <div className="bg-white py-5">
@@ -618,6 +798,11 @@ const Dashboard = () => {
             <li className="nav-item">
               <button className={`nav-link ${activeTab === "plan" ? "active" : ""}`} onClick={() => setActiveTab("plan")}>
                 <i className="fas fa-calendar-alt me-2"></i>Kế hoạch
+              </button>
+            </li>
+            <li className="nav-item">
+              <button className={`nav-link ${activeTab === "planhistory" ? "active" : ""}`} onClick={() => setActiveTab("planhistory")}>
+                <i className="fas fa-history me-2"></i>Lịch sử kế hoạch
               </button>
             </li>
             <li className="nav-item">
@@ -781,12 +966,24 @@ const Dashboard = () => {
                             </div>
                             <div className="mt-2 p-2 bg-info bg-opacity-10 rounded">
                               <small><i className="fas fa-info-circle me-1"></i>
-                                <b>Kế hoạch chung:</b> Tất cả thành viên cùng theo kế hoạch {plan?.goalDays || 60} ngày
+                                <b>Kế hoạch chung:</b> Tất cả thành viên cùng theo kế hoạch {getGoalDays()} ngày
+                              </small>
+                            </div>
+                          </div>
+                        ) : plan ? (
+                          <div className="text-start small">
+                            <div><b>Ngày bắt đầu:</b> {plan.startDate ? new Date(plan.startDate).toLocaleDateString() : "?"}</div>
+                            <div><b>Ngày mục tiêu:</b> {plan.targetQuitDate ? new Date(plan.targetQuitDate).toLocaleDateString() : "?"}</div>
+                            <div><b>Động lực:</b> {plan.personalMotivation || "Chưa nhập"}</div>
+                            <div><b>Trạng thái:</b> {plan.isCurrentGoal ? "Đang hoạt động" : "Không hoạt động"}</div>
+                            <div className="mt-2 p-2 bg-success bg-opacity-10 rounded">
+                              <small><i className="fas fa-calendar-alt me-1"></i>
+                                <b>Kế hoạch cá nhân:</b> {getGoalDays()} ngày không thuốc lá
                               </small>
                             </div>
                           </div>
                         ) : (
-                          <>Bạn đang theo kế hoạch chung: {percent}% hoàn thành mục tiêu {plan?.goalDays || 60} ngày không thuốc lá</>
+                          <>Bạn đang theo kế hoạch chung: {percent}% hoàn thành mục tiêu {getGoalDays()} ngày không thuốc lá</>
                         )}
                       </div>
                       <button className="btn btn-primary mt-3" onClick={() => setShowForm(!showForm)}>
@@ -1023,7 +1220,111 @@ const Dashboard = () => {
                     plan={plan}
                     progress={progress}
                     onUpdatePlan={handleUpdatePlan}
+                    onCreatePlan={handleCreatePlan}
                   />
+                )}
+              </div>
+            )}
+
+            {activeTab === "planhistory" && (
+              <div>
+                <h3 className="fs-5 fw-semibold mb-3">Lịch sử kế hoạch cai thuốc</h3>
+                <p className="text-secondary mb-4">
+                  Xem lại các kế hoạch cai thuốc đã hoàn thành và thành tích của bạn qua từng giai đoạn.
+                </p>
+
+                {/* Thông báo quan trọng về bảo mật dữ liệu */}
+                <div className="alert alert-info mb-4">
+                  <i className="fas fa-shield-alt me-2"></i>
+                  <strong>Bảo mật dữ liệu:</strong> Lịch sử kế hoạch được lấy từ API server và chỉ hiển thị những kế hoạch thuộc về tài khoản của bạn.
+                  Dữ liệu được bảo vệ bởi hệ thống xác thực và phân quyền.
+                </div>
+
+                {planHistory.length === 0 ? (
+                  <div className="alert alert-info">
+                    <i className="fas fa-info-circle me-2"></i>
+                    Bạn chưa có kế hoạch nào đã hoàn thành. Hãy hoàn thành kế hoạch hiện tại để xem lịch sử tại đây.
+                  </div>
+                ) : (
+                  <div className="row g-4">
+                    {planHistory.slice().reverse().map((completedPlan, index) => (
+                      <div key={completedPlan.planId || index} className="col-md-6">
+                        <div className="card h-100">
+                          <div className="card-header bg-success text-white">
+                            <h5 className="card-title mb-0">
+                              <i className="fas fa-check-circle me-2"></i>
+                              Kế hoạch #{planHistory.length - index}
+                            </h5>
+                          </div>
+                          <div className="card-body">
+                            <div className="mb-3">
+                              <strong><i className="fas fa-user me-1 text-primary"></i> Thành viên:</strong>
+                              <p className="mb-2">{completedPlan.memberName || "Không xác định"}</p>
+                            </div>
+                            <div className="mb-3">
+                              <strong><i className="fas fa-calendar-plus me-1 text-primary"></i> Ngày bắt đầu:</strong>
+                              <p className="mb-2">{completedPlan.startDate
+                                ? new Date(completedPlan.startDate).toLocaleDateString('vi-VN')
+                                : "Không xác định"}</p>
+                            </div>
+                            <div className="mb-3">
+                              <strong><i className="fas fa-target me-1 text-info"></i> Ngày mục tiêu:</strong>
+                              <p className="mb-2">{completedPlan.targetQuitDate
+                                ? new Date(completedPlan.targetQuitDate).toLocaleDateString('vi-VN')
+                                : "Không xác định"}</p>
+                            </div>
+                            <div className="mb-3">
+                              <strong><i className="fas fa-heart me-1 text-danger"></i> Động lực:</strong>
+                              <p className="mb-2">{completedPlan.personalMotivation || "Không có"}</p>
+                            </div>
+                            <div className="mb-3">
+                              <strong><i className="fas fa-info-circle me-1 text-secondary"></i> Trạng thái:</strong>
+                              <span className={`badge ${completedPlan.isCurrentGoal ? 'bg-success' : 'bg-secondary'} ms-2`}>
+                                {completedPlan.isCurrentGoal ? 'Đang hoạt động' : 'Đã hoàn thành'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="card-footer bg-light text-muted">
+                            <small>
+                              <i className="fas fa-clock me-1"></i>
+                              Plan ID: {completedPlan.planId}
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Thống kê tổng quan từ API */}
+                {planHistory.length > 0 && (
+                  <div className="mt-5">
+                    <h4 className="fw-bold mb-3"><i className="fas fa-chart-bar me-2"></i>Thống kê tổng quan</h4>
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <div className="bg-primary bg-opacity-10 p-3 rounded text-center">
+                          <div className="h3 fw-bold text-primary mb-1">{planHistory.length}</div>
+                          <div className="small">Tổng số kế hoạch</div>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="bg-success bg-opacity-10 p-3 rounded text-center">
+                          <div className="h3 fw-bold text-success mb-1">
+                            {planHistory.filter(p => !p.isCurrentGoal).length}
+                          </div>
+                          <div className="small">Đã hoàn thành</div>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="bg-info bg-opacity-10 p-3 rounded text-center">
+                          <div className="h3 fw-bold text-info mb-1">
+                            {planHistory.filter(p => p.isCurrentGoal).length}
+                          </div>
+                                                    <div className="small">Đang hoạt động</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -1319,7 +1620,7 @@ const Dashboard = () => {
               </div>
             )}
             {activeTab === "profile" && (
-              <div className="container">
+              <div>
                 <h3 className="fs-5 fw-semibold mb-3">Hồ sơ cá nhân</h3>
                 <p className="text-secondary mb-4">
                   Cập nhật thông tin cá nhân về quá trình hút thuốc và cai thuốc của bạn.
@@ -1385,7 +1686,7 @@ const Dashboard = () => {
                   </div>
 
                   <div className="col-md-6">
-                    {memberProfile ? (
+                    {memberProfile && (
                       <div className="card">
                         <div className="card-header bg-primary text-white">
                           <h5 className="card-title mb-0">
@@ -1423,7 +1724,9 @@ const Dashboard = () => {
                           )}
                         </div>
                       </div>
-                    ) : (
+                    )}
+
+                    {!memberProfile && (
                       <div className="alert alert-info">
                         <i className="fas fa-info-circle me-2"></i>
                         Bạn chưa có hồ sơ cá nhân. Hãy điền thông tin bên trái để tạo hồ sơ.
@@ -1432,6 +1735,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {/* Gợi ý dựa trên hồ sơ */}
                 {memberProfile && (
                   <div className="mt-5">
                     <h4>Gợi ý dành cho bạn</h4>
@@ -1472,35 +1776,20 @@ const Dashboard = () => {
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault();
-                      if (loadings || !memberProfile || !memberProfile.memberId) {
-                        toast.error("Không thể tạo lịch hẹn. Hồ sơ cá nhân chưa có hoặc chưa đầy đủ!");
-                        return;
-                      }
-
-                      const start = e.target.startTime.value;
-                      const end = e.target.endTime.value;
-
-                      if (start >= end) {
-                        toast.error("Giờ kết thúc phải sau giờ bắt đầu!");
-                        return;
-                      }
 
                       const formData = {
-                        stagerId: memberProfile.memberId,
+                        memberId: user?.userId,
+                        coachId: Number(e.target.coachId.value),
                         appointmentDate: e.target.appointmentDate.value,
-                        startTime: start,
-                        endTime: end,
+                        startTime: e.target.startTime.value,
+                        endTime: e.target.endTime.value,
                         status: "Đang chờ",
                         notes: e.target.notes.value || "",
                         createdAt: new Date().toISOString(),
+                        meetingLink: e.target.meetingLink.value || ""
                       };
 
-                      const meetingLink = e.target.meetingLink.value?.trim();
-                      if (meetingLink) {
-                        formData.meetingLink = meetingLink;
-                      }
-
-                      console.log("GỬI DỮ LIỆU:", formData);
+                      console.log("GỬI DỮ LIỆU:", formData); // 👈 xem dữ liệu trước khi gửi
 
                       try {
                         await api.post("/Appointment/CreateAppointment", formData);
