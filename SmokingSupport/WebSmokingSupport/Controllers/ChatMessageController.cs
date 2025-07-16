@@ -97,7 +97,7 @@ namespace WebSmokingSupport.Controllers
         /// đánh dấu một tin nhắn cụ thể là đã đọc
         /// <summary>
         [HttpPost("mark-as-read/{messageId}")]
-        [Authorize(Roles = "Member , Coach")]
+        [Authorize(Roles = "Member,Coach")]
         public async Task<ActionResult> MarkMessageAsRead(int messageId)
         {
             if (messageId <= 0)
@@ -112,13 +112,12 @@ namespace WebSmokingSupport.Controllers
             var messageToUpdate = await _context.ChatMessages.FindAsync(messageId);
             if (messageToUpdate == null)
             {
-                return NotFound("Message not found.");
+                return NotFound("Message not found."); 
             }
-            // nguowfi nnhan danh dau tin nhan da co
 
             if (messageToUpdate.ReceiverId != currentUserId)
             {
-                return Forbid("You can only mark messages as read that were sent to you.");
+                return StatusCode( 403,"Bạn chỉ có thể đánh dấu các tin nhắn được gửi cho bạn là đã đọc.");
             }
             if (!messageToUpdate.IsRead ?? false)
             {
@@ -127,9 +126,6 @@ namespace WebSmokingSupport.Controllers
             }
             return Ok("Message marked as read successfully.");
         }
-        /// <summary>
-        /// laasy danh sasch nguoi da tung chat
-        /// <summary>
         [HttpGet("recent-chat")]
         [Authorize(Roles = "Member, Coach")]
         public async Task<ActionResult<IEnumerable<Object>>> GetRecentChatUsers()
@@ -139,21 +135,18 @@ namespace WebSmokingSupport.Controllers
             {
                 return Unauthorized("You are not authorized to view recent chat users.");
             }
-            // lấy tin nhắn mà người này đã gửi hoạc nahajn
             var conversation = await _context.ChatMessages
                 .Where(m => m.SenderId == currentUserId || m.ReceiverId == currentUserId)
                 .Include(m => m.Sender)
                 .Include(m => m.Receiver)
                 .OrderByDescending(m => m.SentAt)
                 .ToListAsync();
-            // lay ra danh sach cac nguoi dung duy nhat ma nguoi dung hien taji da chat
             var chattedUserIds = conversation
                 .SelectMany(m => new[] {m.SenderId , m.ReceiverId})
                 .Where(id => id != currentUserId && id.HasValue)
                 .Select(id => id.Value)
                 .Distinct()
                 .ToList();
-            //lay thong tin cua ng dung nay
             var chattedUsers = await _context.Users
                 .Where(u => chattedUserIds.Contains(u.UserId))
                 .Select(u => new

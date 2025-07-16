@@ -115,20 +115,18 @@ namespace WebSmokingSupport.Controllers
                 }
 
                 // BƯỚC QUAN TRỌNG: Đặt tất cả các GoalPlan hiện tại của Member này về isCurrentGoal = false
-                var activeGoalPlans = await _context.GoalPlans
-                                                    .Where(gp => gp.MemberId == memberProfile.MemberId && gp.isCurrentGoal == true)
-                                                    .ToListAsync();
+                //var activeGoalPlans = await _context.GoalPlans
+                //                                    .Where(gp => gp.MemberId == memberProfile.MemberId && gp.isCurrentGoal == true)
+                //                                    .ToListAsync();
 
-                foreach (var activeGoal in activeGoalPlans)
-                {
-                    activeGoal.isCurrentGoal = false;
-                    activeGoal.UpdatedAt = DateTime.UtcNow;
-                    await _goalPlanRepository.UpdateAsync(activeGoal); // Cập nhật trạng thái
-                }
-                // Lưu các thay đổi vào database ngay lập tức để tránh lỗi unique constraint
-                await _context.SaveChangesAsync();
-
-
+                //foreach (var activeGoal in activeGoalPlans)
+                //{
+                //    activeGoal.isCurrentGoal = false;
+                //    activeGoal.UpdatedAt = DateTime.UtcNow;
+                //    await _goalPlanRepository.UpdateAsync(activeGoal); // Cập nhật trạng thái
+                //}
+                //// Lưu các thay đổi vào database ngay lập tức để tránh lỗi unique constraint
+                //await _context.SaveChangesAsync();
                 // Tạo GoalPlan mới và đặt isCurrentGoal = true
                 var newGoalPlan = new GoalPlan
                 {
