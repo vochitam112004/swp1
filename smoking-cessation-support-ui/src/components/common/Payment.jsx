@@ -18,11 +18,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 const qrImages = {
   zalopay: "/images/Qr-zalopay.jpg",
   bank: "/images/Qr-nganhang.jpg",
+  momo: "/images/Qr-momo.jpg", // Thêm ảnh QR MoMo
 };
 
 const tabIcons = {
   zalopay: <PaymentIcon sx={{ color: "#008fe5" }} />,
   bank: <AccountBalanceIcon sx={{ color: "#2e7d32" }} />,
+  momo: <CreditCardIcon sx={{ color: "#d82d8b" }} />, // Icon MoMo
 };
 
 const bankInfo = {
@@ -33,7 +35,7 @@ const bankInfo = {
 };
 
 export default function Payment() {
-  const [method, setMethod] = useState("bank");
+  const [method, setMethod] = useState("momo"); // Mặc định chọn MoMo
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -55,26 +57,45 @@ export default function Payment() {
         else navigate("/membership");
       })
       .catch(() => navigate("/membership"));
-  }, [planId]);
+  }, [planId, navigate]);
 
   const handleConfirmPayment = async () => {
     setLoading(true);
     setError("");
 
     try {
-      const transactionId = `manual-${Date.now()}`;
+      if (method === "momo") {
+        // Tạo thanh toán MoMo
+        const momoResponse = await api.post("/MomoPayment/create", {
+          planId: plan.planId,
+          amount: plan.price,
+          orderInfo: `Thanh toán gói ${plan.name}`,
+          orderType: "other",
+          language: "vi"
+        });
 
-      await api.post("/UserMembershipPayment/process-payment", {
-        planId: plan.planId,
-        transactionId,
-        amount: plan.price,
-      });
+        if (momoResponse.data.errorCode === 0) {
+          // Chuyển hướng đến trang thanh toán MoMo
+          window.location.href = momoResponse.data.payUrl;
+        } else {
+          setError("Không thể tạo thanh toán MoMo. Vui lòng thử lại.");
+        }
+      } else {
+        // Thanh toán thủ công cho ZaloPay và Bank
+        const transactionId = `manual-${Date.now()}`;
 
-      setSuccess(true);
+        await api.post("/UserMembershipPayment/process-payment", {
+          planId: plan.planId,
+          transactionId,
+          amount: plan.price,
+        });
 
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
+        setSuccess(true);
+
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      }
     } catch (err) {
       console.error(err);
       setError("Thanh toán thất bại. Vui lòng thử lại.");
@@ -120,35 +141,91 @@ export default function Payment() {
             },
           }}
         >
+          <Tab icon={tabIcons.momo} label="MoMo" value="momo" />
           <Tab icon={tabIcons.zalopay} label="ZaloPay" value="zalopay" />
           <Tab icon={tabIcons.bank} label="Ngân hàng" value="bank" />
         </Tabs>
 
         <Fade in>
           <Box sx={{ mt: 3, textAlign: "center" }}>
-            <img
-              src={qrImages[method]}
-              alt={`QR ${method}`}
-              style={{
-                width: 220,
-                height: 220,
-                objectFit: "cover",
-                borderRadius: 24,
-                boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
-                marginBottom: 16,
-              }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "/images/qr-placeholder.png";
-              }}
-            />
-            <Typography fontWeight={500} mb={1}>
-              Quét mã QR bằng{" "}
-              <span style={{ color: "#1976d2", fontWeight: 700 }}>
-                {method === "zalopay" ? "ZaloPay" : "Ngân hàng"}
-              </span>{" "}
-              để thanh toán.
-            </Typography>
+            {method === "momo" ? (
+              // UI cho MoMo
+              <Box>
+                <Box
+                  sx={{
+                    width: 220,
+                    height: 220,
+                    mx: "auto",
+                    mb: 2,
+                    borderRadius: 3,
+                    background: "linear-gradient(135deg, #d82d8b 0%, #ff6b9d 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 8px 32px rgba(216, 45, 139, 0.3)",
+                  }}
+                >
+                  <Typography
+                    variant="h3"
+                    sx={{
+                      color: "white",
+                      fontWeight: 700,
+                      textAlign: "center",
+                    }}
+                  >
+                    MoMo
+                  </Typography>
+                </Box>
+                <Typography fontWeight={600} mb={2} sx={{ color: "#d82d8b" }}>
+                  Nhấn "Thanh toán MoMo" để chuyển đến ứng dụng MoMo
+                </Typography>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    mt: 2,
+                    p: 2.5,
+                    background: "linear-gradient(90deg, #ffe0f0 0%, #fff0f8 100%)",
+                    borderRadius: 3,
+                  }}
+                >
+                  <Typography fontWeight={700} mb={1} color="#d82d8b">
+                    💳 Thanh toán an toàn với MoMo
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    • Thanh toán nhanh chóng và bảo mật<br />
+                    • Không cần nhập thông tin thẻ<br />
+                    • Hỗ trợ nhiều phương thức thanh toán
+                  </Typography>
+                </Paper>
+              </Box>
+            ) : (
+              // UI cho ZaloPay và Bank (code cũ)
+              <Box>
+                <img
+                  src={qrImages[method]}
+                  alt={`QR ${method}`}
+                  style={{
+                    width: 220,
+                    height: 220,
+                    objectFit: "cover",
+                    borderRadius: 24,
+                    boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+                    marginBottom: 16,
+                  }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/images/qr-placeholder.png";
+                  }}
+                />
+                <Typography fontWeight={500} mb={1}>
+                  Quét mã QR bằng{" "}
+                  <span style={{ color: "#1976d2", fontWeight: 700 }}>
+                    {method === "zalopay" ? "ZaloPay" : "Ngân hàng"}
+                  </span>{" "}
+                  để thanh toán.
+                </Typography>
+              </Box>
+            )}
 
             {method === "bank" && (
               <Paper
@@ -187,16 +264,28 @@ export default function Payment() {
             <Box sx={{ mt: 3 }}>
               <Button
                 variant="contained"
-                color="primary"
+                color={method === "momo" ? "secondary" : "primary"}
                 onClick={handleConfirmPayment}
                 disabled={loading || success}
                 fullWidth
-                sx={{ py: 1.2, fontWeight: 700, fontSize: 18 }}
+                sx={{
+                  py: 1.2,
+                  fontWeight: 700,
+                  fontSize: 18,
+                  ...(method === "momo" && {
+                    background: "linear-gradient(90deg, #d82d8b 0%, #ff6b9d 100%)",
+                    "&:hover": {
+                      background: "linear-gradient(90deg, #c02577 0%, #e55a8a 100%)",
+                    }
+                  })
+                }}
               >
                 {loading ? (
                   <CircularProgress size={24} color="inherit" />
                 ) : success ? (
                   "Đã thanh toán!"
+                ) : method === "momo" ? (
+                  "Thanh toán MoMo"
                 ) : (
                   "Xác nhận đã thanh toán"
                 )}
@@ -218,3 +307,5 @@ export default function Payment() {
     </Box>
   );
 }
+
+

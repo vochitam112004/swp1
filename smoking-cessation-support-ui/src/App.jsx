@@ -32,6 +32,7 @@ import Developers from "./components/common/Developers";
 import Chuyengia from "./components/common/chuyengia";
 import Researchers from "./components/common/Researchers";
 import ChatSupport from "./components/chat/ChatSupport";
+import MomoCallback from "./components/common/MomoCallback";
 import { useState } from "react";
 
 function AppContent() {
@@ -112,6 +113,7 @@ function AppContent() {
           <Route path="/membership" element={<MembershipList />} />
           <Route path="/register" element={<Register />} />
           <Route path="/payment" element={<Payment />} />
+          <Route path="/momo-callback" element={<MomoCallback />} />
           <Route path="/about" element={<About />} />
           <Route path="/chuyengia" element={<Chuyengia />} />
           <Route path="/developers" element={<Developers />} />
