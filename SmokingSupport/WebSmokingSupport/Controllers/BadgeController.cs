@@ -206,5 +206,30 @@ namespace WebSmokingSupport.Controllers
                 return StatusCode(500, $"Lỗi nội bộ máy chủ khi xóa huy hiệu: {ex.Message}");
             }
         }
+
+        [HttpPost("upload-icon")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UploadBadgeIcon(IFormFile file, [FromServices] IWebHostEnvironment _env)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file selected");
+
+            var uploadPath = Path.Combine(_env.WebRootPath, "uploads", "badges");
+
+            if (!Directory.Exists(uploadPath))
+                Directory.CreateDirectory(uploadPath);
+
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            var filePath = Path.Combine(uploadPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var iconUrl = $"/uploads/badges/{fileName}";
+            return Ok(new { iconUrl });
+        }
+
     }
 }
