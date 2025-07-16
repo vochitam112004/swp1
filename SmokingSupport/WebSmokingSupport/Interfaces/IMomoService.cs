@@ -1,7 +1,6 @@
 ﻿using WebSmokingSupport.Entity;
-using WebSmokingSupport.Entity.Momo;
 
-namespace WebSmokingSupport.Service.Momo
+namespace WebSmokingSupport.Interfaces
 {
     public interface IMomoService
     {

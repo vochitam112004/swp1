@@ -1,4 +1,4 @@
-﻿namespace WebSmokingSupport.Entity.Momo
+﻿namespace WebSmokingSupport.Entity
 {
     public class MomoOptionModel
     {

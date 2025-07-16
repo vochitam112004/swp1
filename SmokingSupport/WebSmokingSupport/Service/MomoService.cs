@@ -7,9 +7,9 @@ using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Crmf;
 using RestSharp;
 using WebSmokingSupport.Entity;
-using WebSmokingSupport.Entity.Momo;
+using WebSmokingSupport.Interfaces;
 
-namespace WebSmokingSupport.Service.Momo
+namespace WebSmokingSupport.Service
 {
     public class MomoService : IMomoService
     {
@@ -51,7 +51,7 @@ namespace WebSmokingSupport.Service.Momo
                 orderInfo = model.OrderInfo,
                 requestId = model.OrderId,
                 extraData = "",
-                signature = signature
+                signature
             };
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(requestData), ParameterType.RequestBody);

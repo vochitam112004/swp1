@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebSmokingSupport.Entity;
-using WebSmokingSupport.Service.Momo;
+using WebSmokingSupport.Interfaces;
 
 namespace WebSmokingSupport.Controllers
 {
