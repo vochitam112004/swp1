@@ -335,22 +335,6 @@ const Dashboard = () => {
     fetchAll();
   }, []); // <-- chỉ chạy khi mount
 
-  const getAllBadges = (progress) => {
-    const current = getAchievedBadges(progress);
-    const saved = JSON.parse(localStorage.getItem("achievedBadges") || "[]");
-
-    const combined = [...saved];
-    current.forEach((badge) => {
-      if (!combined.some((b) => b.key === badge.key)) {
-        combined.push(badge);
-      }
-    });
-
-    localStorage.setItem("achievedBadges", JSON.stringify(combined));
-    return combined;
-  };
-
-
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = async (e) => {
     e.preventDefault();
