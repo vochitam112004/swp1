@@ -53,7 +53,6 @@ function AppContent() {
                 <HeroSection />
                 <StatsSection />
                 <FeaturesSection />
-                <Dashboard />
                 <Testimonials />
                 <CTASection />
                 <button

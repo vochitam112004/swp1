@@ -195,6 +195,7 @@ const Dashboard = () => {
   const fetchedRef = useRef(false);
 
   const { user, loading: authLoading } = useAuth();
+  
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -1414,9 +1415,9 @@ const Dashboard = () => {
                         Thông điệp động viên
                       </h3>
                       <p className="mb-1 text-secondary">
-                        Hôm nay là ngày thứ 34 không hút thuốc của bạn! Hãy nhớ
+                        Hôm nay là ngày thứ {progress.daysNoSmoke} không hút thuốc của bạn! Hãy nhớ
                         rằng mỗi ngày không thuốc lá là một chiến thắng. Bạn đã
-                        tiết kiệm được 2,380,000đ và tránh được 476 điếu thuốc.
+                        tiết kiệm được {progress.moneySaved}.
                       </p>
                       <p className="mb-0 text-secondary">
                         Tiếp tục phát huy! Sức khỏe của bạn đã cải thiện đáng kể
@@ -1571,7 +1572,7 @@ const Dashboard = () => {
                           <div className="h3 fw-bold text-info mb-1">
                             {planHistory.filter(p => p.isCurrentGoal).length}
                           </div>
-                                                    <div className="small">Đang hoạt động</div>
+                          <div className="small">Đang hoạt động</div>
                         </div>
                       </div>
                     </div>
@@ -2161,13 +2162,14 @@ const Dashboard = () => {
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault();
-                      if (authLoading || !memberProfile || !memberProfile.memberId) {
-                        toast.error("Không thể tạo lịch hẹn. Hồ sơ cá nhân chưa có hoặc chưa đầy đủ!");
+
+                      if (!user?.id || !memberProfile?.memberId) {
+                        toast.error("Vui lòng đăng nhập và hoàn tất hồ sơ!");
                         return;
                       }
 
-                      const start = e.target.startTime.value;
-                      const end = e.target.endTime.value;
+                      const start = e.target.startTime.value + ":00";
+                      const end = e.target.endTime.value + ":00";
 
                       if (start >= end) {
                         toast.error("Giờ kết thúc phải sau giờ bắt đầu!");
@@ -2182,17 +2184,21 @@ const Dashboard = () => {
                       }
 
                       const formData = {
-                        stagerId: memberProfile.memberId,
+                        stagerId: parseInt(coachId),
                         appointmentDate: e.target.appointmentDate.value,
-                        startTime: e.target.startTime.value,
-                        endTime: e.target.endTime.value,
+                        startTime: start,
+                        endTime: end,
                         status: "Đang chờ",
                         notes: e.target.notes.value || "",
                         createdAt: new Date().toISOString(),
-                        meetingLink: e.target.meetingLink.value || ""
                       };
 
-                      console.log("GỬI DỮ LIỆU:", formData);
+                      const meetingLink = e.target.meetingLink.value?.trim();
+                      if (meetingLink) {
+                        formData.meetingLink = meetingLink;
+                      }
+
+                      console.log("Dữ liệu gửi đi:", JSON.stringify(formData, null, 2));
 
                       try {
                         await api.post("/Appointment/CreateAppointment", formData);

@@ -14,6 +14,7 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useEffect, useState } from "react";
 import api from '../../api/axios';
 import "../../css/BXH.css";
+import { baseApiUrl } from "../../api/axios";
 
 const rowsPerPage = 5;
 
@@ -122,12 +123,17 @@ export default function BXH() {
                     </TableCell>
 
                     {/* 👉 Cột Huy hiệu riêng biệt */}
+                    {/* 👉 Cột Huy hiệu riêng biệt */}
                     <TableCell>
                       <Box display="flex" gap={0.5} flexWrap="wrap">
                         {user.badges?.map((badge) => (
                           <Avatar
                             key={badge.badgeId}
-                            src={badge.iconUrl}
+                            src={
+                              badge.iconUrl?.startsWith("http")
+                                ? badge.iconUrl
+                                : `${baseApiUrl}${badge.iconUrl}`
+                            }
                             alt={badge.name}
                             sx={{ width: 24, height: 24 }}
                             title={badge.name}

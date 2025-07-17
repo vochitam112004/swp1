@@ -6,6 +6,7 @@ import {
 import { toast } from "react-toastify";
 import { useAuth } from "../auth/AuthContext";
 import "../../css/Profile.css";
+import { baseApiUrl } from "../../api/axios";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -286,7 +287,11 @@ export default function Profile() {
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mt: 2 }}>
                 {badges.map((b, idx) => (
                   <Box key={b.badgeId || idx} sx={{ textAlign: 'center', width: 100 }}>
-                    <img src={b.iconUrl} alt={b.name} width={50} height={50} />
+                    <img src={
+                      b.iconUrl?.startsWith("http")
+                        ? b.iconUrl
+                        : `${baseApiUrl}${b.iconUrl}`
+                    } alt={b.name} width={50} height={50} />
                     <Typography variant="body2" fontWeight={600}>{b.name}</Typography>
                   </Box>
                 ))}

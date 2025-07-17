@@ -1,35 +1,37 @@
-import axios from "axios";
+  import axios from "axios";
 
-const api = axios.create({
+  export const baseApiUrl = "https://560f8c4d68e2.ngrok-free.app" // dùng để up ảnh từ máy
 
-  baseURL: "https://560f8c4d68e2.ngrok-free.app/api", // Thay bằng base URL backend của bạn
-  headers: {
-    "Content-Type": "application/json"
-  }
-});
+  const api = axios.create({
 
-// Interceptor để tự gắn token vào header
-api.interceptors.request.use((config) => {
-  config.headers["ngrok-skip-browser-warning"] = "true";
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-    console.log("🔐 Token attached:", token); // DEBUG
-  } else {
-    console.warn("⚠️ No token found");
-  }
-  //
-  return config;
-});
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem("authToken");
+    baseURL: "https://560f8c4d68e2.ngrok-free.app/api", // Thay bằng base URL backend của bạn
+    headers: {
+      "Content-Type": "application/json"
     }
-    return Promise.reject(error);
-  }
-);
+  });
 
-export default api;
+  // Interceptor để tự gắn token vào header
+  api.interceptors.request.use((config) => {
+    config.headers["ngrok-skip-browser-warning"] = "true";
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log("🔐 Token attached:", token); // DEBUG
+    } else {
+      console.warn("⚠️ No token found");
+    }
+    //
+    return config;
+  });
+
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem("authToken");
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  export default api;

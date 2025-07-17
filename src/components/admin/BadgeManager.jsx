@@ -21,13 +21,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
+import { baseApiUrl } from "../../api/axios";
 
 export default function BadgeManager() {
   const [badges, setBadges] = useState([]);
   const [editBadge, setEditBadge] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [form, setForm] = useState({
     name: "",
-    iconUrl: "",
     description: "",
     requiredScore: 0,
   });
@@ -46,10 +47,10 @@ export default function BadgeManager() {
     setEditBadge(badge);
     setForm({
       name: badge.name,
-      iconUrl: badge.iconUrl,
       description: badge.description,
       requiredScore: badge.requiredScore,
     });
+    setSelectedFile(null); // Reset file chọn lại
     setOpen(true);
   };
 
@@ -62,21 +63,53 @@ export default function BadgeManager() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.iconUrl.trim()) return;
-    if (editBadge) {
-      await api.put(`/Badge/Update-BadgeByBadgeId/${editBadge.badgeId}`, form);
-    } else {
-      await api.post("/Badge/Create-Badge", form);
+    if (!form.name.trim()) {
+      toast.warn("Vui lòng nhập tên huy hiệu.");
+      return;
     }
-    setOpen(false);
-    setEditBadge(null);
-    setForm({ name: "", iconUrl: "", description: "", requiredScore: 0 });
-    fetchBadges();
+
+    const formData = new FormData();
+    formData.append("Name", form.name);
+    formData.append("Description", form.description);
+    formData.append("RequiredScore", form.requiredScore);
+
+    if (selectedFile) {
+      formData.append("IconFile", selectedFile);
+    }
+
+    try {
+      if (editBadge) {
+        // Cập nhật không cần ảnh mới cũng được
+        await api.put(`/Badge/Update-BadgeByBadgeId/${editBadge.badgeId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Đã cập nhật huy hiệu!");
+      } else {
+        if (!selectedFile) {
+          toast.warn("Vui lòng chọn ảnh cho huy hiệu mới.");
+          return;
+        }
+        await api.post("/Badge/Create-Badge", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Đã tạo huy hiệu mới!");
+      }
+
+      fetchBadges();
+      setOpen(false);
+      setEditBadge(null);
+      setForm({ name: "", description: "", requiredScore: 0 });
+      setSelectedFile(null);
+    } catch (err) {
+      console.error("❌ Lỗi khi lưu huy hiệu:", err);
+      toast.error("Lưu huy hiệu thất bại!");
+    }
   };
 
   const handleAdd = () => {
     setEditBadge(null);
-    setForm({ name: "", iconUrl: "", description: "", requiredScore: 0 });
+    setForm({ name: "", description: "", requiredScore: 0 });
+    setSelectedFile(null);
     setOpen(true);
   };
 
@@ -116,7 +149,11 @@ export default function BadgeManager() {
               <TableRow key={badge.badgeId}>
                 <TableCell>
                   <img
-                    src={badge.iconUrl}
+                    src={
+                      badge.iconUrl.startsWith("http")
+                        ? badge.iconUrl
+                        : `${baseApiUrl}${badge.iconUrl}`
+                    }
                     alt={badge.name}
                     style={{ width: 40, height: 40 }}
                   />
@@ -125,18 +162,10 @@ export default function BadgeManager() {
                 <TableCell>{badge.description}</TableCell>
                 <TableCell>{badge.requiredScore}</TableCell>
                 <TableCell align="right">
-                  <IconButton
-                    color="primary"
-                    onClick={() => handleEdit(badge)}
-                    size="small"
-                  >
+                  <IconButton color="primary" onClick={() => handleEdit(badge)} size="small">
                     <EditIcon />
                   </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDelete(badge.badgeId)}
-                    size="small"
-                  >
+                  <IconButton color="error" onClick={() => handleDelete(badge.badgeId)} size="small">
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -147,9 +176,7 @@ export default function BadgeManager() {
       </TableContainer>
 
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>
-          {editBadge ? "Chỉnh sửa huy hiệu" : "Thêm huy hiệu"}
-        </DialogTitle>
+        <DialogTitle>{editBadge ? "Chỉnh sửa huy hiệu" : "Thêm huy hiệu"}</DialogTitle>
         <DialogContent>
           <TextField
             margin="dense"
@@ -160,16 +187,7 @@ export default function BadgeManager() {
             fullWidth
             required
           />
-          <TextField
-            margin="dense"
-            label="URL hình ảnh huy hiệu"
-            name="iconUrl"
-            value={form.iconUrl}
-            onChange={handleChange}
-            fullWidth
-            required
-            placeholder="vd: https://..."
-          />
+
           <TextField
             margin="dense"
             label="Mô tả"
@@ -180,6 +198,7 @@ export default function BadgeManager() {
             multiline
             minRows={2}
           />
+
           <TextField
             margin="dense"
             label="Điểm yêu cầu"
@@ -190,6 +209,27 @@ export default function BadgeManager() {
             fullWidth
             required
           />
+
+          <Button variant="outlined" component="label" sx={{ mt: 2 }}>
+            Chọn ảnh từ máy
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+            />
+          </Button>
+
+          {selectedFile && (
+            <Box mt={2}>
+              <Typography variant="body2" color="textSecondary">Xem trước ảnh:</Typography>
+              <img
+                src={URL.createObjectURL(selectedFile)}
+                alt="Xem trước"
+                style={{ width: 80, height: 80 }}
+              />
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Hủy</Button>
