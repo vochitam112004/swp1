@@ -31,11 +31,6 @@
   border-radius: 12px;
   transition: transform 0.3s ease;
 }
-
-.nav-logo:hover {
-  transform: rotate(5deg) scale(1.05);
-}
-
 /* Desktop Navigation Links */
 .nav-links {
   display: flex;
