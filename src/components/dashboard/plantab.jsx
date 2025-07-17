@@ -159,10 +159,6 @@ const PlanTab = ({ plan, progress, onUpdatePlan, onCreatePlan }) => {
           TargetQuitDate: formData.expectedDate, // Mapping expectedDate -> TargetQuitDate
           PersonalMotivation: formData.reason,   // Mapping reason -> PersonalMotivation
           isCurrentGoal: true
-
-
-
-
         };
         
         // Gọi hàm tạo mới
@@ -174,20 +170,12 @@ const PlanTab = ({ plan, progress, onUpdatePlan, onCreatePlan }) => {
           TargetQuitDate: formData.expectedDate, // Mapping expectedDate -> TargetQuitDate
           PersonalMotivation: formData.reason,   // Mapping reason -> PersonalMotivation
           isCurrentGoal: true
-
-
-
-
         };
         
         // Gọi hàm cập nhật
         await onUpdatePlan(newPlan);
         toast.success("Đã cập nhật kế hoạch chi tiết!");
       }
-
-
-
-
     } catch (error) {
       if (isNewPlan) {
         toast.error("Tạo kế hoạch thất bại!");
