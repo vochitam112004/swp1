@@ -12,6 +12,7 @@ const Navigation = () => {
   const { user, logout } = useAuth(); // ✅ context đã có user và logout
   const [anchorEl, setAnchorEl] = useState(null);
   const [blogAnchorEl, setBlogAnchorEl] = useState(null); // Thêm state cho menu Blog
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Thêm state cho mobile menu
   const navigate = useNavigate();
 
   const handleAvatarClick = (event) => {
@@ -37,9 +38,30 @@ const Navigation = () => {
     setBlogAnchorEl(null);
   };
 
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
+  // Close mobile menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileMenuOpen && !event.target.closest('.nav-container')) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [mobileMenuOpen]);
+
   return (
     <Box
       component="nav"
+      className="nav-container"
       sx={{
         display: "flex",
         alignItems: "center",
@@ -48,25 +70,41 @@ const Navigation = () => {
         px: 4,
         backgroundColor: "#e2e6ea",
         boxShadow: 2,
+        position: "relative",
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center" }}>
-        <Link to="/" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 700, fontSize: 22 }}>
+        <Link to="/" className="nav-brand">
           <img
             src="/images/logo.jpg"
             alt="Logo"
-            style={{
-              height: 50, marginRight: 15, verticalAlign: "middle",
-              borderRadius: 12, // ✅ Bo góc
-            }}
+            className="nav-logo"
           />
           Breathe Free
         </Link>
-        <Box sx={{ ml: 4, display: "flex", gap: 2 }}>
-          <Link to="/" className="nav-link">Trang chủ</Link>
+        
+        {/* Mobile Menu Toggle */}
+        <button 
+          className="mobile-menu-toggle"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle menu"
+        >
+          ☰
+        </button>
+        
+        <Box className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+          <Link to="/" className="nav-link" onClick={closeMobileMenu}>
+            Trang chủ
+          </Link>
 
-          <Link to="#" className="nav-link" onClick={handleBlogMenuOpen}
-            style={{ cursor: "pointer" }} // để hiện tay trỏ khi hover
+          <Link 
+            to="#" 
+            className="nav-link" 
+            onClick={(e) => {
+              handleBlogMenuOpen(e);
+              closeMobileMenu();
+            }}
+            style={{ cursor: "pointer" }}
           >
             Blog
           </Link>
@@ -81,14 +119,19 @@ const Navigation = () => {
             <MenuItem component={Link} to="/faq" onClick={handleBlogMenuClose}>Câu hỏi thường gặp</MenuItem>
           </Menu>
 
-          <Link to="/bxh" className="nav-link">Bảng xếp hạng</Link>
-          <Link to="/membership" className="nav-link">Gói thành viên</Link>
-          <Link to="/dashboard" className="nav-link">Dữ liệu cá nhân</Link>
+          <Link to="/bxh" className="nav-link" onClick={closeMobileMenu}>
+            Bảng xếp hạng
+          </Link>
+          <Link to="/membership" className="nav-link" onClick={closeMobileMenu}>
+            Gói thành viên
+          </Link>
+          <Link to="/dashboard" className="nav-link" onClick={closeMobileMenu}>
+            Dữ liệu cá nhân
+          </Link>
         </Box>
-
       </Box>
 
-      <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+      <Box className="nav-actions">
         {user ? (
           <>
             <Avatar
