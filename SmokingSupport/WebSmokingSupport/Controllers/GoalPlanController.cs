@@ -29,7 +29,10 @@ namespace WebSmokingSupport.Controllers
         public async Task<ActionResult<DTOGoalPlanForRead>> GetCurrentGoal()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var member = await _context.MemberProfiles.FirstOrDefaultAsync(m => m.UserId == int.Parse(userId));
+            var member = await _context.MemberProfiles
+                .Include(m => m.User)
+                .FirstOrDefaultAsync(m => m.UserId == int.Parse(userId));
+
             if (member == null) return NotFound("Member not found");
 
             var currentGoal = await _context.GoalPlans
@@ -113,20 +116,23 @@ namespace WebSmokingSupport.Controllers
                 {
                     return NotFound("Hồ sơ thành viên không tìm thấy cho người dùng đã xác thực.");
                 }
+                // Kiểm tra xem người dùng đã có GoalPlan đang hoạt động chưa
+                var now = DateOnly.FromDateTime(DateTime.UtcNow);
 
-                // BƯỚC QUAN TRỌNG: Đặt tất cả các GoalPlan hiện tại của Member này về isCurrentGoal = false
-                //var activeGoalPlans = await _context.GoalPlans
-                //                                    .Where(gp => gp.MemberId == memberProfile.MemberId && gp.isCurrentGoal == true)
-                //                                    .ToListAsync();
+                var existingActiveGoal = await _context.GoalPlans
+                    .Where(gp => gp.MemberId == memberProfile.MemberId
+                                 && gp.isCurrentGoal == true
+                                 && gp.StartDate <= now
+                                 && gp.TargetQuitDate >= now)
+                    .FirstOrDefaultAsync();
 
-                //foreach (var activeGoal in activeGoalPlans)
-                //{
-                //    activeGoal.isCurrentGoal = false;
-                //    activeGoal.UpdatedAt = DateTime.UtcNow;
-                //    await _goalPlanRepository.UpdateAsync(activeGoal); // Cập nhật trạng thái
-                //}
-                //// Lưu các thay đổi vào database ngay lập tức để tránh lỗi unique constraint
-                //await _context.SaveChangesAsync();
+                if (existingActiveGoal != null)
+                {
+                    return BadRequest("Bạn đã có một GoalPlan đang hoạt động. Vui lòng hoàn thành hoặc hủy nó trước khi tạo cái mới.");
+                }
+
+
+
                 // Tạo GoalPlan mới và đặt isCurrentGoal = true
                 var newGoalPlan = new GoalPlan
                 {

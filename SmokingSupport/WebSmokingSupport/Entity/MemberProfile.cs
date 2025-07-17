@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using WebSmokingSupport.Entity;
 namespace WebSmokingSupport.Entity;
 
 public partial class MemberProfile
@@ -22,10 +21,9 @@ public partial class MemberProfile
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
     public virtual ICollection<GoalPlan> GoalPlans { get; set; } = new List<GoalPlan>(); 
-    public virtual User User { get; set; } = null!; 
+    public virtual User User { get; set; } = null!;
  
     public virtual ICollection<MemberTrigger> MemberTriggers { get; set; } = new List<MemberTrigger>();
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
-
     public virtual ICollection<ProgressLog> ProgressLogs { get; set; } = new List<ProgressLog>();
 }
