@@ -22,17 +22,20 @@ namespace WebSmokingSupport.Controllers
         private readonly IOtpService _otpService;
         private readonly IEmailService _emailService;
         private readonly QuitSmokingSupportContext _context;
+        private readonly IWebHostEnvironment _env;
         public UserController(
             IGenericRepository<User> userRepository,
             IOtpService otpService,
             IEmailService emailService,
-            QuitSmokingSupportContext context
+            QuitSmokingSupportContext context,
+            IWebHostEnvironment env
             )
         {
             _userRepository = userRepository;
             _otpService = otpService;
             _emailService = emailService;
             _context = context;
+            _env = env;
         }
 
         [HttpGet]
@@ -89,8 +92,9 @@ namespace WebSmokingSupport.Controllers
 
         }
         [HttpPut("My-Update")]
+        [Consumes("multipart/form-data")]
         [Authorize(Roles = "Member,Coach,Admin")]
-        public async Task<ActionResult> UpdateUser([FromBody] DTOUserForUpdate dto)
+        public async Task<ActionResult> UpdateUser([FromForm] DTOUserForUpdate dto)
         {
             var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
@@ -122,9 +126,38 @@ namespace WebSmokingSupport.Controllers
             {
                 user.PhoneNumber = dto.PhoneNumber;
             }
-            if (!string.IsNullOrWhiteSpace(dto.AvatarUrl))
+            if (dto.AvatarFile != null && dto.AvatarFile.Length > 0)
             {
-                user.AvatarUrl = dto.AvatarUrl;
+                if (!dto.AvatarFile.ContentType.StartsWith("image/"))
+                {
+                    return BadRequest("Tệp tải lên không phải là định dạng ảnh hợp lệ.");
+                }
+
+                try
+                {
+                    var uploadsDirectoryPath = Path.Combine(_env.ContentRootPath, "uploads", "avatars");
+
+                    if (!Directory.Exists(uploadsDirectoryPath))
+                    {
+                        Directory.CreateDirectory(uploadsDirectoryPath);
+                    }
+
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.AvatarFile.FileName);
+                    var filePath = Path.Combine(uploadsDirectoryPath, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await dto.AvatarFile.CopyToAsync(stream);
+                    }
+
+                    // Cập nhật AvatarUrl trong database
+                    user.AvatarUrl = $"/uploads/avatars/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi tải lên ảnh đại diện: {ex.Message}");
+                    return StatusCode(StatusCodes.Status500InternalServerError, $"Đã xảy ra lỗi khi tải lên ảnh đại diện: {ex.Message}");
+                }
             }
             if (dto.IsActive.HasValue)
             {
@@ -136,8 +169,9 @@ namespace WebSmokingSupport.Controllers
             return NoContent();
         }
         [HttpPut("{userId}")]
+        [Consumes("multipart/form-data")]
         [Authorize(Roles = "Admin,Coach,Member")]
-        public async Task<ActionResult<DTOUserForUpdate>> UpdateUser(int userId , DTOUserForUpdate dto)
+        public async Task<ActionResult<DTOUserForUpdate>> UpdateUser(int userId, [FromForm] DTOUserForUpdate dto)
         {
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
@@ -164,14 +198,45 @@ namespace WebSmokingSupport.Controllers
             {
                 user.PhoneNumber = dto.PhoneNumber;
             }
-            if (!string.IsNullOrWhiteSpace(dto.AvatarUrl))
-            {
-                user.AvatarUrl = dto.AvatarUrl;
-            }
             if (dto.IsActive.HasValue)
             {
                 user.IsActive = dto.IsActive.Value;
             }
+            if (dto.AvatarFile != null && dto.AvatarFile.Length > 0)
+            {
+                if (!dto.AvatarFile.ContentType.StartsWith("image/"))
+                {
+                    return BadRequest("Tệp tải lên không phải là định dạng ảnh hợp lệ.");
+                }
+
+                try
+                {
+                    var uploadsDirectoryPath = Path.Combine(_env.ContentRootPath, "uploads", "avatars");
+
+                    if (!Directory.Exists(uploadsDirectoryPath))
+                    {
+                        Directory.CreateDirectory(uploadsDirectoryPath);
+                    }
+
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.AvatarFile.FileName);
+                    var filePath = Path.Combine(uploadsDirectoryPath, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await dto.AvatarFile.CopyToAsync(stream);
+                    }
+
+                    // Cập nhật AvatarUrl trong database
+                    user.AvatarUrl = $"/uploads/avatars/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi tải lên ảnh đại diện: {ex.Message}");
+                    return StatusCode(StatusCodes.Status500InternalServerError, $"Đã xảy ra lỗi khi tải lên ảnh đại diện: {ex.Message}");
+                }
+            }
+            // Nếu dto.AvatarFile là null, AvatarUrl sẽ giữ nguyên giá trị cũ
+
             user.UpdatedAt = DateTime.UtcNow;
             await _userRepository.UpdateAsync(user);
             var userResponse = new DTOUserForRead
