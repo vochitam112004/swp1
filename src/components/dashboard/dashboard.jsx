@@ -31,11 +31,18 @@ ChartJS.register(
 
 // Đặt BADGES và getAchievedBadges ra ngoài function Dashboard
 const BADGES = [
+  // Theo ngày không hút thuốc
   {
     key: "1day",
     label: "1 ngày không hút",
     icon: "fas fa-calendar-check",
     condition: (p) => p.daysNoSmoke >= 1,
+  },
+  {
+    key: "3days",
+    label: "3 ngày không hút",
+    icon: "fas fa-check-circle",
+    condition: (p) => p.daysNoSmoke >= 3,
   },
   {
     key: "7days",
@@ -44,11 +51,37 @@ const BADGES = [
     condition: (p) => p.daysNoSmoke >= 7,
   },
   {
+    key: "14days",
+    label: "2 tuần không hút",
+    icon: "fas fa-heartbeat",
+    condition: (p) => p.daysNoSmoke >= 14,
+  },
+  {
     key: "30days",
     label: "30 ngày không hút",
     icon: "fas fa-award",
     condition: (p) => p.daysNoSmoke >= 30,
   },
+  {
+    key: "90days",
+    label: "3 tháng không hút",
+    icon: "fas fa-medal",
+    condition: (p) => p.daysNoSmoke >= 90,
+  },
+  {
+    key: "180days",
+    label: "6 tháng không hút",
+    icon: "fas fa-star",
+    condition: (p) => p.daysNoSmoke >= 180,
+  },
+  {
+    key: "365days",
+    label: "1 năm không hút",
+    icon: "fas fa-crown",
+    condition: (p) => p.daysNoSmoke >= 365,
+  },
+
+  // Theo số tiền tiết kiệm
   {
     key: "100k",
     label: "Tiết kiệm 100K",
@@ -61,12 +94,60 @@ const BADGES = [
     icon: "fas fa-wallet",
     condition: (p) => p.moneySaved >= 500000,
   },
-  // Thêm các badge khác nếu muốn
+  {
+    key: "1tr",
+    label: "Tiết kiệm 1 triệu",
+    icon: "fas fa-coins",
+    condition: (p) => p.moneySaved >= 1000000,
+  },
+  {
+    key: "5tr",
+    label: "Tiết kiệm 5 triệu",
+    icon: "fas fa-gem",
+    condition: (p) => p.moneySaved >= 5000000,
+  },
+  {
+    key: "10tr",
+    label: "Tiết kiệm 10 triệu",
+    icon: "fas fa-diamond",
+    condition: (p) => p.moneySaved >= 10000000,
+  },
+
+  // Theo sức khỏe
+  {
+    key: "health1",
+    label: "Sức khỏe cải thiện rõ rệt",
+    icon: "fas fa-heart",
+    condition: (p) => p.healthImproved >= 20,
+  },
+  {
+    key: "health2",
+    label: "Sức khỏe hồi phục vượt bậc",
+    icon: "fas fa-lungs",
+    condition: (p) => p.healthImproved >= 50,
+  },
+
+  // Theo số ngày ghi nhật ký
+  {
+    key: "journal5",
+    label: "Ghi nhật ký 5 ngày",
+    icon: "fas fa-pen",
+    condition: (p) => p.journalCount >= 5,
+  },
+  {
+    key: "journal20",
+    label: "Ghi nhật ký 20 ngày",
+    icon: "fas fa-book",
+    condition: (p) => p.journalCount >= 20,
+  },
 ];
 
-function getAchievedBadges(progress) {
-  return BADGES.filter((b) => b.condition(progress));
-}
+
+const getAchievedBadges = (progress) => {
+  if (!progress) return [];
+  return BADGES.filter((badge) => badge.condition(progress));
+};
+
 
 function shouldSendReminder(lastSent, frequency) {
   const now = new Date();
@@ -191,11 +272,12 @@ const Dashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [coachList, setCoachList] = useState([]);
   const [planHistory, setPlanHistory] = useState([]);
+  const [achievedBadges, setAchievedBadges] = useState([]);
   const [_encourages, setEncourages] = useState(() => safeParse("encourages", {}));
   const fetchedRef = useRef(false);
 
   const { user, loading: authLoading } = useAuth();
-  
+
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -252,6 +334,22 @@ const Dashboard = () => {
     }
     fetchAll();
   }, []); // <-- chỉ chạy khi mount
+
+  const getAllBadges = (progress) => {
+    const current = getAchievedBadges(progress);
+    const saved = JSON.parse(localStorage.getItem("achievedBadges") || "[]");
+
+    const combined = [...saved];
+    current.forEach((badge) => {
+      if (!combined.some((b) => b.key === badge.key)) {
+        combined.push(badge);
+      }
+    });
+
+    localStorage.setItem("achievedBadges", JSON.stringify(combined));
+    return combined;
+  };
+
 
   // Hàm ghi nhận tiến trình mỗi ngày
   const handleSubmitProgress = async (e) => {
@@ -409,19 +507,36 @@ const Dashboard = () => {
   }, []);
   // Thông báo khi đạt badge mới
   useEffect(() => {
+    if (!progress) return;
+
     const achieved = getAchievedBadges(progress);
-    const shown = JSON.parse(localStorage.getItem("shownBadges") || "[]");
+    const stored = JSON.parse(localStorage.getItem("allBadges") || "[]");
+
+    const newBadges = [];
+
     achieved.forEach((badge) => {
+      if (!stored.some((b) => b.key === badge.key)) {
+        stored.push(badge);
+        newBadges.push(badge);
+      }
+    });
+
+    localStorage.setItem("allBadges", JSON.stringify(stored));
+
+    const shown = JSON.parse(localStorage.getItem("shownBadges") || "[]");
+
+    newBadges.forEach((badge) => {
       if (!shown.includes(badge.key)) {
-        toast.success(`Chúc mừng! Bạn vừa đạt huy hiệu: ${badge.label}`);
-        sendBrowserNotification(
-          "Chúc mừng!",
-          `Bạn vừa đạt huy hiệu: ${badge.label}`
-        ); // Thêm dòng này
+        toast.success(`🎉 Chúc mừng! Bạn vừa đạt huy hiệu: ${badge.label}`);
+        sendBrowserNotification("🎉 Chúc mừng!", `Bạn vừa đạt huy hiệu: ${badge.label}`);
         shown.push(badge.key);
       }
     });
+
     localStorage.setItem("shownBadges", JSON.stringify(shown));
+
+    // 👉 Hiển thị tất cả huy hiệu từng đạt (ổn định)
+    setAchievedBadges(stored);
   }, [progress]);
 
   // Thông báo động viên cá nhân
@@ -589,15 +704,27 @@ const Dashboard = () => {
   }
 
   useEffect(() => {
-    async function fetchProgressLogs() {
+    async function fetchProgressStats() {
       try {
-        const res = await api.get("/ProgressLog/GetProgress-logs");
-        setProgressLogs(res.data);
-      } catch {
-        setProgressLogs([]);
+        const res = await api.get("/CurrentGoal");
+        const data = res.data;
+
+        setProgress({
+          daysNoSmoke: data.smokeFreeDays || 0,
+          moneySaved: data.totalSpenMoney || 0,
+          health: data.smokeFreeDays * 1 || 0, // ví dụ: 1 điểm mỗi ngày không hút
+        });
+      } catch (err) {
+        console.error("Error fetching progress stats", err);
+        setProgress({
+          daysNoSmoke: 0,
+          moneySaved: 0,
+          health: 0,
+        });
       }
     }
-    fetchProgressLogs();
+
+    fetchProgressStats();
   }, []);
 
   const _handleAddProgressLog = async (logData) => {
@@ -1243,16 +1370,14 @@ const Dashboard = () => {
                 <div className="mt-5">
                   <h3 className="fs-5 fw-semibold mb-3">Thành tích gần đây</h3>
                   <div className="row g-3">
-                    {getAchievedBadges(progress).map((badge) => (
+                    {achievedBadges.map((badge) => (
                       <div className="col-6 col-sm-4 col-md-2" key={badge.key}>
                         <div className="bg-warning bg-opacity-10 p-3 rounded-3 shadow-sm text-center">
                           <div
                             className="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
                             style={{ width: "48px", height: "48px" }}
                           >
-                            <i
-                              className={`${badge.icon} text-warning fs-4`}
-                            ></i>
+                            <i className={`${badge.icon} text-warning fs-4`}></i>
                           </div>
                           <div className="small fw-medium">{badge.label}</div>
                           <button
@@ -1264,6 +1389,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                     ))}
+
                   </div>
                 </div>
 
