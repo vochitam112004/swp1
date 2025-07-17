@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   Box,
   Typography,
@@ -14,6 +14,7 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import api from "../../api/axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { UserContext } from "../../contexts/UserContext";
 
 const qrImages = {
   zalopay: "/images/Qr-zalopay.jpg",
@@ -42,6 +43,7 @@ export default function Payment() {
   const [plan, setPlan] = useState(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useContext(UserContext);
   const planId = parseInt(searchParams.get("planId"));
 
   useEffect(() => {
@@ -65,16 +67,21 @@ export default function Payment() {
 
     try {
       if (method === "momo") {
-        // Tạo thanh toán MoMo
-        const momoResponse = await api.post("/MomoPayment/create", {
-          planId: plan.planId,
-          amount: plan.price,
-          orderInfo: `Thanh toán gói ${plan.name}`,
-          orderType: "other",
-          language: "vi"
+        // Tạo orderId unique
+        const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Lấy tên từ user context hoặc dùng tên mặc định
+        const fullName = user?.fullName || user?.username || "Khách hàng";
+        
+        // Tạo thanh toán MoMo với API endpoint mới
+        const momoResponse = await api.post("/api/UserMembershipPayment/CreatePaymentUrl", {
+          orderId: orderId,
+          amount: plan.price.toString(),
+          fullName: fullName,
+          orderInfo: `Thanh toán gói ${plan.name}`
         });
 
-        if (momoResponse.data.errorCode === 0) {
+        if (momoResponse.data && momoResponse.data.payUrl) {
           // Chuyển hướng đến trang thanh toán MoMo
           window.location.href = momoResponse.data.payUrl;
         } else {

@@ -23,7 +23,7 @@ export default function MomoCallback() {
         }
 
         // Gửi thông tin callback đến backend để xác thực
-        const response = await api.post("/MomoPayment/callback", params);
+        const response = await api.post("/api/UserMembershipPayment/ProcessCallback", params);
         
         if (response.data.success) {
           setSuccess(true);
