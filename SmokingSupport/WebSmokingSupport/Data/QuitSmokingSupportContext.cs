@@ -51,6 +51,7 @@ public partial class QuitSmokingSupportContext : DbContext
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<MembershipPlan> MembershipPlans { get; set; }
     public virtual DbSet<UserBadge> UserBadges { get; set; }
+    public DbSet<UserMembershipHistory> UserMembershipHistories { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -92,6 +93,21 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasForeignKey(d => d.MemberId)
                 .HasConstraintName("FK__Appointme__membe__46E78A0C");
         });
+        modelBuilder.Entity<UserMembershipHistory>()
+               .HasOne(umh => umh.User)          // UserMembershipHistory có một User
+               .WithMany()                       // User có nhiều UserMembershipHistory (nếu không có navigation property ngược trong User)
+               .HasForeignKey(umh => umh.UserId) // Khóa ngoại là UserId
+               .OnDelete(DeleteBehavior.Cascade); // Khi User bị xóa, lịch sử của User đó cũng bị xóa
+
+        // Mối quan hệ giữa UserMembershipHistory và MembershipPlan
+        // Một UserMembershipHistory có thể có một MembershipPlan (nullable)
+        // Một MembershipPlan có thể có nhiều UserMembershipHistory
+        modelBuilder.Entity<UserMembershipHistory>()
+            .HasOne(umh => umh.Plan)          // UserMembershipHistory có một MembershipPlan
+            .WithMany()                       // MembershipPlan có nhiều UserMembershipHistory (nếu không có navigation property ngược trong MembershipPlan)
+            .HasForeignKey(umh => umh.PlanId) // Khóa ngoại là PlanId (nullable)
+            .OnDelete(DeleteBehavior.SetNull); // Khi MembershipPlan bị xóa, PlanId trong lịch sử sẽ được đặt thành NULL
+                                               // (thay vì xóa UserMembershipHistory đó)
 
         modelBuilder.Entity<Badge>(entity =>
         {

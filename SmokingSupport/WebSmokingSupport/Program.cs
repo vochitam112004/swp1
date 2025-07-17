@@ -7,6 +7,8 @@ using WebSmokingSupport.Repositories;
 using WebSmokingSupport.Interfaces;
 using WebSmokingSupport.Service;
 using Microsoft.OpenApi.Models;
+using WebSmokingSupport.Entity;
+using Microsoft.Extensions.FileProviders;
 
     namespace WebSmokingSupport
     {
@@ -94,6 +96,8 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+            builder.Services.Configure<MomoOptionModel>(
+                        builder.Configuration.GetSection("MomoOptions"));   
             builder.Services.AddScoped<IMomoService, MomoService>();
 
             builder.Services.AddMemoryCache();
@@ -106,14 +110,32 @@ using Microsoft.OpenApi.Models;
                         .AllowAnyMethod());
             });
             var app = builder.Build();
+            var contentRootPath = app.Environment.ContentRootPath;
+
+            // Định nghĩa đường dẫn đến thư mục uploads
+            var uploadsDirectoryPath = Path.Combine(contentRootPath, "uploads");
+
+            // Kiểm tra và tạo thư mục 'uploads' nếu nó chưa tồn tại
+            if (!Directory.Exists(uploadsDirectoryPath))
+            {
+                Directory.CreateDirectory(uploadsDirectoryPath);
+                Console.WriteLine($"Đã tạo thư mục: {uploadsDirectoryPath}");
+            }
+
+            // Cấu hình để phục vụ các tệp tĩnh từ thư mục "uploads"
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(uploadsDirectoryPath),
+                RequestPath = "/uploads"
+            });
+
             app.UseCors("AllowAll");
 
 
                 app.UseSwagger();
                 app.UseSwaggerUI();
-                //app.UseHttpsRedirection();
-                
-                app.UseAuthentication();
+            //app.UseHttpsRedirection();
+            app.UseAuthentication();
                 app.UseAuthorization();
 
                 app.MapControllers();   

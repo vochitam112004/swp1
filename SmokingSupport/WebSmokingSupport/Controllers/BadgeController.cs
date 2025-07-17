@@ -113,63 +113,101 @@ namespace WebSmokingSupport.Controllers
         }
         [HttpPost("Create-Badge")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateBadge([FromBody] DTOBadgeForCreate dto)
+        public async Task<IActionResult> CreateBadge([FromForm] DTOBadgeForCreate dto, [FromServices] IWebHostEnvironment _env)
         {
             if (dto == null)
-            {
                 return BadRequest("Dữ liệu huy hiệu không hợp lệ.");
+
+            string? iconUrl = null;
+
+            // Xử lý ảnh nếu có
+            if (dto.IconFile != null && dto.IconFile.Length > 0)
+            {
+                var uploadPath = Path.Combine(_env.ContentRootPath, "uploads", "badges");
+                if (!Directory.Exists(uploadPath))
+                    Directory.CreateDirectory(uploadPath);
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(dto.IconFile.FileName);
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.IconFile.CopyToAsync(stream);
+                }
+
+                iconUrl = $"/uploads/badges/{fileName}";
             }
+
             var badge = new Badge
             {
                 Name = dto.Name,
                 Description = dto.Description,
                 RequiredScore = dto.RequiredScore,
-                IconUrl = dto.IconUrl
+                IconUrl = iconUrl
             };
-         
+
             try
             {
                 int result = await _badgeRepository.CreateAsync(badge);
                 if (result > 0)
-
                 {
                     var allUserIds = await _context.Users.Select(u => u.UserId).ToListAsync();
                     foreach (var userId in allUserIds)
                     {
                         var ranking = await _context.Rankings.FirstOrDefaultAsync(r => r.UserId == userId);
                         if (ranking != null)
-                        {
-                            await _rankingService.CheckAndAwardBadges(userId, ranking?.Score?? 0);
-                        }
+                            await _rankingService.CheckAndAwardBadges(userId, ranking?.Score ?? 0);
                     }
 
-                    return CreatedAtAction(nameof(GetBadgeById), new { id = badge.BadgeId }, badge);
+                    return CreatedAtAction(nameof(GetBadgeById), new { id = badge.BadgeId }, new DTOBadgeForRead
+                    {
+                        BadgeId = badge.BadgeId,
+                        Name = badge.Name,
+                        Description = badge.Description,
+                        RequiredScore = badge.RequiredScore,
+                        IconUrl = badge.IconUrl
+                    });
                 }
-                else
-                {
-                    return StatusCode(500, "Không thể tạo huy hiệu mới.");
-                }
+
+                return StatusCode(500, "Không thể tạo huy hiệu mới.");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi nội bộ máy chủ khi tạo huy hiệu: {ex.Message}");
+                return StatusCode(500, $"Lỗi khi tạo huy hiệu: {ex.Message}");
             }
         }
         [HttpPut("Update-BadgeByBadgeId/{Badgeid}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<DTOBadgeForRead>> UpdateBadge(int Badgeid, [FromBody] DTOBadgeForUpdate dto)
+        public async Task<ActionResult<DTOBadgeForRead>> UpdateBadge(int Badgeid, [FromForm] DTOBadgeForUpdate dto, [FromServices] IWebHostEnvironment _env)
         {
             var badge = await _badgeRepository.GetByIdAsync(Badgeid);
             if (badge == null)
-            {
                 return NotFound($"Huy hiệu với ID {Badgeid} không tìm thấy.");
-            }
+
             badge.Name = dto.Name;
             badge.Description = dto.Description;
             badge.RequiredScore = dto.RequiredScore;
-            badge.IconUrl = dto.IconUrl;
+
+            if (dto.IconFile != null && dto.IconFile.Length > 0)
+            {
+                var uploadPath = Path.Combine(_env.ContentRootPath, "uploads", "badges");
+                if (!Directory.Exists(uploadPath))
+                    Directory.CreateDirectory(uploadPath);
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(dto.IconFile.FileName);
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.IconFile.CopyToAsync(stream);
+                }
+
+                badge.IconUrl = $"/uploads/badges/{fileName}";
+            }
+
             _context.Update(badge);
             await _context.SaveChangesAsync();
+
             var updatedBadge = new DTOBadgeForRead
             {
                 BadgeId = badge.BadgeId,
@@ -178,8 +216,11 @@ namespace WebSmokingSupport.Controllers
                 RequiredScore = badge.RequiredScore,
                 IconUrl = badge.IconUrl
             };
+
             return Ok(updatedBadge);
         }
+
+
         [HttpDelete("Delete-BadgeByBadgeId/{Badgeid}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteBadgeById(int Badgeid)
@@ -206,30 +247,5 @@ namespace WebSmokingSupport.Controllers
                 return StatusCode(500, $"Lỗi nội bộ máy chủ khi xóa huy hiệu: {ex.Message}");
             }
         }
-
-        [HttpPost("upload-icon")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UploadBadgeIcon(IFormFile file, [FromServices] IWebHostEnvironment _env)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest("No file selected");
-
-            var uploadPath = Path.Combine(_env.WebRootPath, "uploads", "badges");
-
-            if (!Directory.Exists(uploadPath))
-                Directory.CreateDirectory(uploadPath);
-
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadPath, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var iconUrl = $"/uploads/badges/{fileName}";
-            return Ok(new { iconUrl });
-        }
-
     }
 }

@@ -19,15 +19,26 @@ namespace WebSmokingSupport.Controllers
         public async Task<IActionResult> CreatePaymentMomo(OrderInfoModel model)
         {
             var response = await _momoService.CreatePaymentMomo(model);
-            return Redirect(response.PayUrl);
+            return Ok(new { PayUrl = response.PayUrl });
         }
 
         [HttpGet]
         [Route("PaymentExecute")]
         public IActionResult PaymentCallBack()
         {
-            var response = _momoService.PaymentExecuteAsync(HttpContext.Request.Query);
-            return Ok(response);
+            var collection = HttpContext.Request.Query;
+
+            collection.TryGetValue("amount", out var amount);
+            collection.TryGetValue("orderInfo", out var orderInfo);
+            collection.TryGetValue("orderId", out var orderId);
+
+            return Ok(new MomoExecuteResponseModel()
+            {
+                Amount = amount,
+                OrderId = orderId,
+                OrderInfo = orderInfo,
+                FullName = "" 
+            });
         }
 
     }
