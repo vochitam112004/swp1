@@ -110,6 +110,16 @@ using Microsoft.Extensions.FileProviders;
                         .AllowAnyMethod());
             });
             var app = builder.Build();
+            
+
+            // ✅ In ra connection string để kiểm tra
+            Console.WriteLine("✅ Connection string đang dùng: " +
+                builder.Configuration.GetConnectionString("DefaultConnection"));
+
+            // Các dòng cấu hình tiếp theo
+            app.UseSwagger();
+            app.UseSwaggerUI();
+            // ...
             var contentRootPath = app.Environment.ContentRootPath;
 
             // Định nghĩa đường dẫn đến thư mục uploads
