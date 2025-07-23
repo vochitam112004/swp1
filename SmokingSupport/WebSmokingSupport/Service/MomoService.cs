@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Crmf;
+using Org.BouncyCastle.Asn1.X9;
 using RestSharp;
 using WebSmokingSupport.Entity;
 using WebSmokingSupport.Interfaces;
@@ -21,14 +22,16 @@ namespace WebSmokingSupport.Service
         public async Task<MomoCreatePaymentResponseModel> CreatePaymentMomo(OrderInfoModel model)
         {
             model.OrderId = DateTime.UtcNow.Ticks.ToString();
-            model.OrderInfo = "Khách hàng: " + model.FullName + ". Nội dung: " + model.OrderInfo;
+            var fullOrderInfo = $"Khách hàng: {model.FullName}. Nội dung: {model.OrderInfo}";
+            
+
             var rawData =
              $"partnerCode={_options.Value.PartnerCode}" +
              $"&accessKey={_options.Value.AccessKey}" +
              $"&requestId={model.OrderId}" +
              $"&amount={model.Amount}" +
              $"&orderId={model.OrderId}" +
-             $"&orderInfo={model.OrderInfo}" +
+             $"&orderInfo={fullOrderInfo}" +
              $"&returnUrl={_options.Value.ReturnUrl}" +
              $"&notifyUrl={_options.Value.NotifyUrl}" +
              $"&extraData=";
@@ -48,7 +51,7 @@ namespace WebSmokingSupport.Service
                 returnUrl = _options.Value.ReturnUrl,
                 orderId = model.OrderId,
                 amount = model.Amount.ToString(),
-                orderInfo = model.OrderInfo,
+                orderInfo = fullOrderInfo,
                 requestId = model.OrderId,
                 extraData = "",
                 signature
@@ -57,6 +60,10 @@ namespace WebSmokingSupport.Service
             request.AddParameter("application/json", JsonConvert.SerializeObject(requestData), ParameterType.RequestBody);
 
             var response = await client.ExecuteAsync(request);
+            if (!response.IsSuccessful)
+            {
+                throw new Exception("Failed to call Momo API: " + response.Content);
+            }
 
             var momoResponse = JsonConvert.DeserializeObject<MomoCreatePaymentResponseModel>(response.Content);
             return momoResponse;
@@ -77,9 +84,9 @@ namespace WebSmokingSupport.Service
             };
         }
 
-        private string ComputeHmacSha256(string message, string sercretKey)
+        private string ComputeHmacSha256(string message, string secretKey)
         {
-            var keyBytes = Encoding.UTF8.GetBytes(sercretKey);
+            var keyBytes = Encoding.UTF8.GetBytes(secretKey);
             var messageBytes = Encoding.UTF8.GetBytes(message);
 
             byte[] hashBytes;
