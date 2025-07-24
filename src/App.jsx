@@ -32,7 +32,7 @@ import Developers from "./components/common/Developers";
 import Chuyengia from "./components/common/Chuyengia";
 import Researchers from "./components/common/researchers";
 import ChatSupport from "./components/chat/ChatSupport";
-import MomoCallback from "./components/common/MomoCallback";
+import PaymentCallback from "./components/common/PaymentCallback";
 import { UserProvider } from "./contexts/UserContext";
 import { useState } from "react";
 
@@ -113,7 +113,7 @@ function AppContent() {
           <Route path="/membership" element={<MembershipList />} />
           <Route path="/register" element={<Register />} />
           <Route path="/payment" element={<Payment />} />
-          <Route path="/momo-callback" element={<MomoCallback />} />
+          <Route path="/payment-callback" element={<PaymentCallback />} />
           <Route path="/about" element={<About />} />
           <Route path="/chuyengia" element={<Chuyengia />} />
           <Route path="/developers" element={<Developers />} />
