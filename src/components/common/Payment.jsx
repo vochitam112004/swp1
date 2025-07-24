@@ -91,7 +91,7 @@ export default function Payment() {
         // Thanh toán thủ công cho ZaloPay và Bank
         const transactionId = `manual-${Date.now()}`;
 
-        await api.post("/UserMembershipPayment/process-payment", {
+        await api.post("/api/UserMembershipPayment/CreatePaymentUrl", {
           planId: plan.planId,
           transactionId,
           amount: plan.price,

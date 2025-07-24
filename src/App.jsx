@@ -33,6 +33,7 @@ import Chuyengia from "./components/common/Chuyengia";
 import Researchers from "./components/common/researchers";
 import ChatSupport from "./components/chat/ChatSupport";
 import MomoCallback from "./components/common/MomoCallback";
+import { UserProvider } from "./contexts/UserContext";
 import { useState } from "react";
 
 function AppContent() {
@@ -184,10 +185,12 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <AppContent />
-    </Router>
+    <UserProvider>
+      <Router>
+        <ScrollToTop />
+        <AppContent />
+      </Router>
+    </UserProvider>
   );
 }
 export default App;
