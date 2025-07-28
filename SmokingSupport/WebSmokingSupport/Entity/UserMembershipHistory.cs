@@ -5,6 +5,7 @@ namespace WebSmokingSupport.Entity
 {
     public class UserMembershipHistory
     {
+        //history of user membership plans
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int HistoryId { get; set; }
