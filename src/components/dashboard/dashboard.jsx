@@ -18,6 +18,7 @@ import SystemReportForm from "../common/SystemReportForm";
 import NotificationHistory from "./NotificationHistory";
 import { useAuth } from "../auth/AuthContext";
 import PlanTab from "./plantab"; // Import PlanTab
+import { useNavigate } from "react-router-dom";
 
 ChartJS.register(
   CategoryScale,
@@ -273,10 +274,33 @@ const Dashboard = () => {
   const [coachList, setCoachList] = useState([]);
   const [planHistory, setPlanHistory] = useState([]);
   const [achievedBadges, setAchievedBadges] = useState([]);
+  const [hasMembership, setHasMembership] = useState(false);
   const [_encourages, setEncourages] = useState(() => safeParse("encourages", {}));
   const fetchedRef = useRef(false);
+  const navigate = useNavigate();
 
   const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    const checkMembership = async () => {
+      try {
+        const res = await api.get("/UserMemberShipHistory/my-history");
+        if (res.data && res.data.length > 0) {
+          setHasMembership(true);
+        } else {
+          toast.warning("Bạn chưa mua gói. Vui lòng mua để sử dụng!");
+          navigate("/membership");
+        }
+      } catch (error) {
+        console.error("Lỗi kiểm tra gói:", error);
+        navigate("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkMembership();
+  }, []);
 
 
   const fetchProfile = async () => {
@@ -946,7 +970,7 @@ const Dashboard = () => {
   };
 
   if (loading) return <div className="text-center mt-4">Đang tải hồ sơ...</div>;
-
+  if (!hasMembership) return null;
 
   return (
     <div className="bg-white py-5">

@@ -101,7 +101,7 @@ export default function BadgeManager() {
       setForm({ name: "", description: "", requiredScore: 0 });
       setSelectedFile(null);
     } catch (err) {
-      console.error("❌ Lỗi khi lưu huy hiệu:", err);
+      console.error("Lỗi khi lưu huy hiệu:", err);
       toast.error("Lưu huy hiệu thất bại!");
     }
   };

@@ -14,21 +14,49 @@ export default function UserManager() {
   const [editingData, setEditingData] = useState(null);
   const [deleteUser, setDeleteUser] = useState(null);
 
-  const fetchUsers = async () => {
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Đặt bên ngoài useEffect
+  const fetchData = async () => {
     try {
-      const res = await api.get("/User/Get-All-User");
-      setUsers(res.data);
-    } catch {
-      console.error("Không lấy được danh sách người dùng");
+      const [userRes, membershipRes] = await Promise.all([
+        api.get("/User/Get-All-User"),
+        api.get("/UserMemberShipHistory"),
+      ]);
+
+      const users = userRes.data;
+      const memberships = membershipRes.data;
+
+      const mergedUsers = users.map((user) => {
+        const userMemberships = memberships.filter(
+          (m) => m.userId === user.userId
+        );
+
+        const latest = userMemberships.sort(
+          (a, b) => new Date(b.startDate) - new Date(a.startDate)
+        )[0];
+
+        return {
+          ...user,
+          planName: latest?.planName || "Chưa mua gói",
+        };
+      });
+
+      setUsers(mergedUsers);
+    } catch (error) {
+      console.error("Không thể lấy dữ liệu người dùng hoặc membership", error);
     }
   };
+
 
   const handleDelete = async (userId) => {
     try {
       await api.delete(`/User/${userId}`);
       setDeleteUser(null);
       toast.success("Xóa thành công!");
-      fetchUsers();
+      fetchData();
     } catch {
       toast.error("Xóa người dùng thất bại");
     }
@@ -40,15 +68,11 @@ export default function UserManager() {
       toast.success("Cập nhật thành công!");
       setEditingUser(null);
       setEditingData(null);
-      fetchUsers();
+      fetchData();
     } catch {
       toast.error("Cập nhật thất bại!");
     }
   };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
   return (
     <Box sx={{ p: 3, margin: "0 auto" }}>
@@ -83,7 +107,13 @@ export default function UserManager() {
           >
             <ListItemText
               primary={user.displayName}
-              secondary={user.email}
+              secondary={
+                <>
+                  {user.email}
+                  <br />
+                  Gói: <strong>{user.planName}</strong>
+                </>
+              }
             />
           </ListItem>
         ))}

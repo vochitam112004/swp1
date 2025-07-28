@@ -142,7 +142,7 @@ export default function Login() {
         <Button
           variant="contained"
           sx={{
-            backgroundColor: "#00c6a2", // ✅ Nút xanh ngọc
+            backgroundColor: "#00c6a2",
             color: "#fff",
             fontWeight: "bold",
             px: 4,
@@ -161,7 +161,6 @@ export default function Login() {
         </Button>
       </Box>
 
-      {/* ✅ Bên phải: Form đăng nhập hiện đại */}
       <Box
         sx={{
           flex: 1,
@@ -201,8 +200,8 @@ export default function Login() {
                   </InputAdornment>
                 ),
                 style: {
-                  background: "#f5f7fb", // ✅ Nền input sáng
-                  borderRadius: 10,       // ✅ Bo góc input
+                  background: "#f5f7fb", 
+                  borderRadius: 10,       
                 },
               }}
             />
@@ -249,7 +248,7 @@ export default function Login() {
                 type="submit"
                 variant="contained"
                 sx={{
-                  backgroundColor: "#2b7de9", // ✅ Màu chính
+                  backgroundColor: "#2b7de9",
                   fontWeight: "bold",
                   borderRadius: 9999,
                   boxShadow: 2,

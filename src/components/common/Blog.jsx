@@ -23,14 +23,18 @@ export default function Blog() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [detail, setDetail] = useState(null);
+
   const token = localStorage.getItem("authToken");
 
   const fetchPosts = async () => {
+    setLoading(true);
+    setError("");
     try {
       const res = await api.get("/CommunityPost");
-      const data = res.data;
-      if (!Array.isArray(data)) throw new Error("Dữ liệu không hợp lệ");
-      setPosts(data);
+      if (!Array.isArray(res.data)) {
+        throw new Error("Dữ liệu bài viết không hợp lệ");
+      }
+      setPosts(res.data);
     } catch (err) {
       setError(err.message || "Không thể tải bài viết.");
     } finally {
@@ -42,17 +46,20 @@ export default function Blog() {
     fetchPosts();
   }, []);
 
-  const handleDelete = async (postId) => {
+  const handleDelete = async (e, postId) => {
+    e.stopPropagation(); // Ngăn mở modal khi bấm xóa
+
     if (!window.confirm("Bạn chắc chắn muốn xóa bài viết này?")) return;
+
     try {
       await api.delete(`/CommunityPost/${postId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Đã xóa bài viết");
       fetchPosts();
-      setDetail(null); // đóng modal nếu đang mở bài bị xóa
+      setDetail(null); // Đóng modal nếu đang xem bài vừa bị xóa
     } catch (err) {
-      console.log(err)
+      console.error("Lỗi xóa bài viết:", err);
       toast.error("Xóa thất bại");
     }
   };
@@ -97,17 +104,19 @@ export default function Blog() {
       {loading ? (
         <div className="blog__loading">Đang tải bài viết...</div>
       ) : error ? (
-        <div className="blog__error">❌ {error}</div>
+        <div className="blog__error">{error}</div>
       ) : filteredPosts.length === 0 ? (
         <div className="blog__empty">
-          {search ? "Không tìm thấy bài viết phù hợp." : "Chưa có bài viết nào."}
+          {search
+            ? "Không tìm thấy bài viết phù hợp."
+            : "Chưa có bài viết nào."}
         </div>
       ) : (
         <div className="blog__list">
-          {paginatedPosts.map((post, index) => (
+          {paginatedPosts.map((post) => (
             <div
               className="blog__item"
-              key={index}
+              key={post.postId}
               onClick={() => setDetail(post)}
             >
               <div className="blog__content">
@@ -126,10 +135,11 @@ export default function Blog() {
                 <p className="blog__summary">
                   {post.content?.slice(0, 150) || "(Không có nội dung)"}...
                 </p>
+
                 {token && (
                   <button
                     className="blog__delete-button"
-                    onClick={() => handleDelete(post.postId)}
+                    onClick={(e) => handleDelete(e, post.postId)}
                   >
                     Xóa
                   </button>
@@ -146,8 +156,9 @@ export default function Blog() {
             <button
               key={i + 1}
               onClick={() => setPage(i + 1)}
-              className={`blog__pagination-button ${page === i + 1 ? "blog__pagination-button--active" : ""
-                }`}
+              className={`blog__pagination-button ${
+                page === i + 1 ? "blog__pagination-button--active" : ""
+              }`}
             >
               {i + 1}
             </button>
@@ -155,8 +166,9 @@ export default function Blog() {
         </div>
       )}
 
-      {detail && <BlogDetailModal post={detail} onClose={() => setDetail(null)} />}
+      {detail && (
+        <BlogDetailModal post={detail} onClose={() => setDetail(null)} />
+      )}
     </div>
-
   );
 }
