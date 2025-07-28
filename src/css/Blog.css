@@ -58,6 +58,38 @@
   color: inherit;
 }
 
+/* Blog Item Container */
+.blog__item-container {
+  position: relative;
+  margin-bottom: 26px;
+}
+
+.blog__delete-button {
+  background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 12px;
+  align-self: flex-start;
+}
+
+.blog__delete-button:hover {
+  background: linear-gradient(135deg, #ff3742 0%, #ff2f3a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 71, 87, 0.4);
+}
+
+.blog__delete-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+}
+
 .blog__item {
   display: flex;
   flex-direction: column;
@@ -108,21 +140,6 @@
   margin-bottom: 8px;
   color: #222;
   font-size: 1.05rem;
-}
-
-.blog__delete-button {
-  background: #ff5c5c;
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-  align-self: flex-start;
-}
-
-.blog__delete-button:hover {
-  background: #e74c3c;
 }
 
 .blog__pagination {

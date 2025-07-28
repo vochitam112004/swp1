@@ -45,7 +45,8 @@ export default function Blog() {
   }, []);
 
   const handleDelete = async (e, postId) => {
-    e.stopPropagation(); // Ngăn mở modal khi bấm xóa
+    e.preventDefault(); // ✅ Ngăn Link navigation
+    e.stopPropagation(); // ✅ Ngăn event bubble up
 
     if (!window.confirm("Bạn chắc chắn muốn xóa bài viết này?")) return;
 
@@ -111,40 +112,43 @@ export default function Blog() {
       ) : (
         <div className="blog__list">
           {paginatedPosts.map((post) => (
-            <Link 
-              to={`/blog/${post.postId}`}
-              key={post.postId}
-              className="blog__item-link"
-            >
-              <div className="blog__item">
-                <div className="blog__content">
-                  <h2 className="blog__post-title blog__post-title--clickable">
-                    {post.title || "(Không có tiêu đề)"}
-                  </h2>
-                  <div className="blog__meta">
-                    <span className="blog__author">
-                      {post.displayName || "Ẩn danh"}
-                    </span>{" "}
-                    -{" "}
-                    <span className="blog__date">
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </span>
+            <div key={post.postId} className="blog__item-container">
+              <Link 
+                to={`/blog/${post.postId}`}
+                className="blog__item-link"
+              >
+                <div className="blog__item">
+                  <div className="blog__content">
+                    <h2 className="blog__post-title blog__post-title--clickable">
+                      {post.title || "(Không có tiêu đề)"}
+                    </h2>
+                    <div className="blog__meta">
+                      <span className="blog__author">
+                        {post.displayName || "Ẩn danh"}
+                      </span>{" "}
+                      -{" "}
+                      <span className="blog__date">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="blog__summary">
+                      {post.content?.slice(0, 150) || "(Không có nội dung)"}...
+                    </p>
                   </div>
-                  <p className="blog__summary">
-                    {post.content?.slice(0, 150) || "(Không có nội dung)"}...
-                  </p>
-
-                  {token && (
-                    <button
-                      className="blog__delete-button"
-                      onClick={(e) => handleDelete(e, post.postId)}
-                    >
-                      Xóa
-                    </button>
-                  )}
                 </div>
-              </div>
-            </Link>
+              </Link>
+
+              {/* ✅ Button xóa nằm dưới cùng, ngoài Link */}
+              {token && (
+                <button
+                  className="blog__delete-button"
+                  onClick={(e) => handleDelete(e, post.postId)}
+                  type="button"
+                >
+                  Xóa bài viết
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
