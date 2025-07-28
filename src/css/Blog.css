@@ -65,7 +65,7 @@
 }
 
 .blog__delete-button {
-  background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+  background: linear-gradient(135deg, #07749f 0%, #65b7da 100%);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -80,7 +80,7 @@
 }
 
 .blog__delete-button:hover {
-  background: linear-gradient(135deg, #ff3742 0%, #ff2f3a 100%);
+  background: linear-gradient(135deg, #eb7f84 0%, #ff2f3a 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(255, 71, 87, 0.4);
 }
