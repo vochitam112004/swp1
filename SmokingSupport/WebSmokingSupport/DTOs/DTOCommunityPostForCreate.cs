@@ -6,7 +6,7 @@ namespace WebSmokingSupport.DTOs
     {
         public string? Content   { get; set; }
         public string? Title { get; set; }
-        public string? ImageUrl { get; set; }
+        public IFormFile? ImageUrl { get; set; }
         public DateTime? CreatedAt { get; set; }
     }
 }

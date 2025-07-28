@@ -8,6 +8,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Runtime.InteropServices;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 namespace WebSmokingSupport.Controllers
 {
 
@@ -42,21 +43,36 @@ namespace WebSmokingSupport.Controllers
         }
         [HttpPost]
         [Authorize(Roles ="Member")]
-        public async Task<ActionResult> CreateCommunityPost([FromBody] DTOCommunityPostForCreate dto)
+        public async Task<ActionResult> CreateCommunityPost([FromForm] DTOCommunityPostForCreate dto, [FromServices] IWebHostEnvironment _env)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized();
 
             int userId = int.Parse(userIdClaim.Value);
-
+            string? imageUrl = null; 
+            if(dto.ImageUrl != null && dto.ImageUrl.Length > 0)
+            {
+                var uploadPath = Path.Combine(_env.ContentRootPath, "uploads", "Post");
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+                var fileName = Guid.NewGuid() + Path.GetExtension(dto.ImageUrl.FileName);
+                var filePath = Path.Combine(uploadPath, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.ImageUrl.CopyToAsync(stream);
+                }
+                imageUrl = $"/uploads/Post/{fileName}"; 
+            }
             var post = new CommunityPost
             {
                 Title = dto.Title,
                 Content = dto.Content,
                 CreatedAt = DateTime.UtcNow,
-                ImageUrl = dto.ImageUrl,
-                UserId = userId
+                UserId = userId,
+                ImageUrl = imageUrl,
             };
 
             _context.CommunityPosts.Add(post);
@@ -66,7 +82,7 @@ namespace WebSmokingSupport.Controllers
         }
         [Authorize(Roles = "Member")]
         [HttpPut("{postId}")]
-        public async Task<ActionResult<DTOCommunityPostForRead>> UpdatePost(int postId, [FromBody] DTOComunityPostForUpdate dto)
+        public async Task<ActionResult<DTOCommunityPostForRead>> UpdatePost(int postId, [FromForm] DTOComunityPostForUpdate dto , [FromServices] IWebHostEnvironment _env)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
@@ -83,9 +99,20 @@ namespace WebSmokingSupport.Controllers
             {
                 post.Content = dto.Content;
             }
-            if (!string.IsNullOrWhiteSpace(dto.ImageUrl))
+            if(dto.ImageUrl != null && dto.ImageUrl .Length > 0)
             {
-                post.ImageUrl = dto.ImageUrl;
+                var uploadPath = Path.Combine(_env.ContentRootPath, "uploads", "Post");
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+                var fileName = Guid.NewGuid() + Path.GetExtension(dto.ImageUrl.FileName);
+                var filePath = Path.Combine(uploadPath, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.ImageUrl.CopyToAsync(stream);
+                }
+                post.ImageUrl = $"/uploads/Post/{fileName}"; // Lưu đường dẫn hình ảnh
             }
 
             post.CreatedAt = DateTime.UtcNow;

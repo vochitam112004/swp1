@@ -119,20 +119,30 @@ namespace WebSmokingSupport.Controllers
                 // Kiểm tra xem người dùng đã có GoalPlan đang hoạt động chưa
                 var now = DateOnly.FromDateTime(DateTime.UtcNow);
 
-                var existingActiveGoal = await _context.GoalPlans
-                    .Where(gp => gp.MemberId == memberProfile.MemberId
-                                 && gp.isCurrentGoal == true
-                                 && gp.StartDate <= now
-                                 && gp.TargetQuitDate >= now)
-                    .FirstOrDefaultAsync();
+                var existingGoal = await _context.GoalPlans
+                        .Where(gp => gp.MemberId == memberProfile.MemberId && gp.isCurrentGoal == true)
+                        .FirstOrDefaultAsync();
 
-                if (existingActiveGoal != null)
+                if (existingGoal != null)
                 {
-                    return BadRequest("Bạn đã có một GoalPlan đang hoạt động. Vui lòng hoàn thành hoặc hủy nó trước khi tạo cái mới.");
+                    if (existingGoal.TargetQuitDate >= now)
+                    {
+                        // Nếu vẫn còn hiệu lực, không cho tạo mới
+                        return BadRequest("Bạn đã có một GoalPlan đang hoạt động. Vui lòng hoàn thành hoặc hủy nó trước khi tạo cái mới.");
+                    }
+                    else
+                    {
+                        // Nếu GoalPlan đã hết hạn, cập nhật isCurrentGoal = false
+                        existingGoal.isCurrentGoal = false;
+                        existingGoal.UpdatedAt = DateTime.UtcNow;
+                        _context.GoalPlans.Update(existingGoal);
+                        await _context.SaveChangesAsync();
+                    }
                 }
-
-
-
+                if (goalPlanDto.TargetQuitDate < DateOnly.FromDateTime(DateTime.UtcNow))
+                {
+                    return BadRequest("Ngày mục tiêu phải lớn hơn ngày bắt đầu.");
+                }
                 // Tạo GoalPlan mới và đặt isCurrentGoal = true
                 var newGoalPlan = new GoalPlan
                 {
@@ -152,7 +162,7 @@ namespace WebSmokingSupport.Controllers
                 var goalPlanResponse = new DTOGoalPlanForRead
                 {
                     PlanId = newGoalPlan.PlanId,
-                    MemberId = newGoalPlan.Member.MemberId,
+                    MemberId = newGoalPlan.MemberId ?? 0,
                     MemberName = memberProfile.User?.DisplayName ?? "Unknown User",
                     StartDate = newGoalPlan.StartDate,
                     TargetQuitDate = newGoalPlan.TargetQuitDate,
