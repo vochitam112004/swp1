@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
-import BlogDetailModal from "./BlogDetail";
 import { toast } from "react-toastify";
 import "../../css/Blog.css";
 import { Button } from "@mui/material";
@@ -22,7 +21,6 @@ export default function Blog() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [detail, setDetail] = useState(null);
 
   const token = localStorage.getItem("authToken");
 
@@ -57,7 +55,6 @@ export default function Blog() {
       });
       toast.success("Đã xóa bài viết");
       fetchPosts();
-      setDetail(null); // Đóng modal nếu đang xem bài vừa bị xóa
     } catch (err) {
       console.error("Lỗi xóa bài viết:", err);
       toast.error("Xóa thất bại");
@@ -114,38 +111,40 @@ export default function Blog() {
       ) : (
         <div className="blog__list">
           {paginatedPosts.map((post) => (
-            <div
-              className="blog__item"
+            <Link 
+              to={`/blog/${post.postId}`}
               key={post.postId}
-              onClick={() => setDetail(post)}
+              className="blog__item-link"
             >
-              <div className="blog__content">
-                <h2 className="blog__post-title blog__post-title--clickable">
-                  {post.title || "(Không có tiêu đề)"}
-                </h2>
-                <div className="blog__meta">
-                  <span className="blog__author">
-                    {post.displayName || "Ẩn danh"}
-                  </span>{" "}
-                  -{" "}
-                  <span className="blog__date">
-                    {new Date(post.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <p className="blog__summary">
-                  {post.content?.slice(0, 150) || "(Không có nội dung)"}...
-                </p>
+              <div className="blog__item">
+                <div className="blog__content">
+                  <h2 className="blog__post-title blog__post-title--clickable">
+                    {post.title || "(Không có tiêu đề)"}
+                  </h2>
+                  <div className="blog__meta">
+                    <span className="blog__author">
+                      {post.displayName || "Ẩn danh"}
+                    </span>{" "}
+                    -{" "}
+                    <span className="blog__date">
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="blog__summary">
+                    {post.content?.slice(0, 150) || "(Không có nội dung)"}...
+                  </p>
 
-                {token && (
-                  <button
-                    className="blog__delete-button"
-                    onClick={(e) => handleDelete(e, post.postId)}
-                  >
-                    Xóa
-                  </button>
-                )}
+                  {token && (
+                    <button
+                      className="blog__delete-button"
+                      onClick={(e) => handleDelete(e, post.postId)}
+                    >
+                      Xóa
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
@@ -164,10 +163,6 @@ export default function Blog() {
             </button>
           ))}
         </div>
-      )}
-
-      {detail && (
-        <BlogDetailModal post={detail} onClose={() => setDetail(null)} />
       )}
     </div>
   );

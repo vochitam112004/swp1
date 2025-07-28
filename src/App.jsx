@@ -13,6 +13,7 @@ import Footer from "./components/layout/footer";
 import Register from "./components/auth/Register";
 import Blog from "./components/common/Blog";
 import BlogPostForm from "./components/common/BlogPostForm";
+import BlogDetail from "./components/common/BlogDetail";
 import BXH from "./components/dashboard/BXH";
 import About from "./components/common/About";
 import Profile from "./components/profile/Profile";
@@ -99,6 +100,7 @@ function AppContent() {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/create" element={<BlogPostForm />} />
+          <Route path="/blog/:postId" element={<BlogDetail />} />
           <Route path="/bxh" element={<BXH />} />
           <Route path="/login" element={<Login />} />
           <Route
