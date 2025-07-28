@@ -1,18 +1,10 @@
   import axios from "axios";
 
-<<<<<<< Updated upstream
   export const baseApiUrl = "https://783a1d747dbf.ngrok-free.app" // dùng để up ảnh từ máy
 
   const api = axios.create({
 
     baseURL: "https://783a1d747dbf.ngrok-free.app/api", // Thay bằng base URL backend của bạn
-=======
-  export const baseApiUrl = "https://localhost:7254" // dùng để up ảnh từ máy
-
-  const api = axios.create({
-
-    baseURL: "https://localhost:7254/api", // Thay bằng base URL backend của bạn
->>>>>>> Stashed changes
     headers: {
       "Content-Type": "application/json"
     }
