@@ -122,8 +122,6 @@ export default function BXH() {
                       </Box>
                     </TableCell>
 
-                    {/* 👉 Cột Huy hiệu riêng biệt */}
-                    {/* 👉 Cột Huy hiệu riêng biệt */}
                     <TableCell>
                       <Box display="flex" gap={0.5} flexWrap="wrap">
                         {user.badges?.map((badge) => (

@@ -65,10 +65,9 @@ export default function Login() {
         token: response.data.token,
       };
 
-      localStorage.setItem("authToken", response.data.token);
-      localStorage.setItem("user", JSON.stringify(userData));
       login(userData);
       toast.success("Đăng nhập thành công!");
+
       switch (u.userType) {
         case "Admin":
           navigate("/admin");

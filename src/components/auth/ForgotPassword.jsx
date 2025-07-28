@@ -14,7 +14,7 @@ export default function ForgotPassword() {
   const handleSendOTP = async () => {
     if (!email) return toast.error("Vui lòng nhập email!");
     try {
-      await api.post("/Auth/request-reset", { email }); // ⬅️ bạn đổi path theo backend
+      await api.post("/Auth/request-reset", { email }); // bạn đổi path theo backend
       toast.success("Đã gửi mã OTP đến email!");  
       setStep(2);
     } catch {
@@ -25,7 +25,7 @@ export default function ForgotPassword() {
   const handleVerifyOTP = async () => {
     if (!otp) return toast.error("Vui lòng nhập mã OTP!");
     try {
-      await api.post("/Auth/verify-otp", {email, otpCode: otp }); // ⬅️ bạn đổi path theo backend
+      await api.post("/Auth/verify-otp", {email, otpCode: otp }); // bạn đổi path theo backend
       toast.success("Xác thực OTP thành công!");
       setStep(3);
     } catch {
