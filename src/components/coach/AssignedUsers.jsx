@@ -9,12 +9,16 @@ import {
   Typography,
   Box,
 } from "@mui/material";
+import ChatIcon from '@mui/icons-material/Chat';
 import { useEffect, useState } from "react"
 import '../../css/Blog.css'
 import api from "../../api/axios";
+import ChatSupport from "../chat/ChatSupport";
 
 export default function AssignedUsers() {
-  const [users, setUsers] = useState([])
+  const [users, setUsers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedDisplayName, setSelectedDisplayName] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -27,10 +31,21 @@ export default function AssignedUsers() {
     }
     fetchUsers().then(data => {
       if (data) {
-        setUsers(data)
+        const memberUsers = data.filter(user => user.userType === "Member");
+        setUsers(memberUsers);
       }
     })
   }, [])
+
+  const handleChat = (userId, displayName) => {
+    setSelectedUserId(userId);
+    setSelectedDisplayName(displayName);
+  };
+
+  const handleCloseChat = () => {
+    setSelectedUserId(null);
+    setSelectedDisplayName("");
+  };
 
   return (
     <div>
@@ -41,8 +56,10 @@ export default function AssignedUsers() {
               <TableCell><strong>Người dùng</strong></TableCell>
               <TableCell align="center"><strong>Địa chỉ</strong></TableCell>
               <TableCell align="center"><strong>Số điện thoại</strong></TableCell>
+              <TableCell align="left"><strong>Email</strong></TableCell>
               <TableCell align="center"><strong>Trạng thái</strong></TableCell>
               <TableCell align="center"><strong>Ngày tạo</strong></TableCell>
+              <TableCell align="center"><strong>Nhắn tin</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -59,13 +76,27 @@ export default function AssignedUsers() {
                 </TableCell>
                 <TableCell align="center">{user.address}</TableCell>
                 <TableCell align="center">{user.phoneNumber}</TableCell>
+                <TableCell align="center">{user.email}</TableCell>
                 <TableCell align="center">{user.isActive ? "Đang hoạt động" : "Không còn sử dụng"}</TableCell>
                 <TableCell align="center">{new Date(user.createdAt).toLocaleDateString("vi-VN")}</TableCell>
+                <TableCell align="center">
+                  <ChatIcon
+                    sx={{ cursor: 'pointer', color: '#1976d2' }}
+                    onClick={() => handleChat(user.userId, user.displayName)}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+      {selectedUserId && (
+        <ChatSupport
+          targetUserId={selectedUserId}
+          targetDisplayName={selectedDisplayName}
+          onClose={handleCloseChat}
+        />
+      )}
     </div>
   )
 }

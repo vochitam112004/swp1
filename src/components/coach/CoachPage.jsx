@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import AssignedUsers from "./AssignedUsers";
 import UserProgress from "./UserProgress";
-import SendAdvice from "./SendAdvice";
 import UserPlans from "./UserPlans";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -99,7 +98,6 @@ export default function CoachDashboard() {
         >
           <Tab label="Người dùng được phân công" />
           <Tab label="Tiến trình & Sức khỏe" />
-          <Tab label="Tư vấn cá nhân" />
           <Tab label="Huy hiệu động viên" />
           <Tab label="Hồ sơ huấn luyện viên" />
         </Tabs>
@@ -107,7 +105,6 @@ export default function CoachDashboard() {
 
       {tab === 0 && <AssignedUsers />}
       {tab === 1 && <UserProgress />}
-      {tab === 2 && <SendAdvice />}
       {tab === 3 && <UserPlans />}
       {tab === 4 && <Profile />}
     </Box>

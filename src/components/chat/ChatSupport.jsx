@@ -19,7 +19,7 @@ const getSenderLabel = (fromId, currentUserId, senderName) => {
   return fromId === currentUserId ? "Bạn" : senderName;
 };
 
-const ChatSupport = ({ targetUserId, onClose }) => {
+const ChatSupport = ({ targetUserId, onClose, targetDisplayName }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,17 +40,17 @@ const ChatSupport = ({ targetUserId, onClose }) => {
     },
   };
 
-  const markMessagesAsRead = async (msgs) => {
-    for (const msg of msgs) {
-      if (!msg.isRead && msg.messageId) {
-        try {
-          await api.post(`/ChatMessage/mark-as-read/${msg.messageId}`);
-        } catch (err) {
-          console.error("Không thể đánh dấu tin nhắn đã đọc", msg.messageId, err);
-        }
-      }
-    }
-  };
+  // const markMessagesAsRead = async (msgs) => {
+  //   for (const msg of msgs) {
+  //     if (!msg.isRead && msg.messageId) {
+  //       try {
+  //         await api.post(`/ChatMessage/mark-as-read/${msg.messageId}`);
+  //       } catch (err) {
+  //         console.error("Không thể đánh dấu tin nhắn đã đọc", msg.messageId, err);
+  //       }
+  //     }
+  //   }
+  // };
 
   const fetchData = useCallback(async () => {
     if (role === "user") {
@@ -80,7 +80,7 @@ const ChatSupport = ({ targetUserId, onClose }) => {
         }))
         : [{ senderId: null, senderDisplayName: "Hệ thống", content: "Xin chào! Tôi có thể giúp gì cho bạn?" }];
       setMessages(msgs);
-      markMessagesAsRead(msgs);
+      // markMessagesAsRead(msgs);
     } catch (err) {
       console.log(err)
       setMessages([{ senderId: null, senderDisplayName: "Hệ thống", content: "Không thể tải tin nhắn." }]);
@@ -143,10 +143,10 @@ const ChatSupport = ({ targetUserId, onClose }) => {
   return (
     <div style={styles.chatContainer}>
       <div style={styles.header}>
-        Nhắn tin
+        Nhắn tin: {targetDisplayName}
         <span style={{ float: "right", cursor: "pointer" }} onClick={onClose}>✕</span>
       </div>
-      {role === "user" && (
+      {role === "user" && !targetUserId && (
         <div style={{ padding: "16px 24px 8px 24px", borderBottom: "1px solid #e3e3e3", background: "#f5f7fa" }}>
           <label style={{ fontWeight: 600, color: "#1976d2", marginBottom: 6, display: "block" }}>
             Chọn huấn luyện viên:
