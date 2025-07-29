@@ -78,32 +78,11 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-          <div className="col-6 col-md-3">
-            <h3 className="text-uppercase fs-6 fw-semibold mb-3">Kết nối</h3>
-            <div className="mb-3 d-flex gap-3">
-              <a
-                href="https://www.facebook.com/groups/707621863012993"
-                className="text-secondary fs-4"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="fab fa-facebook-f"></i>
-              </a>
-            </div>
-          </div>
         </div>
         <div className="mt-5 border-top border-secondary pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
           <p className="mb-2 mb-md-0 text-secondary text-center text-md-start">
             &copy; 2025 Breathe Free. All rights reserved.
           </p>
-          <div className="d-flex gap-4">
-            <a href="#" className="text-secondary text-decoration-none">
-              Chính sách bảo mật
-            </a>
-            <a href="#" className="text-secondary text-decoration-none">
-              Điều khoản sử dụng
-            </a>
-          </div>
         </div>
       </div>
     </footer>

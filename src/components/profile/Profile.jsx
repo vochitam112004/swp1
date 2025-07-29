@@ -300,20 +300,22 @@ export default function Profile() {
           </Box>
         )}
 
-        <Box className="membership-history" sx={{ mt: 6 }}>
-          <Typography className="membership-history-title">Lịch sử gói thành viên</Typography>
-          {history.length === 0 ? (
-            <Typography className="membership-history-empty">Chưa có lịch sử.</Typography>
-          ) : (
-            <ul className="membership-history-list">
-              {history.map((h, idx) => (
-                <li key={idx}>
-                  {h.planName} ({new Date(h.startDate).toLocaleDateString("vi-VN")} - {h.endDate ? new Date(h.endDate).toLocaleDateString("vi-VN") : "Hiện tại"})
-                </li>
-              ))}
-            </ul>
-          )}
-        </Box>
+        {user?.userType === "Member" && (
+          <Box className="membership-history" sx={{ mt: 6 }}>
+            <Typography className="membership-history-title">Lịch sử gói thành viên</Typography>
+            {history.length === 0 ? (
+              <Typography className="membership-history-empty">Chưa có lịch sử.</Typography>
+            ) : (
+              <ul className="membership-history-list">
+                {history.map((h, idx) => (
+                  <li key={idx}>
+                    {h.planName} ({new Date(h.startDate).toLocaleDateString("vi-VN")} - {h.endDate ? new Date(h.endDate).toLocaleDateString("vi-VN") : "Hiện tại"})
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Box>
+        )}
       </Paper>
     </Box>
   );

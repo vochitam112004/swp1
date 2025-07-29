@@ -56,7 +56,7 @@ export default function AssignedUsers() {
               <TableCell><strong>Người dùng</strong></TableCell>
               <TableCell align="center"><strong>Địa chỉ</strong></TableCell>
               <TableCell align="center"><strong>Số điện thoại</strong></TableCell>
-              <TableCell align="left"><strong>Email</strong></TableCell>
+              <TableCell align="center"><strong>Email</strong></TableCell>
               <TableCell align="center"><strong>Trạng thái</strong></TableCell>
               <TableCell align="center"><strong>Ngày tạo</strong></TableCell>
               <TableCell align="center"><strong>Nhắn tin</strong></TableCell>
