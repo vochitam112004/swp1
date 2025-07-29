@@ -85,7 +85,6 @@ export default function Login() {
     }
   };
 
-  // ✅ Nếu đã đăng nhập, hiện avatar và nút đăng xuất
   if (user) {
     return (
       <Box className="auth-bg" sx={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
@@ -115,7 +114,6 @@ export default function Login() {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", fontFamily: 'Poppins, sans-serif' }}>
-      {/* ✅ Bên trái: Hình nền với overlay và lời chào */}
       <Box
         sx={{
           flex: 1,
@@ -124,7 +122,6 @@ export default function Login() {
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
           color: "#fff",
-          display: { xs: 'none', md: 'flex' }, // ✅ Ẩn trên thiết bị nhỏ
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",

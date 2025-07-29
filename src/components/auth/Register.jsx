@@ -65,7 +65,6 @@ export default function Register() {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", fontFamily: 'Poppins, sans-serif' }}>
-      {/* ✅ Bên trái: Hình ảnh & lời chào */}
       <Box
         sx={{
           flex: 1,
@@ -110,7 +109,6 @@ export default function Register() {
         </Button>
       </Box>
 
-      {/* ✅ Bên phải: Form đăng ký */}
       <Box
         sx={{
           flex: 1,

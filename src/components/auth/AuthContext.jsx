@@ -4,7 +4,7 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [authToken, setAuthToken] = useState(null); // ✅ thêm dòng này
+  const [authToken, setAuthToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,12 +14,12 @@ export function AuthProvider({ children }) {
       setUser(JSON.parse(savedUser));
       setAuthToken(savedToken);
     }
-    setLoading(false); // đánh dấu đã load xong
+    setLoading(false);
   }, []);
 
   const login = (userData) => {
     setUser(userData);
-    setAuthToken(userData.token); // giả sử token nằm trong userData
+    setAuthToken(userData.token);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("authToken", userData.token);
   };

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Box,
-  Typography,
   Tabs,
   Tab,
   Paper,
@@ -19,8 +18,8 @@ import "../../css/Coach.css";
 
 export default function CoachDashboard() {
   const [tab, setTab] = useState(0);
-  const { user, logout } = useAuth(); // ✅ lấy user từ context
-  const [anchorEl, setAnchorEl] = useState(null); // ✅ anchor cho menu
+  const { user, logout } = useAuth();
+  const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
 
   const handleTabChange = (event, newValue) => {
@@ -28,7 +27,7 @@ export default function CoachDashboard() {
   };
 
   const handleAvatarClick = (event) => {
-    setAnchorEl(event.currentTarget); // ✅ mở menu
+    setAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
@@ -36,14 +35,14 @@ export default function CoachDashboard() {
   };
 
   const handleLogout = () => {
-    logout(); // ✅ gọi từ context
+    logout();
     handleMenuClose();
     navigate("/");
   };
 
   const handleProfile = () => {
     handleMenuClose();
-    setTab(4);
+    setTab(3);
   };
 
   return (
