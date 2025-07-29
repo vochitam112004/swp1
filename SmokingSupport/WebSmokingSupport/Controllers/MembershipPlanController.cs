@@ -21,6 +21,7 @@ namespace WebSmokingSupport.Controllers
             _membershipPlanRepository = membershipPlanRepository;
         }
         [HttpGet]
+        [Authorize(Roles = "Admin,Member,Coach")]
         public async Task<ActionResult<IEnumerable<DTOMembershipPlanForRead>>> GetAllMembershipPlan()
         {
             var membershipPlans = await _membershipPlanRepository.GetAllAsync();
@@ -66,6 +67,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(MembershipPlan);
         }
         [HttpPut("{planId}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<DTOMembershipPlanForUpdate>> UpdateMembershipPlans(int planId ,[FromBody] DTOMembershipPlanForUpdate dto)
         {
             if (!ModelState.IsValid)
