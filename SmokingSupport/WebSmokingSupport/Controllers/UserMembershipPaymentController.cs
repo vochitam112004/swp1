@@ -49,7 +49,7 @@ namespace WebSmokingSupport.Controllers
             if (plan == null) return NotFound("Không tìm thấy gói");
 
             var now = DateTime.Now;
-            var endDate = now.AddDays(plan.DurationInDays); // hoặc AddDays(30)
+            var endDate = now.AddDays(plan.DurationDays); // hoặc AddDays(30)
 
             var history = new UserMembershipHistory
             {
