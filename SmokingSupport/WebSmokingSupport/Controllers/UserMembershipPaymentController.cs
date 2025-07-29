@@ -29,21 +29,28 @@ namespace WebSmokingSupport.Controllers
 
         [HttpGet]
         [Route("PaymentExecute")]
-        public async Task<IActionResult> PaymentCallBack()
+        public async Task<IActionResult> PaymentCallBack(string? orderInfo)
         {
             var collection = HttpContext.Request.Query;
 
+            // Kiểm tra trạng thái giao dịch từ Momo
+            collection.TryGetValue("resultCode", out var resultCode);
+            if (resultCode != "0")
+            {
+                return BadRequest("Thanh toán thất bại hoặc bị hủy.");
+            }
+
+            // Lấy các tham số cần thiết
             collection.TryGetValue("amount", out var amount);
             collection.TryGetValue("orderInfo", out var orderInfo);
             collection.TryGetValue("orderId", out var orderId);
 
-            // Tách userId - planId từ orderInfo (ví dụ "5-2")
+            // Tách userId - planId từ orderInfo 
             var parts = orderInfo.ToString().Split("-");
             if (parts.Length != 2) return BadRequest("Thông tin orderInfo không hợp lệ");
 
-            int userId = int.Parse(parts[0]);
-            int planId = int.Parse(parts[1]);
-
+             if (!int.TryParse(parts[0], out int userId) || !int.TryParse(parts[1], out int planId))
+        return BadRequest("UserId hoặc PlanId không hợp lệ.");
             // Lấy plan từ DB
             var plan = await _context.MembershipPlans.FindAsync(planId);
             if (plan == null) return NotFound("Không tìm thấy gói");
@@ -64,6 +71,8 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(new MomoExecuteResponseModel()
             {
+                Status = "Success",
+                Message = "Giao dịch Momo đã được xử lý thành công",
                 Amount = amount,
                 OrderId = orderId,
                 OrderInfo = orderInfo,
