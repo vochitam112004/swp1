@@ -29,7 +29,7 @@ namespace WebSmokingSupport.Controllers
 
         [HttpGet]
         [Route("PaymentExecute")]
-        public async Task<IActionResult> PaymentCallBack(string? orderInfo)
+        public async Task<IActionResult> PaymentCallBack()
         {
             var collection = HttpContext.Request.Query;
 
