@@ -128,6 +128,8 @@ namespace WebSmokingSupport.Controllers
             }
             var roles = User.FindFirst(ClaimTypes.Role)?.Value;
             IQueryable<Appointment> appointmentsQuery;
+
+            // 🔹 Nếu là Member => chỉ xem appointment của chính mình
             if (roles == "Member")
             {
                 appointmentsQuery = _context.Appointments
@@ -160,7 +162,9 @@ namespace WebSmokingSupport.Controllers
             {
                 AppointmentId = a.AppointmentId,
                 MemberId = a.MemberId,
+                MemberUserId = a.Member?.UserId,
                 CoachId = a.CoachId,
+                CoachUserId = a.Coach?.UserId,
                 MemberName = a.Member?.User?.DisplayName ?? "Unknown Member",
                 CoachName = a.Coach?.Coach?.DisplayName ?? "Unknown Coach",
                 AppointmentDate = a.AppointmentDate,
