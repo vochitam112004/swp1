@@ -10,7 +10,7 @@
         public string? RequestType { get; set; }
         public string? PayUrl { get; set; }
         public string? Signature { get; set; }
-        public string? QrCodeUrl { get; set; }
+        public string? QrCodeUrl { get; set; } 
         public string? Deeplink { get; set; }
         public string? DeeplinkWebInApp { get; set; }
 

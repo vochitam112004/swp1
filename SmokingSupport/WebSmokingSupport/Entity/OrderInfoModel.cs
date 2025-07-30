@@ -2,14 +2,10 @@
 {
     public class OrderInfoModel
     {
-
-        public string OrderId { get; set; } = string.Empty;
-        public string Amount { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
-
-        public int UserId { get; set; }
-        public int PlanId { get; set; }
-
-        public string OrderInfo => $"{UserId}-{PlanId}";
+        public string OrderId { get; set; }
+        public long Amount { get; set; }
+        public string OrderInfo { get; set; } // Sẽ lưu trữ "userId-planId"
+        public int UserId { get; set; } // Đã thêm để truyền trực tiếp userId
+        public int PlanId { get; set; } // Đã thêm để truyền trực tiếp planId
     }
 }
