@@ -10,15 +10,14 @@
     }
   });
 
-  // Interceptor để tự gắn token vào header
   api.interceptors.request.use((config) => {
     config.headers["ngrok-skip-browser-warning"] = "true";
     const token = localStorage.getItem("authToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("🔐 Token attached:", token); // DEBUG
+      console.log("Token attached:", token);
     } else {
-      console.warn("⚠️ No token found");
+      console.warn("No token found");
     }
     //
     return config;

@@ -40,7 +40,6 @@ export default function BXH() {
         const badges = Array.isArray(badgeRes.data) ? badgeRes.data : [];
 
         const rankingWithBadges = rankingData.map((user) => {
-          // Chọn huy hiệu mà điểm yêu cầu <= điểm của người dùng
           const userBadges = badges.filter(
             (badge) => badge.requiredScore <= user.score
           );

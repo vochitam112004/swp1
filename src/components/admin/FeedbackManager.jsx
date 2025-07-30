@@ -161,7 +161,7 @@ export default function FeedbackManager() {
             }}
           >
             <Typography fontWeight={600}>
-              {fb.isType ? "Ẩn danh" : fb.disPlayName || "Ẩn danh"} (
+              {fb.disPlayName || "(Không có tên)"} (
               {fb.isType ? "Feedback dành cho Coach" : "Feedback trải nghiệm hệ thống"})
             </Typography>
             <Rating value={fb.rating} readOnly size="small" />

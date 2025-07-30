@@ -18,7 +18,6 @@ export default function UserManager() {
     fetchData();
   }, []);
 
-  // Đặt bên ngoài useEffect
   const fetchData = async () => {
     try {
       const [userRes, membershipRes] = await Promise.all([

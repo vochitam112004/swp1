@@ -15,6 +15,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Profile from "../profile/Profile";
 import "../../css/Coach.css";
+import AppointmentList from "./AppointmentList";
 
 export default function CoachDashboard() {
   const [tab, setTab] = useState(0);
@@ -42,7 +43,7 @@ export default function CoachDashboard() {
 
   const handleProfile = () => {
     handleMenuClose();
-    setTab(3);
+    setTab(4);
   };
 
   return (
@@ -95,17 +96,18 @@ export default function CoachDashboard() {
             },
           }}
         >
-          <Tab label="Người dùng được phân công" />
+          <Tab label="Danh sách người dùng" />
           <Tab label="Tiến trình & Sức khỏe" />
           <Tab label="Kế hoạch cai thuốc của người dùng" />
-          <Tab label="Hồ sơ huấn luyện viên" />
+          <Tab label="Danh sách lịch hẹn" />
         </Tabs>
       </Paper>
 
       {tab === 0 && <AssignedUsers />}
       {tab === 1 && <UserProgress />}
       {tab === 2 && <UserPlans />}
-      {tab === 3 && <Profile />}
+      {tab === 3 && <AppointmentList/>}
+      {tab === 4 && <Profile />}
     </Box>
   );
 }
