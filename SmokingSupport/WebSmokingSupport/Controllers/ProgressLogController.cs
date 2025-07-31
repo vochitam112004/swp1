@@ -131,8 +131,12 @@ namespace WebSmokingSupport.Controllers
             var member = await _context.MemberProfiles.FirstOrDefaultAsync(m => m.UserId == userId);
             if (member == null) return NotFound("Member not found");
 
+         
+
+
             // 1. Tìm GoalPlan đang hoạt động vào ngày được chọn
-            var logDateOnly = DateOnly.FromDateTime(dto.LogDate.ToDateTime(TimeOnly.MinValue)); // chuyển DateTime thành  DateOnly
+            // 1. Tìm GoalPlan đang hoạt động vào ngày được chọn
+            var logDateOnly = DateOnly.FromDateTime(dto.LogDate.ToDateTime(TimeOnly.MinValue)); // chuyển DateTime -> DateOnly
 
             var currentGoalPlan = await _context.GoalPlans
                 .FirstOrDefaultAsync(g =>
