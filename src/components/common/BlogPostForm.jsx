@@ -1,36 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../../api/axios"; // Giả sử axios.js đã được cấu hình interceptor
+import { Button } from "@mui/material";
+import api from "../../api/axios";
+import "../../css/Blog.css";
 
 export default function BlogPostForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("authToken");
 
-  // Cải thiện luồng chuyển hướng nếu chưa đăng nhập
   useEffect(() => {
     if (!token) {
       toast.warn("Bạn cần đăng nhập để đăng bài.");
       navigate("/login");
     }
   }, [token, navigate]);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setImage(file);
-      setPreview(URL.createObjectURL(file));
-    } else {
-      setImage(null);
-      setPreview(null);
-      toast.error("Vui lòng chọn file ảnh hợp lệ!");
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,34 +26,26 @@ export default function BlogPostForm() {
       return;
     }
     setLoading(true);
-
     try {
-      let imageUrl = "";
-      if (image) {
-        const formData = new FormData();
-        formData.append("file", image);
-        // BỎ header thủ công, interceptor sẽ tự làm
-        const res = await api.post("/Upload/image", formData);
-        imageUrl = res.data.url; // Giả sử API trả về { url: '...' }
-      }
+      const formData = new FormData();
+      formData.append("Title", title);
+      formData.append("Content", content);
+      formData.append("CreatedAt", new Date().toISOString());
 
-      await api.post("/CommunityPost", {
-        title,
-        content,
-        image: imageUrl,
+      await api.post("/CommunityPost", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       toast.success("Đăng bài thành công!");
-      navigate("/blog"); // Chuyển hướng sau khi thành công
+      navigate("/blog");
     } catch (err) {
-      const errorMessage = err.response?.data?.message || "Đăng bài thất bại!";
-      toast.error(errorMessage);
+      console.error(err);
+      toast.error(err.response?.data?.message || "Đăng bài thất bại!");
     } finally {
       setLoading(false);
     }
   };
 
-  // Nếu chưa có token, không hiển thị form để tránh flicker
   if (!token) {
     return <div>Bạn cần <Link to="/login">đăng nhập</Link> để đăng bài.</div>;
   }
@@ -80,7 +59,7 @@ export default function BlogPostForm() {
         className="blog-form__input"
         placeholder="Tiêu đề"
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        onChange={(e) => setTitle(e.target.value)}
         required
       />
 
@@ -88,33 +67,14 @@ export default function BlogPostForm() {
         className="blog-form__textarea"
         placeholder="Nội dung"
         value={content}
-        onChange={e => setContent(e.target.value)}
+        onChange={(e) => setContent(e.target.value)}
         required
         rows={8}
       />
-
-      <div>
-        <label className="blog-form__label">
-          Ảnh đại diện bài viết:
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="blog-form__file-input"
-          />
-        </label>
-
-        {preview && (
-          <div>
-            <img src={preview} alt="preview" className="blog-form__preview" />
-          </div>
-        )}
-      </div>
 
       <button type="submit" disabled={loading} className="blog-form__submit">
         {loading ? "Đang đăng..." : "Đăng bài"}
       </button>
     </form>
-
   );
 }
