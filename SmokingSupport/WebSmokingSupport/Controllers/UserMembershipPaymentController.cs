@@ -61,67 +61,57 @@ namespace WebSmokingSupport.Controllers
             return Ok(new { PayUrl = response.PayUrl, QrCodeUrl = response.QrCodeUrl });
         }
 
-        [HttpGet]
-        [Route("PaymentExecute")]
-        public async Task<IActionResult> PaymentCallBack()
+
+        [HttpPost]
+        [Route("PaymentNotify")]
+        public async Task<IActionResult> PaymentNotify([FromBody] MomoNotifyModel notify)
         {
-            var collection = HttpContext.Request.Query;
-
-            // Kiểm tra trạng thái giao dịch từ Momo
-            collection.TryGetValue("resultCode", out var resultCode);
-            if (resultCode != "0")
-            {
+            if (notify.resultCode != 0)
                 return BadRequest("Thanh toán thất bại hoặc bị hủy.");
-            }
 
-            // Lấy các tham số cần thiết
-            collection.TryGetValue("amount", out var amount);
-            collection.TryGetValue("orderInfo", out var orderInfo);
-            collection.TryGetValue("orderId", out var orderId);
-
-            // Tách userId - planId từ orderInfo
-            // Định dạng dự kiến là "userId-planId" dựa trên cách nó được gửi từ CreatePaymentMomo
-            var parts = orderInfo.ToString().Split("-");
+            var parts = notify.orderInfo.Split("-");
             if (parts.Length != 2)
-            {
-                return BadRequest("Thông tin orderInfo không hợp lệ. Định dạng mong muốn: 'userId-planId'");
-            }
+                return BadRequest("orderInfo không hợp lệ.");
 
             if (!int.TryParse(parts[0], out int userId) || !int.TryParse(parts[1], out int planId))
-            {
-                return BadRequest("UserId hoặc PlanId không hợp lệ trong orderInfo.");
-            }
+                return BadRequest("UserId hoặc PlanId không hợp lệ.");
 
-            // Lấy plan từ DB
             var plan = await _context.MembershipPlans.FindAsync(planId);
             if (plan == null)
-            {
-                return NotFound("Không tìm thấy gói thành viên tương ứng.");
-            }
+                return NotFound("Không tìm thấy gói.");
 
             var now = DateTime.Now;
-            var endDate = now.AddDays(plan.DurationDays);
-
             var history = new UserMembershipHistory
             {
                 UserId = userId,
                 PlanId = planId,
                 StartDate = now,
-                EndDate = endDate
+                EndDate = now.AddDays(plan.DurationDays)
             };
 
             _context.UserMembershipHistories.Add(history);
             await _context.SaveChangesAsync();
 
-            return Ok(new MomoExecuteResponseModel()
-            {
-                Status = "Success",
-                Message = "Giao dịch MoMo đã được xử lý thành công",
-                Amount = amount.ToString(), // Đảm bảo amount là string theo MomoExecuteResponseModel
-                OrderId = orderId.ToString(),
-                OrderInfo = orderInfo.ToString(),
-                FullName = "" // FullName có thể để trống hoặc lấy từ dịch vụ người dùng nếu cần
-            });
+            return Ok(new { message = "Giao dịch thành công" });
         }
+
+
+        [HttpGet]
+        [Route("PaymentExecute")]
+        public IActionResult PaymentCallBack()
+        {
+            // Lấy resultCode để hiển thị kết quả
+            var collection = HttpContext.Request.Query;
+            collection.TryGetValue("resultCode", out var resultCode);
+
+            if (resultCode != "0")
+            {
+                return Content("<h1>Thanh toán thất bại hoặc bị hủy.</h1>", "text/html");
+            }
+
+            // Hiển thị trang thành công
+            return Content("<h1>Thanh toán thành công!</h1><p>Bạn có thể đóng trang này.</p>", "text/html");
+        }
+
     }
 }
