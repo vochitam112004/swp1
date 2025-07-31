@@ -16,7 +16,7 @@ namespace WebSmokingSupport.Repositories
 
         public Task SaveOtpAsync(string email, string otp)
         {
-            _cache.Set(email, otp, TimeSpan.FromMinutes(5)); 
+            _cache.Set(email, otp, TimeSpan.FromMinutes(5)); // OTP có hiệu lực 5 phút
             return Task.CompletedTask;
         }
 

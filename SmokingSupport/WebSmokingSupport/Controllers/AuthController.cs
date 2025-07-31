@@ -58,7 +58,7 @@ namespace WebSmokingSupport.Controllers
                 var name = payload.Name;
                 var avatarUrl = payload.Picture;
 
-                // Kiểm tra người dùng tồn tại 
+                // Kiểm tra người dùng đã tồn tại chưa
                 var user = await _userRepository.GetByEmailAsync(email);
 
                 if (user == null)
@@ -181,6 +181,7 @@ namespace WebSmokingSupport.Controllers
             });
         }
         [HttpPost("request-reset")]
+      
         public async Task<ActionResult> RequestPasswordReset([FromBody] DTOForgotPasswordRequestDTO dto)
         {
             if (!ModelState.IsValid)
@@ -210,9 +211,13 @@ namespace WebSmokingSupport.Controllers
             }
             catch (Exception ex)
             {
-               
+                // Ghi log lỗi gửi email nhưng vẫn trả về thành công cho người dùng
+                // để tránh tiết lộ thông tin email có tồn tại hay không.
                 Console.WriteLine($"[ERROR] Không thể gửi OTP đến email {user.Email}: {ex.Message}");
+                // Bạn có thể ghi log chi tiết hơn bằng ILogger nếu có.
             }
+
+
             Console.WriteLine($"[DEBUG] OTP gửi đến email {user.Email}: {otp}");
 
             return Ok("Password reset request successful. Please check your email for the OTP code.");
