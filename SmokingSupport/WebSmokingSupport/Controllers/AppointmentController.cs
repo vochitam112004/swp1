@@ -228,10 +228,11 @@ namespace WebSmokingSupport.Controllers
             if (userIdClaim == null) return Unauthorized();
             int userId = int.Parse(userIdClaim);
 
-        
-            if (appointment.Member?.UserId != userId && appointment.Coach?.CoachId != userId)
+
+            if (appointment.Member?.UserId != userId && appointment.Coach?.UserId != userId)
                 return Forbid("You are not allowed to update this appointment.");
-            if(!string.IsNullOrEmpty(dto.MeetingLink))
+
+            if (!string.IsNullOrEmpty(dto.MeetingLink))
             {
                 appointment.MeetingLink = dto.MeetingLink;
             }
