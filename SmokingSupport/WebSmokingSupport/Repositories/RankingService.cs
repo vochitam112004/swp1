@@ -10,13 +10,13 @@ namespace WebSmokingSupport.Repositories
         private readonly QuitSmokingSupportContext _context;
         private readonly IGenericRepository<Ranking> _rankingRepository;
         private readonly IGenericRepository<UserBadge> _userBadgeRepository;
-        private readonly IGenericRepository<Badge> _badgeRepository; // Để truy vấn thông tin huy hiệu
+        private readonly IGenericRepository<Badge> _badgeRepository; 
 
         public RankingService(
             QuitSmokingSupportContext context,
             IGenericRepository<Ranking> rankingRepository,
             IGenericRepository<UserBadge> userBadgeRepository,
-            IGenericRepository<Badge> badgeRepository) // Inject BadgeRepository
+            IGenericRepository<Badge> badgeRepository) 
         {
             _context = context;
             _rankingRepository = rankingRepository;
@@ -26,10 +26,9 @@ namespace WebSmokingSupport.Repositories
 
         public async Task UpdateUserScoreAndBadges(int userId, int smokeFreeDays)
         {
-            // --- 1. Tính toán điểm số ---
+            // tinh diem 
             int calculatedScore = CalculateScore(smokeFreeDays);
 
-            // Cập nhật hoặc tạo bản ghi Ranking
             var ranking = await _context.Rankings.FirstOrDefaultAsync(r => r.UserId == userId);
             if (ranking == null)
             {
@@ -43,7 +42,6 @@ namespace WebSmokingSupport.Repositories
             }
             else
             {
-                // Chỉ cập nhật nếu điểm mới cao hơn
                 if (calculatedScore > ranking.Score)
                 {
                     ranking.Score = calculatedScore;
