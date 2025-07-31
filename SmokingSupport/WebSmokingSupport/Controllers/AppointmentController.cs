@@ -81,18 +81,6 @@ namespace WebSmokingSupport.Controllers
                 return Unauthorized("You are not authorized to create an appointment.");
             }
 
-            //check schedule conflict
-            bool conflict = await _context.Appointments.AnyAsync(a =>
-                a.CoachId == CoachId &&
-                a.AppointmentDate == dto.AppointmentDate &&
-                a.StartTime < dto.EndTime &&
-                dto.StartTime < a.EndTime);
-
-            if (conflict)
-            {
-                return Conflict("Appointment time overlaps with another booking.");
-            }
-
             var appointment = new Appointment
             {
                 MemberId = memberId,
