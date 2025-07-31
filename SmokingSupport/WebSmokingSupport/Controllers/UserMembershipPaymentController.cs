@@ -15,12 +15,11 @@ namespace WebSmokingSupport.Controllers
     {
         private readonly IMomoService _momoService;
         private readonly QuitSmokingSupportContext _context;
-        private readonly ILogger<UserMembershipPaymentController> _logger;
-        public UserMembershipPaymentController(IMomoService momoService, QuitSmokingSupportContext context, ILogger<UserMembershipPaymentController> logger)
+
+        public UserMembershipPaymentController(IMomoService momoService, QuitSmokingSupportContext context)
         {
             _momoService = momoService;
             _context = context;
-            _logger = logger;
         }
 
         [HttpPost]
@@ -68,44 +67,28 @@ namespace WebSmokingSupport.Controllers
         {
             var collection = HttpContext.Request.Query;
 
-            _logger.LogInformation("MoMo PaymentCallBack received. Query parameters: {Query}", collection.Select(kvp => $"{kvp.Key}={kvp.Value}").ToList());
-
-            // Lấy resultCode từ MoMo
-            collection.TryGetValue("errorCode", out var errorCode);
-            collection.TryGetValue("message", out var moMoMessage); // Lấy cả thông báo của MoMo
-
-            _logger.LogInformation("MoMo Callback - resultCode: {resultCode}, Message: {moMoMessage}", errorCode, moMoMessage);
-
-
-            // --- Logic đã sửa đổi để kiểm tra trạng thái thành công ---
-            // Trong môi trường test, MoMo thường trả về resultCode "0" hoặc "9000" cho thành công.
-            // Kiểm tra cả hai mã này.
-            if (errorCode != "0")
+            // Kiểm tra trạng thái giao dịch từ Momo
+            collection.TryGetValue("resultCode", out var resultCode);
+            if (resultCode != "0")
             {
-                _logger.LogError("MoMo Callback failed/cancelled. resultCode: {resultCode}, MoMo Message: {moMoMessage}", errorCode, moMoMessage);
-                return BadRequest($"Thanh toán thất bại hoặc bị hủy. Mã lỗi MoMo: {errorCode}. Chi tiết: {moMoMessage}");
+                return BadRequest("Thanh toán thất bại hoặc bị hủy.");
             }
-            // --- Kết thúc Logic đã sửa đổi ---
-
 
             // Lấy các tham số cần thiết
             collection.TryGetValue("amount", out var amount);
             collection.TryGetValue("orderInfo", out var orderInfo);
             collection.TryGetValue("orderId", out var orderId);
 
-            _logger.LogInformation("MoMo Callback - Amount: {amount}, OrderInfo: {orderInfo}, OrderId: {orderId}", amount, orderInfo, orderId);
-
             // Tách userId - planId từ orderInfo
+            // Định dạng dự kiến là "userId-planId" dựa trên cách nó được gửi từ CreatePaymentMomo
             var parts = orderInfo.ToString().Split("-");
             if (parts.Length != 2)
             {
-                _logger.LogError("Invalid orderInfo format: {orderInfo}. Expected 'userId-planId'.", orderInfo);
                 return BadRequest("Thông tin orderInfo không hợp lệ. Định dạng mong muốn: 'userId-planId'");
             }
 
             if (!int.TryParse(parts[0], out int userId) || !int.TryParse(parts[1], out int planId))
             {
-                _logger.LogError("Invalid UserId ({userIdPart}) or PlanId ({planIdPart}) in orderInfo: {orderInfo}.", parts[0], parts[1], orderInfo);
                 return BadRequest("UserId hoặc PlanId không hợp lệ trong orderInfo.");
             }
 
@@ -113,7 +96,6 @@ namespace WebSmokingSupport.Controllers
             var plan = await _context.MembershipPlans.FindAsync(planId);
             if (plan == null)
             {
-                _logger.LogError("Membership plan with ID {planId} not found.", planId);
                 return NotFound("Không tìm thấy gói thành viên tương ứng.");
             }
 
@@ -131,13 +113,11 @@ namespace WebSmokingSupport.Controllers
             _context.UserMembershipHistories.Add(history);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("UserMembershipHistory added successfully for UserId: {userId}, PlanId: {planId}", userId, planId);
-
             return Ok(new MomoExecuteResponseModel()
             {
                 Status = "Success",
                 Message = "Giao dịch MoMo đã được xử lý thành công",
-                Amount = amount.ToString(),
+                Amount = amount.ToString(), // Đảm bảo amount là string theo MomoExecuteResponseModel
                 OrderId = orderId.ToString(),
                 OrderInfo = orderInfo.ToString(),
                 FullName = "" // FullName có thể để trống hoặc lấy từ dịch vụ người dùng nếu cần
