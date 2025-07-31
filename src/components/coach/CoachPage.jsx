@@ -98,16 +98,14 @@ export default function CoachDashboard() {
         >
           <Tab label="Danh sách người dùng" />
           <Tab label="Tiến trình & Sức khỏe" />
-          <Tab label="Kế hoạch cai thuốc của người dùng" />
           <Tab label="Danh sách lịch hẹn" />
         </Tabs>
       </Paper>
 
       {tab === 0 && <AssignedUsers />}
       {tab === 1 && <UserProgress />}
-      {tab === 2 && <UserPlans />}
-      {tab === 3 && <AppointmentList/>}
-      {tab === 4 && <Profile />}
+      {tab === 2 && <AppointmentList />}
+      {tab === 3 && <Profile />}
     </Box>
   );
 }

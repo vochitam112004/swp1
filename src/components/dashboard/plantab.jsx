@@ -443,10 +443,23 @@ const PlanTab = ({ plan, progress, onUpdatePlan, onCreatePlan }) => {
                 <p><strong>Động lực cá nhân:</strong> {plan.personalMotivation || plan.PersonalMotivation || "Vì sức khỏe và tương lai tốt đẹp"}</p>
                 <p><strong>Ngày bắt đầu:</strong> {plan.startDate || plan.StartDate ? new Date(plan.startDate || plan.StartDate).toLocaleDateString('vi-VN') : "Chưa xác định"}</p>
                 <p><strong>Trạng thái:</strong> {plan.isCurrentGoal ? "Đang hoạt động" : "Không hoạt động"}</p>
+                <button
+                  className="btn btn-warning btn-sm mt-2"
+                  onClick={() => {
+                    // Gọi hàm cập nhật kế hoạch với dữ liệu hiện tại
+                    const updateData = {
+                      targetQuitDate: plan.targetQuitDate || plan.TargetQuitDate,
+                      personalMotivation: plan.personalMotivation || plan.PersonalMotivation,
+                      isCurrentGoal: true
+                    };
+                    onUpdatePlan(updateData);
+                  }}
+                >
+                  <i className="fas fa-sync-alt me-1"></i> Cập nhật kế hoạch hiện tại
+                </button>
               </div>
               <div className="col-md-6">
                 <p><strong>Ngày mục tiêu:</strong> {plan.targetQuitDate || plan.TargetQuitDate ? new Date(plan.targetQuitDate || plan.TargetQuitDate).toLocaleDateString('vi-VN') : "Chưa xác định"}</p>
-
                 <p><strong>Áp dụng cho:</strong> Tất cả thành viên cộng đồng</p>
               </div>
             </div>

@@ -351,7 +351,6 @@ const Dashboard = () => {
         setPlan(goalPlanRes.data || null);
       } catch (err) {
         console.error("❌ Lỗi khi fetch dữ liệu:", err);
-        toast.error("Lỗi khi tải dữ liệu: " + (err.response?.data?.message || err.message));
       } finally {
         setLoading(false);
       }
@@ -820,43 +819,35 @@ const Dashboard = () => {
 
   // Hàm cập nhật GoalPlan qua API
   const handleUpdatePlan = async (newPlan) => {
-    if (!plan) {
-      // Nếu không có plan thì gọi tạo mới thay vì báo lỗi
-      toast.info("Chưa có kế hoạch hiện tại. Sẽ tạo kế hoạch mới.");
-      return handleCreatePlan(newPlan);
-    }
-    try {
-      // Cập nhật kế hoạch qua API PUT
-      const updateData = {
-        targetQuitDate: newPlan.TargetQuitDate,
-        personalMotivation: newPlan.PersonalMotivation,
-        isCurrentGoal: newPlan.isCurrentGoal
-      };
-
-      await api.put(`/GoalPlan/Update-GoalPlan`, updateData);
-
-      // Reload lại plan từ API sau khi update thành công - thử nhiều endpoint
-      try {
-        const res = await api.get("/GoalPlan/current-goal");
-        setPlan(res.data || null);
-      } catch {
-        try {
-          const res = await api.get("/GoalPlan/GetCurrentGoal");
-          setPlan(res.data || null);
-        } catch {
-          console.log("Không reload được plan sau update");
-        }
-      }
-
-      console.log("API trả về kế hoạch:", plan);
-      toast.success("Đã cập nhật kế hoạch!");
-    } catch (err) {
-      console.error("Lỗi cập nhật kế hoạch:", err);
-      // Nếu update thất bại (có thể API không tồn tại), thử tạo mới
-      toast.info("Cập nhật thất bại, sẽ tạo kế hoạch mới.");
-      handleCreatePlan(newPlan);
-    }
-  };
+  setLoading(true);
+  if (!plan) {
+    toast.info("Chưa có kế hoạch hiện tại. Sẽ tạo kế hoạch mới.");
+    setLoading(false);
+    return handleCreatePlan(newPlan);
+  }
+  try {
+    // Chuẩn hóa dữ liệu gửi lên API
+    const updateData = {
+      targetQuitDate: newPlan.targetQuitDate || newPlan.TargetQuitDate,
+      isCurrentGoal: true,
+      personalMotivation: newPlan.personalMotivation || newPlan.PersonalMotivation || ""
+    };
+    await api.put("/GoalPlan/Update-GoalPlan", updateData);
+    toast.success("Đã cập nhật kế hoạch thành công!");
+    // Sau khi cập nhật, reload lại kế hoạch và mục tiêu hiện tại
+    const [goalRes, planRes] = await Promise.all([
+      api.get("/CurrentGoal"),
+      api.get("/GoalPlan/current-goal")
+    ]);
+    setCurrentGoal(goalRes.data);
+    setPlan(planRes.data);
+  } catch (err) {
+    console.error("Lỗi cập nhật kế hoạch:", err);
+    toast.error("Cập nhật kế hoạch thất bại! " + (err.response?.data?.message || err.message));
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Hàm tạo mới GoalPlan qua API
   const handleCreatePlan = async (newPlan) => {
