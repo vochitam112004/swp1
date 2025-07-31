@@ -319,7 +319,6 @@ const Dashboard = () => {
       }
     } catch (err) {
       console.error("❌ Lỗi khi fetch MemberProfile:", err);
-      toast.error("Lỗi khi tải hồ sơ cá nhân: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
