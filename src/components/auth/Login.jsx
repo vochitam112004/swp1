@@ -122,6 +122,7 @@ export default function Login() {
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
           color: "#fff",
+          display: "flex",
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
