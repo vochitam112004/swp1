@@ -17,6 +17,18 @@ export default function SystemReportManager() {
     setLoading(false);
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xoá báo cáo này?")) return;
+    try {
+      await api.delete(`/SystemReport/${id}`);
+      toast.success("Đã xoá báo cáo!");
+      fetchReports();
+    } catch (err) {
+      console.error("Xoá thất bại:", err);
+      toast.error("Xoá báo cáo thất bại!");
+    }
+  };
+
   useEffect(() => {
     fetchReports();
   }, []);
@@ -34,15 +46,24 @@ export default function SystemReportManager() {
               <th>Loại</th>
               <th>Thời gian</th>
               <th>Nội dung</th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
-            {reports.map(r => (
+            {reports.map((r) => (
               <tr key={r.reportId}>
                 <td>{r.nameReporter}</td>
                 <td>{r.reportType}</td>
                 <td>{new Date(r.reportedAt).toLocaleString()}</td>
                 <td>{r.details}</td>
+                <td>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDelete(r.reportId)}
+                  >
+                    Xoá
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
