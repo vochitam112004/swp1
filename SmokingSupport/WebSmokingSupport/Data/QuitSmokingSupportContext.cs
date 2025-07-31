@@ -55,7 +55,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
-        => optionsBuilder.UseSqlServer("Server=DESKTOP-8Q6QE3T;Database=QuitSmokingSupport;Trusted_Connection=True;TrustServerCertificate=True;");
+        => optionsBuilder.UseSqlServer("Server=LAPTOP-F3S9SQ2M\\SQLEXPRESS12;Database=QuitSmokingSupport;Trusted_Connection=True;TrustServerCertificate=True;");
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.UseCollation("Vietnamese_CI_AS"); // hỗ trợ tiếng Việt
