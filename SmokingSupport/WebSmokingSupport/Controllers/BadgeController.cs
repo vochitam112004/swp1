@@ -230,8 +230,17 @@ namespace WebSmokingSupport.Controllers
             {
                 return NotFound($"Huy hiệu với ID {Badgeid} không tìm thấy.");
             }
+
             try
             {
+                var relatedUserBadges = await _context.UserBadges
+                    .Where(ub => ub.BadgeId == Badgeid)
+                    .ToListAsync();
+
+                _context.UserBadges.RemoveRange(relatedUserBadges);
+                await _context.SaveChangesAsync(); 
+
+           
                 bool isRemoved = await _badgeRepository.RemoveAsync(badge);
                 if (isRemoved)
                 {
