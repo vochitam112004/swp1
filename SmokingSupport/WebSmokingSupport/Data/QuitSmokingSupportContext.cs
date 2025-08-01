@@ -55,8 +55,19 @@ public partial class QuitSmokingSupportContext : DbContext
     public DbSet<UserMembershipHistory> UserMembershipHistories { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
 
-        => optionsBuilder.UseSqlServer("Server=DESKTOP-8Q6QE3T;Database=QuitSmokingSupport;Trusted_Connection=True;TrustServerCertificate=True;");
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            optionsBuilder.UseSqlServer(connectionString);
+        }
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.UseCollation("Vietnamese_CI_AS"); 
