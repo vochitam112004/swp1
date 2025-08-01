@@ -123,9 +123,7 @@ const Dashboard = () => {
       setPlan(res.data);
       toast.success("Đã cập nhật kế hoạch!");
     } catch (err) {
-
-      console.error("❌ Lỗi khi fetch MemberProfile:", err);
-
+      toast.error(err.response?.data?.message || "Cập nhật kế hoạch thất bại!");
     } finally {
       setLoading(false);
     }
