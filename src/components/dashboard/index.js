@@ -1,5 +1,12 @@
 // Dashboard components exports
+// Dashboard components export
 export { default as Dashboard } from './dashboard';
+export { default as DashboardNew } from './DashboardNew';
+export { default as DashboardClean } from './DashboardClean';
+export { default as ProgressTab } from './ProgressTab';
+export { default as PlanTab } from './plantab';
+export { default as NotificationHistory } from './NotificationHistory';
+export { default as NotificationSystem } from './NotificationSystem';
 export { default as BadgeComponents } from './components/BadgeComponents';
 export { default as ProgressTracker } from './components/ProgressTracker';
 export { default as JournalManager } from './components/JournalManager';

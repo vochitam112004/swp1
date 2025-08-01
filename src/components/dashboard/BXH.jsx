@@ -3,163 +3,186 @@ import {
   Typography,
   Paper,
   Avatar,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Pagination,
+  Select,
+  MenuItem,
+  FormControl,
 } from "@mui/material";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useEffect, useState } from "react";
 import api from '../../api/axios';
 import "../../css/BXH.css";
-import { baseApiUrl } from "../../api/axios";
-
-const rowsPerPage = 5;
 
 export default function BXH() {
-  const [page, setPage] = useState(1);
   const [ranking, setRanking] = useState([]);
+  const [timeFilter, setTimeFilter] = useState('all');
 
-  const handleChangePage = (event, value) => {
-    setPage(value);
+  const handleTimeFilterChange = (event) => {
+    setTimeFilter(event.target.value);
   };
 
   useEffect(() => {
-    const fetchRankingWithBadges = async () => {
+    const fetchRanking = async () => {
       try {
-        const [rankingRes, badgeRes] = await Promise.all([
-          api.get("/Ranking/GetAllRankings"),
-          api.get("/Badge/GetAllBadge"),
-        ]);
-        console.log("badgeRes:", badgeRes)
+        const rankingRes = await api.get("/Ranking/GetAllRankings");
         console.log("rankingRes:", rankingRes)
 
         const rankingData = Array.isArray(rankingRes.data) ? rankingRes.data : [];
-        const badges = Array.isArray(badgeRes.data) ? badgeRes.data : [];
-
-        const rankingWithBadges = rankingData.map((user) => {
-          const userBadges = badges.filter(
-            (badge) => badge.requiredScore <= user.score
-          );
-          return { ...user, badges: userBadges };
-        });
-
-        setRanking(rankingWithBadges);
+        
+        // Sắp xếp theo score giảm dần
+        const sortedRanking = rankingData.sort((a, b) => b.score - a.score);
+        setRanking(sortedRanking);
       } catch (error) {
-        console.error("Lỗi lấy bảng xếp hạng hoặc huy hiệu:", error);
+        console.error("Lỗi lấy bảng xếp hạng:", error);
       }
     };
 
-    fetchRankingWithBadges();
+    fetchRanking();
   }, []);
 
+  // Lấy top 3 và danh sách còn lại
+  const top3 = ranking.slice(0, 3);
+  const restOfRanking = ranking.slice(3);
 
-  const getRankIcon = (rank) => {
-    const colors = ["#FFD700", "#C0C0C0", "#CD7F32"];
-    if (rank <= 3) {
-      return <EmojiEventsIcon sx={{ color: colors[rank - 1] }} />;
-    }
-    return rank;
+  // Tính toán số tiền tiết kiệm (giả sử 1 gói thuốc = 50,000 VND)
+  const calculateSavings = (days) => {
+    const pricePerPack = 50000;
+    const packsPerDay = 1; // Giả sử 1 gói/ngày
+    return days * packsPerDay * pricePerPack;
   };
 
-  const paginatedData = ranking.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
+  // Format số tiền
+  const formatMoney = (amount) => {
+    return new Intl.NumberFormat('vi-VN').format(amount);
+  };
 
   return (
     <div className="bxh-container">
-      <div className="bxh-title">Bảng xếp hạng thành viên</div>
+      {/* Header */}
+      <div className="bxh-header">
+        <Typography variant="h4" className="bxh-title">
+          Bảng xếp hạng cộng đồng
+        </Typography>
+        <Typography variant="body1" className="bxh-subtitle">
+          Xem thứ hạng của bạn và được truyền cảm hứng từ những thành viên xuất sắc nhất
+          trong cộng đồng QuitSmoke
+        </Typography>
+        
+        {/* Time Filter */}
+        <Box className="time-filter">
+          <FormControl size="small">
+            <Select
+              value={timeFilter}
+              onChange={handleTimeFilterChange}
+              displayEmpty
+              className="time-select"
+            >
+              <MenuItem value="all">Tất cả thời gian</MenuItem>
+              <MenuItem value="month">Tháng này</MenuItem>
+              <MenuItem value="week">Tuần này</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </div>
 
-      <Box component={Paper} sx={{ borderRadius: 3, boxShadow: 3, overflowX: "auto" }}>
-        <Table className="bxh-table">
-          <TableHead>
-            <TableRow>
-              <TableCell align="center" sx={{ fontWeight: 700 }}>Hạng</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Thành viên</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Huy hiệu</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 700 }}>Số ngày không hút thuốc</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedData
-              .sort((a, b) => b.score - a.score)
-              .map((user, idx) => {
-                const actualRank = (page - 1) * rowsPerPage + idx + 1;
-                return (
-                  <TableRow
-                    key={user.rankingId || idx}
-                    className={
-                      actualRank === 1
-                        ? "top1"
-                        : actualRank === 2
-                          ? "top2"
-                          : actualRank === 3
-                            ? "top3"
-                            : ""
-                    }
-                  >
-                    {/* Cột Hạng */}
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>
-                      {getRankIcon(actualRank)}
-                    </TableCell>
+      {/* Top 3 Section */}
+      <div className="top3-section">
+        {top3.length >= 2 && (
+          <div className="top3-container">
+            {/* Rank 2 */}
+            <div className="rank-card rank-2">
+              <Avatar
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  top3[1]?.userName || "Ẩn danh"
+                )}&background=C0C0C0&color=fff`}
+                className="rank-avatar"
+                sx={{ width: 80, height: 80 }}
+              />
+              <Typography className="rank-name">{top3[1]?.userName || "Ẩn danh"}</Typography>
+              <Typography className="rank-badge">Hạng 2</Typography>
+              <Typography className="rank-days">{top3[1]?.score || 0}</Typography>
+              <Typography className="rank-label">ngày không hút thuốc</Typography>
+              <Typography className="rank-savings">
+                {formatMoney(calculateSavings(top3[1]?.score || 0))} đã tiết kiệm
+              </Typography>
+            </div>
 
-                    {/* Cột Thành viên */}
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1.5}>
-                        <Avatar
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            user.userName || "Ẩn danh"
-                          )}`}
-                          alt={user.userName || "Ẩn danh"}
-                        />
-                        <Typography fontWeight={600}>
-                          {user.userName || "Ẩn danh"}
-                        </Typography>
-                      </Box>
-                    </TableCell>
+            {/* Rank 1 */}
+            <div className="rank-card rank-1">
+              <Avatar
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  top3[0]?.userName || "Ẩn danh"
+                )}&background=FFD700&color=fff`}
+                className="rank-avatar"
+                sx={{ width: 100, height: 100 }}
+              />
+              <Typography className="rank-name">{top3[0]?.userName || "Ẩn danh"}</Typography>
+              <Typography className="rank-badge champion">Vô địch</Typography>
+              <Typography className="rank-days">{top3[0]?.score || 0}</Typography>
+              <Typography className="rank-label">ngày không hút thuốc</Typography>
+              <Typography className="rank-savings">
+                {formatMoney(calculateSavings(top3[0]?.score || 0))} đã tiết kiệm
+              </Typography>
+            </div>
 
-                    <TableCell>
-                      <Box display="flex" gap={0.5} flexWrap="wrap">
-                        {user.badges?.map((badge) => (
-                          <Avatar
-                            key={badge.badgeId}
-                            src={
-                              badge.iconUrl?.startsWith("http")
-                                ? badge.iconUrl
-                                : `${baseApiUrl}${badge.iconUrl}`
-                            }
-                            alt={badge.name}
-                            sx={{ width: 24, height: 24 }}
-                            title={badge.name}
-                          />
-                        ))}
-                      </Box>
-                    </TableCell>
+            {/* Rank 3 */}
+            {top3.length >= 3 && (
+              <div className="rank-card rank-3">
+                <Avatar
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    top3[2]?.userName || "Ẩn danh"
+                  )}&background=CD7F32&color=fff`}
+                  className="rank-avatar"
+                  sx={{ width: 80, height: 80 }}
+                />
+                <Typography className="rank-name">{top3[2]?.userName || "Ẩn danh"}</Typography>
+                <Typography className="rank-badge">Hạng 3</Typography>
+                <Typography className="rank-days">{top3[2]?.score || 0}</Typography>
+                <Typography className="rank-label">ngày không hút thuốc</Typography>
+                <Typography className="rank-savings">
+                  {formatMoney(calculateSavings(top3[2]?.score || 0))} đã tiết kiệm
+                </Typography>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-                    {/* Cột số ngày */}
-                    <TableCell align="center">
-                      <Typography fontWeight={500}>{user.score} ngày</Typography>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-          </TableBody>
-
-        </Table>
-      </Box>
-
-      {/* Pagination */}
-      <Box display="flex" justifyContent="center" mt={3}>
-        <Pagination
-          count={Math.ceil(ranking.length / rowsPerPage)}
-          page={page}
-          onChange={handleChangePage}
-          color="primary"
-        />
-      </Box>
+      {/* Detailed Ranking List */}
+      <div className="detailed-ranking">
+        <Typography variant="h6" className="section-title">
+          Bảng xếp hạng chi tiết
+        </Typography>
+        
+        <Paper className="ranking-list">
+          {ranking.map((user, index) => (
+            <div key={user.rankingId || index} className={`ranking-item ${index < 3 ? `top-${index + 1}` : ''}`}>
+              <div className="ranking-left">
+                <Typography className="ranking-position">#{index + 1}</Typography>
+                <Avatar
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user.userName || "Ẩn danh"
+                  )}`}
+                  className="ranking-avatar"
+                />
+                <div className="ranking-info">
+                  <Typography className="ranking-name">{user.userName || "Ẩn danh"}</Typography>
+                  <Typography className="ranking-badge">
+                    {index === 0 ? "Vô địch" : index === 1 ? "Hạng 2" : index === 2 ? "Hạng 3" : "Hạng 4"}
+                  </Typography>
+                </div>
+              </div>
+              
+              <div className="ranking-right">
+                <div className="ranking-stats">
+                  <Typography className="ranking-days">{user.score} ngày</Typography>
+                  <Typography className="ranking-savings">
+                    {formatMoney(calculateSavings(user.score))} đã tiết kiệm
+                  </Typography>
+                </div>
+              </div>
+            </div>
+          ))}
+        </Paper>
+      </div>
     </div>
   );
 }

@@ -28,6 +28,7 @@ import Research from "./components/common/Research";
 import FAQ from "./components/common/FAQ";
 import MembershipList from "./components/dashboard/membership";
 import ResearchDetail from "./components/common/ResearchDetail";
+import CoachList from "./components/common/CoachList";
 import ScrollToTop from "./components/common/ScrollToTop";
 import Developers from "./components/common/Developers";
 import Chuyengia from "./components/common/Chuyengia";
@@ -98,6 +99,7 @@ function AppContent() {
           <Route path="/research" element={<Research />} />
           <Route path="/research/:id" element={<ResearchDetail />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/coaches" element={<CoachList />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/create" element={<BlogPostForm />} />
           <Route path="/blog/:postId" element={<BlogDetail />} />

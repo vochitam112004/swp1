@@ -122,6 +122,9 @@ const Navigation = () => {
           <Link to="/bxh" className="nav-link" onClick={closeMobileMenu}>
             Bảng xếp hạng
           </Link>
+          <Link to="/coaches" className="nav-link" onClick={closeMobileMenu}>
+            Huấn luyện viên
+          </Link>
           <Link to="/membership" className="nav-link" onClick={closeMobileMenu}>
             Gói thành viên
           </Link>

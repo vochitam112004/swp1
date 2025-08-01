@@ -8,7 +8,7 @@ const getCurrentUser = () => {
 
 const getUserRole = () => {
   const user = getCurrentUser();
-  return user.role || "user";
+  return user.userType === "Coach" ? "coach" : "user";
 };
 
 const getMessageColor = (fromId, currentUserId) => {
@@ -19,7 +19,7 @@ const getSenderLabel = (fromId, currentUserId, senderName) => {
   return fromId === currentUserId ? "Bạn" : senderName;
 };
 
-const ChatSupport = ({ targetUserId, onClose, targetDisplayName }) => {
+const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -141,11 +141,13 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName }) => {
   };
 
   return (
-    <div style={styles.chatContainer}>
-      <div style={styles.header}>
-        Nhắn tin: {targetDisplayName}
-        <span style={{ float: "right", cursor: "pointer" }} onClick={onClose}>✕</span>
-      </div>
+    <div style={isModal ? styles.chatContainerModal : styles.chatContainer}>
+      {!isModal && (
+        <div style={styles.header}>
+          Nhắn tin: {targetDisplayName}
+          <span style={{ float: "right", cursor: "pointer" }} onClick={onClose}>✕</span>
+        </div>
+      )}
       {role === "user" && !targetUserId && (
         <div style={{ padding: "16px 24px 8px 24px", borderBottom: "1px solid #e3e3e3", background: "#f5f7fa" }}>
           <label style={{ fontWeight: 600, color: "#1976d2", marginBottom: 6, display: "block" }}>
@@ -177,7 +179,7 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName }) => {
           </select>
         </div>
       )}
-      <div style={styles.messageList}>
+      <div style={isModal ? styles.messageListModal : styles.messageList}>
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -235,6 +237,13 @@ const styles = {
     fontFamily: "sans-serif",
     height: "400px"
   },
+  chatContainerModal: {
+    background: "#fff",
+    display: "flex",
+    flexDirection: "column",
+    height: "500px",
+    fontFamily: "sans-serif",
+  },
   header: {
     background: "#1976d2",
     color: "#fff",
@@ -246,6 +255,12 @@ const styles = {
     flex: 1,
     padding: 16,
     maxHeight: 320,
+    overflowY: "auto",
+    background: "#fafafa",
+  },
+  messageListModal: {
+    flex: 1,
+    padding: 16,
     overflowY: "auto",
     background: "#fafafa",
   },

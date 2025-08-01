@@ -1,0 +1,735 @@
+/* Dashboard CSS - Updated with New Design */
+
+/* Original dashboard styles - keep for backward compatibility */
+.dashboard-header {
+  background: linear-gradient(135deg, #4CAF50 0%, #2196F3 100%);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+}
+
+.dashboard-header .content {
+  position: relative;
+  z-index: 1;
+}
+
+/* New Dashboard Design - Matching the provided image */
+.dashboard-new-container {
+  padding: 20px;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* Main Achievement Card */
+.main-achievement-card {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  border-radius: 20px;
+  color: white;
+  padding: 30px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+}
+
+.achievement-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.achievement-info h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.achievement-info p {
+  opacity: 0.9;
+  margin-bottom: 0;
+  font-size: 16px;
+}
+
+.achievement-percentage {
+  text-align: center;
+}
+
+.percentage-circle {
+  width: 80px;
+  height: 80px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.percentage-circle::before {
+  content: '';
+  position: absolute;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: white;
+  border-right-color: white;
+  transform: rotate(135deg);
+}
+
+.percentage-text {
+  font-size: 20px;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.achievement-percentage small {
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card-yellow .stat-icon {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+}
+
+.stat-card-green .stat-icon {
+  background: linear-gradient(135deg, #00c851 0%, #00ff89 100%);
+}
+
+.stat-card-blue .stat-icon {
+  background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%);
+}
+
+.stat-card-pink .stat-icon {
+  background: linear-gradient(135deg, #ff6b9d 0%, #ff8cc8 100%);
+}
+
+.stat-card-orange .stat-icon {
+  background: linear-gradient(135deg, #ff9500 0%, #ffb347 100%);
+}
+
+.stat-card-purple .stat-icon {
+  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.stat-content p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.stat-date {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+/* Progress Bar */
+.stat-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b35 0%, #f7931e 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.stat-card-pink .progress-fill {
+  background: linear-gradient(90deg, #ff6b9d 0%, #ff8cc8 100%);
+}
+
+.stat-card-orange .progress-fill {
+  background: linear-gradient(90deg, #ff9500 0%, #ffb347 100%);
+}
+
+.stat-card-purple .progress-fill {
+  background: linear-gradient(90deg, #9c27b0 0%, #ba68c8 100%);
+}
+
+.stat-progress span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  min-width: 35px;
+}
+
+/* Upcoming Achievements */
+.upcoming-achievements {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.upcoming-achievements h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.achievement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f8f9fa;
+  transition: background 0.2s ease;
+}
+
+.achievement-item:hover {
+  background: #e9ecef;
+}
+
+.achievement-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.achievement-icon {
+  font-size: 24px;
+}
+
+.achievement-details {
+  flex: 1;
+}
+
+.achievement-details h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.achievement-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.achievement-progress .progress-bar {
+  flex: 1;
+  height: 8px;
+}
+
+.achievement-progress span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+}
+
+/* Legacy styles for backward compatibility */
+.stats-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: none !important;
+  border-radius: 15px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-new-container {
+    padding: 15px;
+  }
+  
+  .main-achievement-card {
+    padding: 20px;
+  }
+  
+  .achievement-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .stat-card {
+    padding: 20px;
+  }
+  
+  .achievement-info h2 {
+    font-size: 20px;
+  }
+  
+  .percentage-circle {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .percentage-circle::before {
+    width: 54px;
+    height: 54px;
+  }
+  
+  .percentage-text {
+    font-size: 16px;
+  }
+  
+  .dashboard-header h3 {
+    font-size: 1.5rem;
+  }
+  
+  .dashboard-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .stats-card .card-body {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .achievement-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .achievement-progress {
+    width: 100%;
+  }
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Seven Day Progress Chart Styles */
+.seven-day-chart {
+  padding: 20px 10px;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  height: 150px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
+.chart-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 2px;
+}
+
+.chart-bar-container {
+  height: 120px;
+  display: flex;
+  align-items: end;
+  width: 100%;
+  justify-content: center;
+}
+
+.chart-bar {
+  width: 24px;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.chart-bar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.bar-success {
+  background: linear-gradient(180deg, #28a745 0%, #20c997 100%);
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.bar-danger {
+  background: linear-gradient(180deg, #dc3545 0%, #fd7e14 100%);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.bar-value {
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  margin-top: 4px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.achievement-icon {
+  position: absolute;
+  top: -8px;
+  color: white;
+  font-size: 8px;
+  background: #28a745;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.chart-day-label {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.day-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+}
+
+.day-date {
+  font-size: 11px;
+  color: #6c757d;
+  margin-top: 2px;
+}
+
+.success-indicator {
+  margin-top: 2px;
+}
+
+.success-indicator small {
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.chart-legend {
+  border-top: 1px solid #e9ecef;
+  padding-top: 15px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legend-color.bar-success {
+  background: linear-gradient(180deg, #28a745 0%, #20c997 100%);
+}
+
+.legend-color.bar-danger {
+  background: linear-gradient(180deg, #dc3545 0%, #fd7e14 100%);
+}
+
+@media (max-width: 576px) {
+  .chart-bar {
+    width: 20px;
+  }
+  
+  .day-name {
+    font-size: 10px;
+  }
+  
+  .day-date {
+    font-size: 9px;
+  }
+  
+  .bar-value {
+    font-size: 8px;
+  }
+  
+  .seven-day-chart {
+    padding: 15px 5px;
+  }
+  
+  .chart-container {
+    height: 120px;
+  }
+  
+  .chart-bar-container {
+    height: 100px;
+  }
+}
+
+/* Progress Tab Styles */
+.progress-tab-container {
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.progress-filter-card {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+}
+
+.progress-filter-card:hover {
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.progress-stats-card {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.progress-stats-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.progress-chart-container {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.progress-table-container {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.progress-table-container .table {
+  margin-bottom: 0;
+}
+
+.progress-table-container .table th {
+  background: #f8f9fa;
+  border: none;
+  font-weight: 600;
+  color: #495057;
+  padding: 1rem 0.75rem;
+}
+
+.progress-table-container .table td {
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+  padding: 1rem 0.75rem;
+  vertical-align: middle;
+}
+
+.progress-table-container .table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.time-range-selector .btn-group .btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.time-range-selector .btn-group .btn:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.time-range-selector .btn-group .btn:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.time-range-selector .btn-group .btn:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+.metric-selector .btn-group .btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.metric-selector .btn-group .btn:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.metric-selector .btn-group .btn:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.empty-chart-state {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 15px;
+}
+
+.empty-chart-state i {
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.progress-badge-success {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+}
+
+.progress-badge-warning {
+  background: linear-gradient(135deg, #ffc107, #fd7e14);
+  color: white;
+  border: none;
+}
+
+.progress-badge-danger {
+  background: linear-gradient(135deg, #dc3545, #e83e8c);
+  color: white;
+  border: none;
+}
+
+@media (max-width: 768px) {
+  .progress-chart-container {
+    padding: 1rem;
+  }
+  
+  .progress-table-container .table th,
+  .progress-table-container .table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.875rem;
+  }
+  
+  .time-range-selector .btn-group .btn,
+  .metric-selector .btn-group .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
