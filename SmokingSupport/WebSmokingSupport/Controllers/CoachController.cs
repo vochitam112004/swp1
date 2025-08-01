@@ -204,5 +204,79 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(coachCount);
         }
+
+        [HttpPut("{coachId}")]
+        [Consumes("multipart/form-data")]
+        [Authorize(Roles = "Admin,Coach")]
+        public async Task<ActionResult<DTOCoachResponse>> UpdateCoach(
+     int coachId,
+     [FromForm] DTOCoachForUpdate dto,
+     IFormFile? avatarFile)
+        {
+            var coachProfile = await _context.CoachProfiles
+                .Include(c => c.Coach) // Coach là User
+                .FirstOrDefaultAsync(c => c.CoachId == coachId);
+
+            if (coachProfile == null)
+            {
+                return NotFound("Coach not found.");
+            }
+
+            var user = coachProfile.Coach;
+
+            // Update User fields
+            if (!string.IsNullOrWhiteSpace(dto.UserName))
+                user.Username = dto.UserName;
+            if (!string.IsNullOrWhiteSpace(dto.DisplayName))
+                user.DisplayName = dto.DisplayName;
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+                user.Email = dto.Email;
+            if (!string.IsNullOrWhiteSpace(dto.Address))
+                user.Address = dto.Address;
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                user.PhoneNumber = dto.PhoneNumber;
+            if (dto.IsActive.HasValue)
+                user.IsActive = dto.IsActive.Value;
+
+            // Update CoachProfile fields
+            if (!string.IsNullOrWhiteSpace(dto.Specialization))
+                coachProfile.Specialization = dto.Specialization;
+
+            // Upload avatar
+            if (avatarFile != null && avatarFile.Length > 0)
+            {
+                var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(avatarFile.FileName)}";
+                var savePath = Path.Combine("wwwroot/avatars", fileName);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(savePath)!);
+
+                using (var stream = new FileStream(savePath, FileMode.Create))
+                {
+                    await avatarFile.CopyToAsync(stream);
+                }
+
+                user.AvatarUrl = $"/avatars/{fileName}";
+            }
+
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            // Tạo response
+            var response = new DTOCoachResponse
+            {
+                CoachId = coachProfile.CoachId,
+                Username = user.Username,
+                DisplayName = user.DisplayName,
+                AvatarUrl = user.AvatarUrl,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                Specialization = coachProfile.Specialization,
+               
+            };
+
+            return Ok(response);
+        }
+ 
     }
 }
