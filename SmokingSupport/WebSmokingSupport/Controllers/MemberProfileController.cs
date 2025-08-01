@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿
 using Microsoft.AspNetCore.Mvc;
 using WebSmokingSupport.Interfaces;
-using WebSmokingSupport.Entity;
 using WebSmokingSupport.DTOs;
-using System.Security.Claims;
+using WebSmokingSupport.Entity;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Identity.Client;
+using WebSmokingSupport.Service;
+using System.Security.Claims;
+using Google.Apis.Util;
+using WebSmokingSupport.Data;
+using Microsoft.EntityFrameworkCore;
 namespace WebSmokingSupport.Controllers
 {
     [Route("api/[controller]")]
@@ -13,119 +16,163 @@ namespace WebSmokingSupport.Controllers
     public class MemberProfileController : ControllerBase
     {
         private readonly IGenericRepository<MemberProfile> _memberProfileRepository;
-        private readonly IGenericRepository<User> _userRepository;
-        public MemberProfileController(IGenericRepository<MemberProfile> memberProfileRepository, IGenericRepository<User> userRepository)
+        private readonly QuitSmokingSupportContext _context;
+        public MemberProfileController(IGenericRepository<MemberProfile> memberProfileRepository, QuitSmokingSupportContext context)
         {
             _memberProfileRepository = memberProfileRepository;
-            _userRepository = userRepository;
+            _context = context;
         }
-        [HttpGet]
-        [Authorize(Roles = "Member ,Coach,Admin")]
-        public async Task<ActionResult<DTOMemberProfileForRead>> GetMemberProfile()
+        [HttpGet("GetMyMemberProfile")]
+        [Authorize(Roles = "Member")]
+        public async Task<ActionResult<DTOMemberProfileForRead>> GetMyMemberProfile()
         {
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaims == null)
             {
                 return Unauthorized("User not authenticated.");
             }
-            var memberProfile = (await _memberProfileRepository.GetAllAsync()).FirstOrDefault(mp => mp.UserId == userId);
+            int userId = int.Parse(userIdClaims);
+            var memberProfile = await _context.MemberProfiles
+                .Include(mp => mp.User)
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+
             if (memberProfile == null)
             {
                 return NotFound("Member profile not found.");
             }
-            var memberProfileResponse = new DTOMemberProfileForRead
+            var MemberProfileResponse = new DTOMemberProfileForRead
             {
                 MemberId = memberProfile.MemberId,
-                SmokingStatus = memberProfile.SmokingStatus,
+                UserId = memberProfile.UserId,
+                DisplayName = memberProfile.User.DisplayName,
+                CigarettesSmoked = memberProfile.CigarettesSmoked,
                 QuitAttempts = memberProfile.QuitAttempts,
-                experience_level = memberProfile.ExperienceLevel,
-                PreviousAttempts = memberProfile.PreviousAttempts,
+                ExperienceLevel = memberProfile.ExperienceLevel,
+                PersonalMotivation = memberProfile.PersonalMotivation,
+                health = memberProfile.health,
+                PricePerPack = memberProfile.PricePerPack,
+                CigarettesPerPack = memberProfile.CigarettesPerPack,
+                CreatedAt = memberProfile.CreatedAt,
+                UpdatedAt = memberProfile.UpdatedAt
             };
-            return Ok(memberProfileResponse);
+            return Ok(MemberProfileResponse);
         }
-        [HttpPost]
-        [Authorize(Roles = "Member ,Coach,Admin")]
-        public async Task<ActionResult<DTOMemberProfileForCreate>> CreateMemberProfile([FromBody] DTOMemberProfileForCreate memberProfileDto)
+        [HttpPost("CreateMyMemberProfile")]
+        [Authorize(Roles = "Member")]
+        public async Task<ActionResult<DTOMemberProfileForRead>> CreateMyMemberProfile([FromBody] DTOMemberProfileForCreate dto)
         {
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            int userId = int.Parse(userIdString);
-            if (string.IsNullOrEmpty(userIdString))
+            var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaims, out int userId))
             {
                 return Unauthorized("User not authenticated.");
             }
-
-            if (memberProfileDto == null)
+            var memberProfilExist = await _context.MemberProfiles
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if (memberProfilExist != null)
             {
-                return BadRequest("Member profile data is required.");
-            }
-            var userExists = await _userRepository.GetByIdAsync(userId);
-            if (userExists == null)
-            {
-                return NotFound("User not found.");
-            }
-            var existingMemberProfile = (await _memberProfileRepository.GetAllAsync())
-                .FirstOrDefault(mp => mp.UserId == userId);
-            if (existingMemberProfile != null)
-            {
-                return Conflict($"User with ID already has a member profile (MemberId: {existingMemberProfile.MemberId}).");
+                return BadRequest("Member profile already exists for this user.");
             }
             var newMemberProfile = new MemberProfile
             {
                 UserId = userId,
-                SmokingStatus = memberProfileDto.SmokingStatus,
-                QuitAttempts = memberProfileDto.QuitAttempts,
-                ExperienceLevel = memberProfileDto.experience_level,
-                PreviousAttempts = memberProfileDto.PreviousAttempts,
+                CigarettesSmoked = dto.CigarettesSmoked,
+                QuitAttempts = dto.QuitAttempts,
+                ExperienceLevel = dto.ExperienceLevel,
+                PersonalMotivation = dto.PersonalMotivation,
+                health = dto.health,
+                PricePerPack = dto.PricePerPack,
+                CigarettesPerPack = dto.CigarettesPerPack,
+                CreatedAt = DateTime.UtcNow,
             };
             await _memberProfileRepository.CreateAsync(newMemberProfile);
-            return Ok(new { message = "Member profile created successfully." });
-
+            await _context.SaveChangesAsync();
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+            var MemberProfileResponse = new DTOMemberProfileForRead
+            {
+                MemberId = newMemberProfile.MemberId,
+                UserId = newMemberProfile.UserId,
+                DisplayName = user?.DisplayName ?? "Unknown User",
+                CigarettesSmoked = newMemberProfile.CigarettesSmoked,
+                QuitAttempts = newMemberProfile.QuitAttempts,
+                ExperienceLevel = newMemberProfile.ExperienceLevel,
+                PersonalMotivation = newMemberProfile.PersonalMotivation,
+                health = newMemberProfile.health,
+                PricePerPack = newMemberProfile.PricePerPack,
+                CigarettesPerPack = newMemberProfile.CigarettesPerPack,
+                CreatedAt = newMemberProfile.CreatedAt,
+            };
+            return Ok(MemberProfileResponse);
         }
-        [HttpPut("Update-MemberProfile/{memberId}")]
-        [Authorize(Roles = "Member ,Coach,Admin")]
-        public async Task<IActionResult> UpdateMemberProfile(int memberId ,[FromBody] DTOMemberProfileForUpdate memberProfileDto)
+        [HttpPut("UpdateMyMemberProfile")]
+        [Authorize(Roles = "Member")]
+        public async Task<ActionResult<DTOAppointmentForRead>> UpdateMyMemberProfile([FromBody] DTOMemberProfileForUpdate dto)
         {
-           
-            var existingMemberProfile = await _memberProfileRepository.GetByIdAsync(memberId);
-            if (existingMemberProfile == null)
+            var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaims, out int userId))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+            var memberProfile = await _context.MemberProfiles
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if (memberProfile == null)
             {
                 return NotFound("Member profile not found.");
             }
-            if (!string.IsNullOrWhiteSpace(memberProfileDto.SmokingStatus))
+            memberProfile.CigarettesSmoked = dto.CigarettesSmoked ?? memberProfile.CigarettesSmoked;
+            memberProfile.QuitAttempts = dto.QuitAttempts ?? memberProfile.QuitAttempts;
+            memberProfile.ExperienceLevel = dto.ExperienceLevel ?? memberProfile.ExperienceLevel;
+            memberProfile.PersonalMotivation = dto.PersonalMotivation ?? memberProfile.PersonalMotivation;
+            memberProfile.health = dto.health ?? memberProfile.health;
+            memberProfile.PricePerPack = dto.PricePerPack ?? memberProfile.PricePerPack;
+            memberProfile.CigarettesPerPack = dto.CigarettesPerPack ?? memberProfile.CigarettesPerPack;
+            memberProfile.UpdatedAt = DateTime.UtcNow;
+            _context.MemberProfiles.Update(memberProfile);
+            await _context.SaveChangesAsync();
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null)
             {
-                existingMemberProfile.SmokingStatus = memberProfileDto.SmokingStatus;
+                return NotFound("User not found.");
             }
-            if(!string.IsNullOrWhiteSpace(memberProfileDto.PreviousAttempts))
+            var UpdateMemberProfileResponse = new DTOMemberProfileForRead
             {
-                existingMemberProfile.PreviousAttempts = memberProfileDto.PreviousAttempts;
-            }
-            if(memberProfileDto.QuitAttempts.HasValue)
-            {
-                existingMemberProfile.QuitAttempts = memberProfileDto.QuitAttempts.Value;
-            }
-            if(memberProfileDto.experience_level.HasValue)
-            {
-                existingMemberProfile.ExperienceLevel = memberProfileDto.experience_level.Value;
-            }
-
-
-            await _memberProfileRepository.UpdateAsync(existingMemberProfile);
-            return NoContent();
+                MemberId = memberProfile.MemberId,
+                UserId = memberProfile.UserId,
+                DisplayName = user.DisplayName,
+                CigarettesSmoked = memberProfile.CigarettesSmoked,
+                QuitAttempts = memberProfile.QuitAttempts,
+                ExperienceLevel = memberProfile.ExperienceLevel,
+                PersonalMotivation = memberProfile.PersonalMotivation,
+                health = memberProfile.health,
+                PricePerPack = memberProfile.PricePerPack,
+                CigarettesPerPack = memberProfile.CigarettesPerPack,
+                CreatedAt = memberProfile.CreatedAt,
+                UpdatedAt = memberProfile.UpdatedAt
+            };
+            return Ok(UpdateMemberProfileResponse);
         }
-        [HttpDelete()]
-        [Authorize(Roles = "Member ,Coach,Admin")]
-        public async Task<IActionResult> DeleteMemberProfile()
+        [HttpDelete("DeleteMyMemberProfile")]
+        [Authorize(Roles = "Member")]
+        public async Task<ActionResult> DeleteMyMemberProfile()
         {
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            int userid = int.Parse(userIdString);
-            var memberProfile = (await _memberProfileRepository.GetAllAsync())
-                .FirstOrDefault(mp => mp.UserId == userid);
-
+            var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaims, out int userId))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+            var memberProfile = await _context.MemberProfiles
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
             if (memberProfile == null)
             {
-                return NotFound("Member profile not found for the logged-in user");
+                return NotFound("Member profile not found.");
             }
-            await _memberProfileRepository.RemoveAsync(memberProfile);
+            _context.MemberProfiles.Remove(memberProfile);
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }

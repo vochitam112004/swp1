@@ -10,7 +10,6 @@ public partial class TriggerFactor
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int TriggerId { get; set; }
-
     public string? Name { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

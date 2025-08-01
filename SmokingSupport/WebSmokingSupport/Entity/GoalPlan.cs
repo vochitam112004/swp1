@@ -10,19 +10,15 @@ public partial class GoalPlan
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int PlanId { get; set; }
+    public int MemberId { get; set; } 
+    public DateOnly StartDate { get; set; } // ngày bắt đầu kế hoạch
+    public bool isCurrentGoal { get; set; } = true;
+    public DateOnly EndDate { get; set; } // ngày kết thúc kế hoạch
+    public int TotalDays { get; set; }  // tổng số ngày trong kế hoạch
+    public DateTime CreatedAt { get; set; } 
+    public DateTime? UpdatedAt { get; set; } 
+    public virtual MemberProfile? Member { get; set; }
+    public virtual ICollection<ProgressLog> ProgressLogs { get; set; } = new List<ProgressLog>();
+    public virtual ICollection<GoalPlanWeeklyReduction> GoalPlanWeeklyReductions { get; set; } = new List<GoalPlanWeeklyReduction>();
 
-    public int? MemberId { get; set; } // Foreign key to MemberProfile (can be nullable if a GoalPlan might exist without a Member, but typically it should not be null)
-
-    public DateOnly? StartDate { get; set; }
-    public DateOnly? TargetQuitDate { get; set; }
-    public string? PersonalMotivation { get; set; }
-    public bool? isCurrentGoal { get; set; } = true;
-    public DateTime CreatedAt { get; set; } // Added property
-    public DateTime? UpdatedAt { get; set; } // Added property
-
-    // Navigation properties
-    public virtual MemberProfile? Member { get; set; } // MemberId is nullable, so Member can be nullable (consider if MemberId should be [Required])
-
-    // << XÓA: public ProgressLog? ProgressLog { get; set; } >> Đây là thừa, bạn đã có ICollection bên dưới
-    public virtual ICollection<ProgressLog> ProgressLogs { get; set; } = new List<ProgressLog>(); // st<Member
 }

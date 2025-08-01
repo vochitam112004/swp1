@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebSmokingSupport.Entity;
 
 namespace WebSmokingSupport.Data;
@@ -58,7 +59,7 @@ public partial class QuitSmokingSupportContext : DbContext
         => optionsBuilder.UseSqlServer("Server=DESKTOP-8Q6QE3T;Database=QuitSmokingSupport;Trusted_Connection=True;TrustServerCertificate=True;");
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.UseCollation("Vietnamese_CI_AS"); // hỗ trợ tiếng Việt
+        modelBuilder.UseCollation("Vietnamese_CI_AS"); 
 
         modelBuilder.Entity<Appointment>(entity =>
         {
@@ -73,39 +74,33 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasColumnName("end_time");
             entity.Property(e => e.MemberId).HasColumnName("member_id");
             entity.Property(e => e.Notes)
-                .IsUnicode(true) // ✅ cho phép ghi chú bằng tiếng Việt
+                .IsUnicode(true)
                 .HasColumnName("notes");
             entity.Property(e => e.StartTime)
                 .HasColumnType("time")
                 .HasColumnName("start_time");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
-                .IsUnicode(true) // ✅ hỗ trợ trạng thái tiếng Việt
+                .IsUnicode(true) 
                 .HasColumnName("status");
 
             entity.HasOne(d => d.Coach).WithMany(p => p.Appointments)
                 .HasForeignKey(d => d.CoachId)
                 .HasConstraintName("FK__Appointme__coach__47DBAE45");
 
-            entity.HasOne(d => d.Member).WithMany(p => p.Appointments)
-                .HasForeignKey(d => d.MemberId)
-                .HasConstraintName("FK__Appointme__membe__46E78A0C");
         });
         modelBuilder.Entity<UserMembershipHistory>()
-               .HasOne(umh => umh.User)          // UserMembershipHistory có một User
-               .WithMany()                       // User có nhiều UserMembershipHistory (nếu không có navigation property ngược trong User)
-               .HasForeignKey(umh => umh.UserId) // Khóa ngoại là UserId
-               .OnDelete(DeleteBehavior.Cascade); // Khi User bị xóa, lịch sử của User đó cũng bị xóa
+               .HasOne(umh => umh.User)        
+               .WithMany()                       
+               .HasForeignKey(umh => umh.UserId) 
+               .OnDelete(DeleteBehavior.Cascade); 
 
-        // Mối quan hệ giữa UserMembershipHistory và MembershipPlan
-        // Một UserMembershipHistory có thể có một MembershipPlan (nullable)
-        // Một MembershipPlan có thể có nhiều UserMembershipHistory
+      
         modelBuilder.Entity<UserMembershipHistory>()
-            .HasOne(umh => umh.Plan)          // UserMembershipHistory có một MembershipPlan
-            .WithMany()                       // MembershipPlan có nhiều UserMembershipHistory (nếu không có navigation property ngược trong MembershipPlan)
-            .HasForeignKey(umh => umh.PlanId) // Khóa ngoại là PlanId (nullable)
-            .OnDelete(DeleteBehavior.SetNull); // Khi MembershipPlan bị xóa, PlanId trong lịch sử sẽ được đặt thành NULL
-                                               // (thay vì xóa UserMembershipHistory đó)
+            .HasOne(umh => umh.Plan)          
+            .WithMany()                       
+            .HasForeignKey(umh => umh.PlanId) 
+            .OnDelete(DeleteBehavior.SetNull); 
 
         modelBuilder.Entity<Badge>(entity =>
         {
@@ -115,15 +110,15 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.BadgeId).HasColumnName("badge_id");
             entity.Property(e => e.Description)
-                .IsUnicode(true) // ✅ mô tả tiếng Việt
+                .IsUnicode(true) 
                 .HasColumnName("description");
             entity.Property(e => e.IconUrl)
                 .HasMaxLength(255)
-                .IsUnicode(true) // ✅ hỗ trợ URL có ký tự tiếng Việt (nếu cần)
+                .IsUnicode(true)
                 .HasColumnName("icon_url");
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
-                .IsUnicode(true) // ✅ tên huy hiệu tiếng Việt
+                .IsUnicode(true) 
                 .HasColumnName("name");
         });
 
@@ -135,7 +130,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.MessageId).HasColumnName("message_id");
             entity.Property(e => e.Content)
-                .IsUnicode(true) // ✅ nội dung chat tiếng Việt
+                .IsUnicode(true) 
                 .HasColumnName("content");
             entity.Property(e => e.IsRead).HasColumnName("is_read");
             entity.Property(e => e.ReceiverId).HasColumnName("receiver_id");
@@ -167,7 +162,7 @@ public partial class QuitSmokingSupportContext : DbContext
                 .ValueGeneratedNever()
                 .HasColumnName("coach_id");
             entity.Property(e => e.Specialization)
-                .IsUnicode(true) // ✅ chuyên môn bằng tiếng Việt
+                .IsUnicode(true) 
                 .HasColumnName("specialization");
 
             entity
@@ -186,7 +181,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.InteractionId).HasColumnName("interaction_id");
             entity.Property(e => e.CommentContent)
-                .IsUnicode(true) // ✅ bình luận tiếng Việt
+                .IsUnicode(true) 
                 .HasColumnName("comment_content");
             entity.Property(e => e.CommentedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -212,7 +207,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.PostId).HasColumnName("post_id");
             entity.Property(e => e.Content)
-                .IsUnicode(true) // ✅ nội dung bài viết tiếng Việt
+                .IsUnicode(true) 
                 .HasColumnName("content");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -261,39 +256,58 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.MemberId).HasColumnName("member_id");
 
             entity.Property(e => e.StartDate).HasColumnName("start_date").HasColumnType("date");
-            entity.Property(e => e.TargetQuitDate).HasColumnName("target_quit_date").HasColumnType("date");
-            entity.Property(e => e.PersonalMotivation).HasColumnName("personal_motivation").HasMaxLength(500);
-            
-        
+            entity.Property(e => e.EndDate).HasColumnName("end_date").HasColumnType("date");
             entity.Property(e => e.isCurrentGoal)
                   .HasColumnName("is_current_goal") 
                   .HasDefaultValue(true);
-            
-
+           
             entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("datetime").HasDefaultValueSql("GETUTCDATE()");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("datetime");
 
 
-            // Mối quan hệ MemberProfile - GoalPlan (1-N)
-            // Một MemberProfile có NHIỀU GoalPlan
-            entity.HasOne(gp => gp.Member) // GoalPlan có 1 MemberProfile
-                  .WithMany(m => m.GoalPlans) // MemberProfile có NHIỀU GoalPlan
-                  .HasForeignKey(gp => gp.MemberId) // Khóa ngoại MemberId là trong GoalPlan
-                  .OnDelete(DeleteBehavior.SetNull); // Nếu MemberId là nullable, SetNull là hợp lý
-                                                     // .HasConstraintName("FK__GoalPlan__member__300424B4"); // Giữ nguyên nếu bạn muốn tên constraint này
+            entity.HasOne(gp => gp.Member) 
+                  .WithMany(m => m.GoalPlans) 
+                  .HasForeignKey(gp => gp.MemberId) 
+                  .OnDelete(DeleteBehavior.SetNull);
 
-            // Ràng buộc duy nhất có điều kiện cho MemberId và isCurrentGoal
-            // Đảm bảo chỉ có một GoalPlan là currentGoal = true cho mỗi Member
             entity.HasIndex(g => new { g.MemberId, g.isCurrentGoal })
                   .IsUnique()
-                  .HasFilter("[is_current_goal] = 1"); // Sử dụng tên cột trong DB cho HasFilter
-
-            // Mối quan hệ GoalPlan - ProgressLog (1-N)
-            entity.HasMany(gp => gp.ProgressLogs) // GoalPlan có nhiều ProgressLog
-                  .WithOne(pl => pl.GoalPlan)      // ProgressLog có một GoalPlan
-                  .HasForeignKey(pl => pl.GoalPlanId) // Khóa ngoại GoalPlanId là trong ProgressLog
-                  .OnDelete(DeleteBehavior.SetNull); // Yêu cầu ProgressLog.GoalPlanId là nullable
+                  .HasFilter("[is_current_goal] = 1"); 
+            entity.HasMany(gp => gp.ProgressLogs) 
+                  .WithOne(pl => pl.GoalPlan)    
+                  .HasForeignKey(pl => pl.GoalPlanId) 
+                  .OnDelete(DeleteBehavior.SetNull);
         });
+        modelBuilder.Entity<GoalPlanWeeklyReduction>(entity =>
+        {
+            entity.HasKey(e => e.WeeklyReductionId);
+            entity.ToTable("GoalPlanWeeklyReduction");
+
+            entity.Property(e => e.GoalPlanId).HasColumnName("goal_plan_id");
+            entity.Property(e => e.WeekNumber).HasColumnName("week_number");
+            entity.Property(e => e.CigarettesReduced).HasColumnName("cigarettes_reduced");
+
+            var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
+                d => d.ToDateTime(TimeOnly.MinValue),
+                d => DateOnly.FromDateTime(d)
+            );
+
+            entity.Property(e => e.StartDate)
+                .HasConversion(dateOnlyConverter)
+                .HasColumnName("start_date")
+                .HasColumnType("date");
+
+            entity.Property(e => e.EndDate)
+                .HasConversion(dateOnlyConverter)
+                .HasColumnName("end_date")
+                .HasColumnType("date");
+
+            entity.HasOne(e => e.GoalPlan)
+                .WithMany(gp => gp.GoalPlanWeeklyReductions)
+                .HasForeignKey(e => e.GoalPlanId)
+                .HasConstraintName("FK_GoalPlanWeeklyReduction_GoalPlan");
+        });
+
 
         modelBuilder.Entity<MemberProfile>(entity =>
         {
@@ -303,21 +317,29 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.MemberId)
                 .ValueGeneratedOnAdd()
                 .HasColumnName("member_id");
-            // ... other Property mappings for MemberProfile
+            entity.Property(e => e.health)
+                .HasMaxLength(50)
+                .IsUnicode(true)
+                .HasColumnName("health");
 
-            // Mối quan hệ MemberProfile - User (1-1)
+            entity.Property(e => e.PersonalMotivation)
+                .HasColumnName("personal_motivation")
+                .HasMaxLength(500);
+
             entity.HasOne(d => d.User)
                 .WithOne(p => p.MemberProfile)
                 .HasForeignKey<MemberProfile>(d => d.UserId)
-                .OnDelete(DeleteBehavior.Cascade) // OK: Khi User bị xóa, MemberProfile bị xóa
+                .OnDelete(DeleteBehavior.Cascade) 
                 .HasConstraintName("FK__MemberPro__user__286302EC");
 
-            // Mối quan hệ MemberProfile - ProgressLog (1-N)
-            // Khi MemberProfile bị xóa, các ProgressLog của nó cũng bị xóa.
-            entity.HasMany(m => m.ProgressLogs) // MemberProfile có nhiều ProgressLog
+            entity.HasMany(m => m.ProgressLogs)
                   .WithOne(pl => pl.Member)
                   .HasForeignKey(pl => pl.MemberId) 
-                  .OnDelete(DeleteBehavior.Cascade); 
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.PricePerPack)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("price_per_pack");
         });
         modelBuilder.Entity<MemberTrigger>(entity =>
         {
@@ -399,21 +421,10 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.LogId).HasColumnName("log_id");
             entity.Property(e => e.CigarettesSmoked).HasColumnName("cigarettes_smoked");
-            entity.Property(e => e.LogDate).HasColumnName("log_date");
+            entity.Property(e => e.LogDate)
+                .HasColumnName("log_date")
+                .HasColumnType("date");
             entity.Property(e => e.MemberId).HasColumnName("member_id");
-
-            entity.Property(e => e.Mood)
-                .HasMaxLength(50)
-                .IsUnicode(true)
-                .HasColumnName("mood");
-            entity.Property(e => e.Notes)
-                .IsUnicode(true)
-                .HasColumnName("notes");
-            entity.Property(e => e.CigarettesPerPack)
-                .HasColumnName("cigarettes_per_pack");
-            entity.Property(e => e.PricePerPack)
-                .HasColumnType("decimal(18, 2)")
-                .HasColumnName("price_per_pack");
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
                 .HasColumnType("datetime")
@@ -423,6 +434,11 @@ public partial class QuitSmokingSupportContext : DbContext
             .HasColumnName("goal_plan_id")
             .IsRequired(false);
             entity.HasIndex(p => new { p.MemberId, p.LogDate });
+            entity.Property(e => e.Notes)
+                .IsUnicode(true)
+                .HasColumnName("notes");
+            entity.Property(e => e.CigarettesSmoked)
+              .HasColumnName("cigarettes_per_pack");
         });
 
         modelBuilder.Entity<Ranking>(entity =>

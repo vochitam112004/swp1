@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebSmokingSupport.Data;
 
@@ -11,9 +12,11 @@ using WebSmokingSupport.Data;
 namespace WebSmokingSupport.Migrations
 {
     [DbContext(typeof(QuitSmokingSupportContext))]
-    partial class QuitSmokingSupportContextModelSnapshot : ModelSnapshot
+    [Migration("20250801042456_SmokingReduceWeek")]
+    partial class SmokingReduceWeek
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -357,41 +360,6 @@ namespace WebSmokingSupport.Migrations
                     b.ToTable("GoalPlan", (string)null);
                 });
 
-            modelBuilder.Entity("WebSmokingSupport.Entity.GoalPlanWeeklyReduction", b =>
-                {
-                    b.Property<int>("WeeklyReductionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WeeklyReductionId"));
-
-                    b.Property<int>("CigarettesReduced")
-                        .HasColumnType("int")
-                        .HasColumnName("cigarettes_reduced");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("end_date");
-
-                    b.Property<int>("GoalPlanId")
-                        .HasColumnType("int")
-                        .HasColumnName("goal_plan_id");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("start_date");
-
-                    b.Property<int>("WeekNumber")
-                        .HasColumnType("int")
-                        .HasColumnName("week_number");
-
-                    b.HasKey("WeeklyReductionId");
-
-                    b.HasIndex("GoalPlanId");
-
-                    b.ToTable("GoalPlanWeeklyReduction", (string)null);
-                });
-
             modelBuilder.Entity("WebSmokingSupport.Entity.MemberProfile", b =>
                 {
                     b.Property<int>("MemberId")
@@ -407,9 +375,6 @@ namespace WebSmokingSupport.Migrations
                     b.Property<int?>("CigarettesSmoked")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int?>("ExperienceLevel")
                         .HasColumnType("int");
 
@@ -424,9 +389,6 @@ namespace WebSmokingSupport.Migrations
 
                     b.Property<int?>("QuitAttempts")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -986,18 +948,6 @@ namespace WebSmokingSupport.Migrations
                     b.Navigation("Member");
                 });
 
-            modelBuilder.Entity("WebSmokingSupport.Entity.GoalPlanWeeklyReduction", b =>
-                {
-                    b.HasOne("WebSmokingSupport.Entity.GoalPlan", "GoalPlan")
-                        .WithMany("GoalPlanWeeklyReductions")
-                        .HasForeignKey("GoalPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_GoalPlanWeeklyReduction_GoalPlan");
-
-                    b.Navigation("GoalPlan");
-                });
-
             modelBuilder.Entity("WebSmokingSupport.Entity.MemberProfile", b =>
                 {
                     b.HasOne("WebSmokingSupport.Entity.User", "User")
@@ -1140,8 +1090,6 @@ namespace WebSmokingSupport.Migrations
 
             modelBuilder.Entity("WebSmokingSupport.Entity.GoalPlan", b =>
                 {
-                    b.Navigation("GoalPlanWeeklyReductions");
-
                     b.Navigation("ProgressLogs");
                 });
 

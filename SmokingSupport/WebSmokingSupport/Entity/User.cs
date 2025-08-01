@@ -47,7 +47,7 @@ public partial class User
     public virtual ICollection<Ranking> Rankings { get; set; } = new List<Ranking>();
 
     public virtual ICollection<SystemReport> SystemReports { get; set; } = new List<SystemReport>();
-
+    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     public virtual ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
     public virtual ICollection<CommunityPost> CommunityPosts { get; set; } = new List<CommunityPost>();
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebSmokingSupport.Data;
 
@@ -11,9 +12,11 @@ using WebSmokingSupport.Data;
 namespace WebSmokingSupport.Migrations
 {
     [DbContext(typeof(QuitSmokingSupportContext))]
-    partial class QuitSmokingSupportContextModelSnapshot : ModelSnapshot
+    [Migration("20250801044414_updateWeekSmoking")]
+    partial class updateWeekSmoking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -407,9 +410,6 @@ namespace WebSmokingSupport.Migrations
                     b.Property<int?>("CigarettesSmoked")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int?>("ExperienceLevel")
                         .HasColumnType("int");
 
@@ -424,9 +424,6 @@ namespace WebSmokingSupport.Migrations
 
                     b.Property<int?>("QuitAttempts")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
