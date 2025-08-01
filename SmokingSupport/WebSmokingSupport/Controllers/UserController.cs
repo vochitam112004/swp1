@@ -149,8 +149,7 @@ namespace WebSmokingSupport.Controllers
                     {
                         await dto.AvatarFile.CopyToAsync(stream);
                     }
-
-                    // Cập nhật AvatarUrl trong database
+ 
                     user.AvatarUrl = $"/uploads/avatars/{fileName}";
                 }
                 catch (Exception ex)
@@ -202,41 +201,6 @@ namespace WebSmokingSupport.Controllers
             {
                 user.IsActive = dto.IsActive.Value;
             }
-            if (dto.AvatarFile != null && dto.AvatarFile.Length > 0)
-            {
-                if (!dto.AvatarFile.ContentType.StartsWith("image/"))
-                {
-                    return BadRequest("Tệp tải lên không phải là định dạng ảnh hợp lệ.");
-                }
-
-                try
-                {
-                    var uploadsDirectoryPath = Path.Combine(_env.ContentRootPath, "uploads", "avatars");
-
-                    if (!Directory.Exists(uploadsDirectoryPath))
-                    {
-                        Directory.CreateDirectory(uploadsDirectoryPath);
-                    }
-
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.AvatarFile.FileName);
-                    var filePath = Path.Combine(uploadsDirectoryPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await dto.AvatarFile.CopyToAsync(stream);
-                    }
-
-                    // Cập nhật AvatarUrl trong database
-                    user.AvatarUrl = $"/uploads/avatars/{fileName}";
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Lỗi khi tải lên ảnh đại diện: {ex.Message}");
-                    return StatusCode(StatusCodes.Status500InternalServerError, $"Đã xảy ra lỗi khi tải lên ảnh đại diện: {ex.Message}");
-                }
-            }
-            // Nếu dto.AvatarFile là null, AvatarUrl sẽ giữ nguyên giá trị cũ
-
             user.UpdatedAt = DateTime.UtcNow;
             await _userRepository.UpdateAsync(user);
             var userResponse = new DTOUserForRead
@@ -248,7 +212,6 @@ namespace WebSmokingSupport.Controllers
                 Address = user.Address,
                 PhoneNumber = user.PhoneNumber,
                 UserType = user.UserType,
-                AvatarUrl = user.AvatarUrl,
                 CreatedAt = user.CreatedAt,
                 UpdatedAt = user.UpdatedAt,
                 IsActive = user.IsActive
