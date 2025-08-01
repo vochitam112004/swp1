@@ -277,6 +277,35 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(response);
         }
- 
+
+        [HttpDelete("{coachId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteCoach(int coachId)
+        {
+            var coachProfile = await _context.CoachProfiles
+                .Include(c => c.Coach) // Coach chính là User
+                .FirstOrDefaultAsync(c => c.CoachId == coachId);
+
+            if (coachProfile == null)
+            {
+                return NotFound("Coach not found.");
+            }
+
+            var user = coachProfile.Coach;
+
+            // Xóa CoachProfile
+            _context.CoachProfiles.Remove(coachProfile);
+
+            // Xóa User nếu cần
+            if (user != null)
+            {
+                _context.Users.Remove(user);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok($"Coach with ID {coachId} deleted successfully.");
+        }
+
     }
 }
