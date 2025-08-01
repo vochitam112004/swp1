@@ -4,18 +4,11 @@ namespace WebSmokingSupport.DTOs
 {
     public class DTOGoalPlanForCreate
     {
-        
-        public DateOnly? TargetQuitDate { get; set; }
-        public string? PersonalMotivation { get; set; }
-
-        [Required]
-        public decimal PricePerPack { get; set; }
-
-        [Required]
-        public int CigarettesPerPack { get; set; }
-
-        public string? Mood { get; set; }
-        public string? Notes { get; set; }
-        public bool? isCurrentGoal { get; set; }
+        public DateOnly StartDate { get; set; } 
+        public bool isCurrentGoal { get; set; } = true;
+        public DateOnly EndDate { get; set; } 
+        public int TotalDays { get; set; } 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; 
+        public DateTime? UpdatedAt { get; set; }
     }
 }

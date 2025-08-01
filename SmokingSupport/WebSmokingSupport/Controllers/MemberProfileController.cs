@@ -22,6 +22,34 @@ namespace WebSmokingSupport.Controllers
             _memberProfileRepository = memberProfileRepository;
             _context = context;
         }
+        [HttpGet("GetMemberProfileByUserId/{userId}")]
+        [Authorize(Roles = "Coach, Admin")]
+        public async Task<ActionResult<DTOMemberProfileForRead>> GetMemberProfileByUserId(int userId)
+        {
+            var memberProfile = await _context.MemberProfiles
+                .Include(mp => mp.User)
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if (memberProfile == null)
+            {
+                return NotFound($"Member profile not found for the specified user ID = {userId}.");
+            }
+            var MemberProfileResponse = new DTOMemberProfileForRead
+            {
+                MemberId = memberProfile.MemberId,
+                UserId = memberProfile.UserId,
+                DisplayName = memberProfile.User.DisplayName,
+                CigarettesSmoked = memberProfile.CigarettesSmoked,
+                QuitAttempts = memberProfile.QuitAttempts,
+                ExperienceLevel = memberProfile.ExperienceLevel,
+                PersonalMotivation = memberProfile.PersonalMotivation,
+                health = memberProfile.health,
+                PricePerPack = memberProfile.PricePerPack,
+                CigarettesPerPack = memberProfile.CigarettesPerPack,
+                CreatedAt = memberProfile.CreatedAt,
+                UpdatedAt = memberProfile.UpdatedAt
+            };
+            return Ok(MemberProfileResponse);
+        }
         [HttpGet("GetMyMemberProfile")]
         [Authorize(Roles = "Member")]
         public async Task<ActionResult<DTOMemberProfileForRead>> GetMyMemberProfile()
