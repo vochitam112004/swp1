@@ -10,80 +10,53 @@ import {
   ListItem,
   ListItemText,
   IconButton,
-  Modal
+  Modal,
+  Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import api from "../../api/axios";
-import EditIcon from "@mui/icons-material/Edit";
-import { toast } from "react-toastify";
 import DeleteIcon from "@mui/icons-material/Delete";
-import "../../css/Admin.css";
+import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
+import { toast } from "react-toastify";
 
 export default function ManageCoach() {
-  const [form, setForm] = useState({
+  const [coaches, setCoaches] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [selectedCoachId, setSelectedCoachId] = useState(null);
+  const [editingData, setEditingData] = useState(null);
+  const [newCoach, setNewCoach] = useState({
     username: "",
-    password: "",
+    passWord: "",
     email: "",
-    displayName: "",
     phoneNumber: "",
     address: "",
+    userType: "Coach",
+    specialization: "",
+    displayName: "",
+    avatarUrl: ""
   });
-
-  const [coaches, setCoaches] = useState([]);
-  const [deleteCoachId, setDeleteCoachId] = useState(null);
-  const [editingCoach, setEditingCoach] = useState(null);
-  const [editingData, setEditingData] = useState(null);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const fetchCoaches = async () => {
     try {
       const res = await api.get("/Coach");
-      if (Array.isArray(res.data)) {
-        setCoaches(res.data);
-      } else {
-        setCoaches([]);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Không thể lấy danh sách coach");
-    }
-  };
-
-  const handleCreate = async () => {
-    if (!form.username || !form.password || !form.email || !form.displayName) {
-      toast.error("Vui lòng điền đầy đủ");
-      return;
-    }
-    try {
-      await api.post("/Coach/create-coach-by-Admin", {
-        ...form,
-        userType: "Coach",
-      });
-      toast.success("Tạo coach thành công!");
-      setForm({
-        username: "",
-        password: "",
-        email: "",
-        displayName: "",
-        phoneNumber: "",
-        address: "",
-      });
-      fetchCoaches();
-    } catch {
-      toast.error("Lỗi khi tạo coach");
-    }
-  };
-
-  const handleUpdateCoach = async (coach) => {
-    try {
-      await api.put(`/User/${coach.userId}`, coach);
-      toast.success("Cập nhật thành công!");
-      setEditingCoach(null);
-      fetchCoaches();
-    } catch {
-      toast.error("Cập nhật thất bại!");
+      const processed = (res.data || [])
+        .filter((c) => c && c.username)
+        .map((c) => ({
+          ...c,
+          isActive: !c.isLocked,
+          userName: c.username,
+          avatarUrl: c.avatarUrl || null,
+        }));
+      setCoaches(processed);
+    } catch (error) {
+      console.error("Failed to fetch coaches", error);
     }
   };
 
@@ -91,174 +64,206 @@ export default function ManageCoach() {
     fetchCoaches();
   }, []);
 
-  return (
-    <Box className="manage-coach" sx={{ display: 'flex', gap: 4, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-      <Box flex={1} minWidth={300}>
-        <Typography variant="h6" mb={2} className="manage-coach__title">
-          Tạo tài khoản Coach
-        </Typography>
+  const handleDeleteCoach = async () => {
+    try {
+      await api.delete(`/Coach/${selectedCoachId}`);
+      toast.success("Xóa coach thành công");
+      setDeleteDialogOpen(false);
+      fetchCoaches();
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast.error("Xóa coach thất bại");
+    }
+  };
 
-        <Paper className="manage-coach__form" elevation={3} sx={{ p: 2 }}>
+  const handleUpdateCoach = async () => {
+    if (!editingData) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("UserName", editingData.userName);
+      formData.append("Email", editingData.email);
+      formData.append("PhoneNumber", editingData.phoneNumber);
+      formData.append("Address", editingData.address);
+      formData.append("AvatarUrl", editingData.avatarUrl);
+      formData.append("DisplayName", editingData.displayName);
+      formData.append("Specialization", editingData.specialization);
+      formData.append("IsActive", editingData.isActive);
+      formData.append("UpdatedAt", new Date().toISOString());
+      if (editingData.avatarFile) {
+        formData.append("avatarFile", editingData.avatarFile);
+      }
+
+      await api.put(`/Coach/${editingData.coachId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Cập nhật coach thành công");
+      setEditModalOpen(false);
+      fetchCoaches();
+    } catch (error) {
+      console.error("Update failed:", error);
+      toast.error("Cập nhật thất bại");
+    }
+  };
+
+  const handleCreateCoach = async () => {
+    try {
+      await api.post("/Coach/create-coach-by-Admin", newCoach);
+      toast.success("Tạo coach thành công");
+      setCreateModalOpen(false);
+      fetchCoaches();
+      setNewCoach({
+        username: "",
+        passWord: "",
+        email: "",
+        phoneNumber: "",
+        address: "",
+        userType: "Coach",
+        specialization: "",
+        displayName: "",
+        avatarUrl: ""
+      });
+    } catch (error) {
+      console.error("Create failed:", error);
+      toast.error("Tạo coach thất bại");
+    }
+  };
+
+  const filteredCoaches = coaches.filter(
+    (coach) =>
+      coach.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      coach.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      coach.username?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <Box p={3}>
+      <Typography variant="h4" gutterBottom>
+        Quản lý Coach
+      </Typography>
+
+      <Box display="flex" alignItems="center" gap={2} mb={2}>
+        <TextField
+          label="Tìm kiếm coach"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setCreateModalOpen(true)}
+        >
+          Thêm Coach
+        </Button>
+      </Box>
+
+      <List>
+        {filteredCoaches.map((coach) => (
+          <ListItem key={coach.coachId} secondaryAction={
+            <>
+              <IconButton onClick={() => {
+                setEditingData(coach);
+                setEditModalOpen(true);
+              }}>
+                <EditIcon />
+              </IconButton>
+              <IconButton onClick={() => {
+                setSelectedCoachId(coach.coachId);
+                setDeleteDialogOpen(true);
+              }}>
+                <DeleteIcon />
+              </IconButton>
+            </>
+          }>
+            <Avatar src={coach.avatarUrl} sx={{ mr: 2 }} />
+            <ListItemText
+              primary={coach.displayName}
+              secondary={`${coach.email} - ${coach.specialization}`}
+            />
+          </ListItem>
+        ))}
+      </List>
+
+      {/* Modal edit coach */}
+      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)}>
+        <Box p={3} sx={{ backgroundColor: "white", width: 500, mx: "auto", mt: 5 }}>
+          <Typography variant="h6" gutterBottom>Cập nhật Coach</Typography>
+          {editingData && (
+            <Grid container spacing={2}>
+              {["userName", "displayName", "email", "phoneNumber", "address", "specialization"].map((field) => (
+                <Grid item xs={12} sm={6} key={field}>
+                  <TextField
+                    label={field}
+                    name={field}
+                    fullWidth
+                    value={editingData[field] || ""}
+                    onChange={(e) =>
+                      setEditingData({ ...editingData, [field]: e.target.value })
+                    }
+                  />
+                </Grid>
+              ))}
+              <Grid item xs={12} sm={6}>
+                <Button variant="contained" component="label">
+                  Upload Avatar
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) =>
+                      setEditingData({ ...editingData, avatarFile: e.target.files[0] })
+                    }
+                  />
+                </Button>
+                {editingData.avatarFile && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    {editingData.avatarFile.name}
+                  </Typography>
+                )}
+              </Grid>
+              <Grid item xs={12}>
+                <Button variant="contained" onClick={handleUpdateCoach}>Lưu</Button>
+              </Grid>
+            </Grid>
+          )}
+        </Box>
+      </Modal>
+
+      {/* Modal create coach */}
+      <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)}>
+        <Box p={3} sx={{ backgroundColor: "white", width: 500, mx: "auto", mt: 5 }}>
+          <Typography variant="h6" gutterBottom>Thêm Coach</Typography>
           <Grid container spacing={2}>
-            {["username", "password", "email", "displayName", "phoneNumber", "address"].map((field) => (
+            {["username", "passWord", "displayName", "email", "phoneNumber", "address", "specialization", "avatarUrl"].map((field) => (
               <Grid item xs={12} sm={6} key={field}>
                 <TextField
                   label={field}
                   name={field}
-                  type={field === "password" ? "password" : "text"}
                   fullWidth
-                  value={form[field]}
-                  onChange={handleChange}
+                  value={newCoach[field] || ""}
+                  onChange={(e) =>
+                    setNewCoach({ ...newCoach, [field]: e.target.value })
+                  }
                 />
               </Grid>
             ))}
             <Grid item xs={12}>
-              <Button variant="contained" onClick={handleCreate}>
-                Tạo Coach
-              </Button>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Box>
-
-      <Box flex={1.5} minWidth={360}>
-        <Typography variant="h6" mb={2}>Danh sách Coach</Typography>
-
-        {coaches.length > 0 ? (
-          <Paper elevation={2}>
-            <List>
-              {coaches.map((coach) => (
-                <ListItem
-                  key={coach.userId}
-                  divider
-                  secondaryAction={
-                    <>
-                      <IconButton onClick={() => {
-                        setEditingCoach(coach);
-                        setEditingData({ ...coach });
-                      }}>
-                        <EditIcon color="primary" />
-                      </IconButton>
-
-                      <IconButton
-                        edge="end"
-                        aria-label="delete"
-                        onClick={() => setDeleteCoachId(coach)}
-                      >
-                        <DeleteIcon color="error" />
-                      </IconButton>
-                    </>
-                  }
-                >
-                  <ListItemText
-                    primary={`${coach.displayName} (${coach.username})`}
-                    secondary={coach.email}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
-        ) : (
-          <Typography color="text.secondary">Chưa có coach nào.</Typography>
-        )}
-      </Box>
-
-      {/* Modal chỉnh sửa */}
-      <Modal
-        open={Boolean(editingCoach)}
-        onClose={() => {
-          setEditingCoach(null);
-          setEditingData(null);
-        }}
-      >
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          bgcolor: 'background.paper',
-          boxShadow: 24,
-          borderRadius: 2,
-          p: 4,
-          width: 600,
-          maxWidth: '95%',
-        }}>
-          <Typography variant="h6" gutterBottom>
-            Cập nhật Coach: {editingData?.username}
-          </Typography>
-
-          <Grid container spacing={2}>
-            {["email", "displayName", "phoneNumber", "address"].map((field) => (
-              <Grid item xs={12} sm={6} key={field}>
-                <TextField
-                  label={field}
-                  name={field}
-                  fullWidth
-                  value={editingData?.[field] || ""}
-                  onChange={(e) =>
-                    setEditingData({ ...editingData, [field]: e.target.value })
-                  }
-                />
-              </Grid>
-            ))}
-            <Grid item xs={12} sx={{ textAlign: 'right' }}>
-              <Button variant="contained" onClick={() => handleUpdateCoach(editingData)}>
-                Lưu cập nhật
-              </Button>
-              <Button variant="text" onClick={() => {
-                setEditingCoach(null);
-                setEditingData(null);
-              }} sx={{ ml: 2 }}>
-                Hủy
-              </Button>
+              <Button variant="contained" onClick={handleCreateCoach}>Tạo</Button>
             </Grid>
           </Grid>
         </Box>
       </Modal>
 
-      {/* Modal xác nhận xoá */}
-      <Modal
-        open={Boolean(deleteCoachId)}
-        onClose={() => setDeleteCoachId(null)}
-      >
-        <Box sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          bgcolor: "background.paper",
-          borderRadius: 2,
-          boxShadow: 24,
-          p: 3,
-          minWidth: 360,
-        }}>
-          <Typography variant="body1" color="error" mb={2}>
-            Bạn có chắc chắn muốn xóa <strong>{deleteCoachId?.displayName}</strong>?
-          </Typography>
-          <Box display="flex" justifyContent="flex-end" gap={2}>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={async () => {
-                try {
-                  await api.delete(`/User/${deleteCoachId.userId}`);
-                  toast.success("Đã xóa coach thành công");
-                  fetchCoaches();
-                } catch {
-                  toast.error("Xóa coach thất bại");
-                } finally {
-                  setDeleteCoachId(null);
-                }
-              }}
-            >
-              Xóa
-            </Button>
-            <Button variant="outlined" onClick={() => setDeleteCoachId(null)}>
-              Hủy
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
+      {/* Dialog xóa */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Xác nhận xóa</DialogTitle>
+        <DialogContent>Bạn có chắc chắn muốn xóa coach này?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Hủy</Button>
+          <Button color="error" onClick={handleDeleteCoach}>Xóa</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

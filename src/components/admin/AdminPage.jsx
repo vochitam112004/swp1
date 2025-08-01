@@ -4,8 +4,8 @@ import {
   Typography,
   Tabs,
   Tab,
-  Paper,
   MenuItem,
+  Stack
 } from "@mui/material";
 import ManageCoach from "./ManageCoach";
 import UserManager from "./UserManager";
@@ -13,76 +13,62 @@ import MembershipManager from "./MembershipManager";
 import FeedbackManager from "./FeedbackManager";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import SystemReportManager from "./SystemReportManager";
 import BadgeManager from "./BadgeManager";
 import SystemOverview from "./SystemOverview";
 
 export default function AdminPage() {
   const [tab, setTab] = useState(0);
   const { logout } = useAuth();
-  const [setAnchorEl] = useState(null);
   const navigate = useNavigate();
 
   const handleTabChange = (event, newValue) => {
     setTab(newValue);
   };
 
-  const handleMenuClose = () => setAnchorEl(null);
-
   const handleLogout = () => {
     logout();
-    handleMenuClose();
     navigate("/");
   };
-  
+
   return (
-    <Box
-      sx={{
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-        p: 3,
-      }}
-    >
-      <Typography
-        variant="h4"
+    <Box sx={{ backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+      {/* Header + Logout */}
+      <Box
         sx={{
-          fontWeight: "bold",
-          textAlign: "center",
-          color: "#1976d2",
-          mb: 2,
+          bgcolor: "#fff",
+          px: 4,
+          py: 3,
+          borderBottom: "1px solid #e0e0e0",
         }}
       >
-        Bảng điều khiển quản trị viên
-      </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            color="#1976d2"
+          >
+            Bảng điều khiển quản trị viên
+          </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-        <MenuItem
-          onClick={handleLogout}
-          sx={{
-            backgroundColor: "#e53935",
-            color: "white",
-            borderRadius: "8px",
-            px: 2,
-            py: 1,
-            width: "fit-content",
-            fontWeight: "bold",
-            "&:hover": {
-              backgroundColor: "#c62828",
-            },
-          }}
-        >
-          Đăng xuất
-        </MenuItem>
-      </Box>
+          <MenuItem
+            onClick={handleLogout}
+            sx={{
+              backgroundColor: "#e53935",
+              color: "white",
+              borderRadius: "6px",
+              px: 2,
+              py: 1,
+              fontWeight: "bold",
+              "&:hover": {
+                backgroundColor: "#c62828",
+              },
+            }}
+          >
+            Đăng xuất
+          </MenuItem>
+        </Stack>
 
-      <Paper
-        elevation={3}
-        sx={{
-          mb: 2,
-          borderRadius: 2,
-          bgcolor: "#ffffff",
-        }}
-      >
+        {/* Tabs */}
         <Tabs
           value={tab}
           onChange={handleTabChange}
@@ -91,12 +77,20 @@ export default function AdminPage() {
           textColor="primary"
           indicatorColor="primary"
           sx={{
+            mt: 2,
             "& .MuiTab-root": {
-              fontWeight: "bold",
+              fontWeight: "normal",
               textTransform: "none",
+              minWidth: "auto",
+              mr: 3,
+              color: "#333",
             },
             "& .Mui-selected": {
               color: "#1976d2 !important",
+              fontWeight: "bold",
+            },
+            "& .MuiTabs-indicator": {
+              backgroundColor: "#1976d2",
             },
           }}
         >
@@ -105,18 +99,19 @@ export default function AdminPage() {
           <Tab label="Gói thành viên" />
           <Tab label="Phản hồi & Đánh giá" />
           <Tab label="Quản lí huy hiệu" />
-          <Tab label="Báo cáo hệ thống" />
           <Tab label="Thống kê hệ thống" />
         </Tabs>
-      </Paper>
+      </Box>
 
-      {tab === 0 && <ManageCoach />}
-      {tab === 1 && <UserManager />}
-      {tab === 2 && <MembershipManager />}
-      {tab === 3 && <FeedbackManager />}
-      {tab === 4 && <BadgeManager />}
-      {tab === 5 && <SystemReportManager />}
-      {tab === 6 && <SystemOverview />}
+      {/* Nội dung tab */}
+      <Box sx={{ px: 4, py: 3 }}>
+        {tab === 0 && <ManageCoach />}
+        {tab === 1 && <UserManager />}
+        {tab === 2 && <MembershipManager />}
+        {tab === 3 && <FeedbackManager />}
+        {tab === 4 && <BadgeManager />}
+        {tab === 5 && <SystemOverview />}
+      </Box>
     </Box>
   );
 }
