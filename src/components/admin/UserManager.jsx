@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Box, Typography, List, ListItem, ListItemText, IconButton,
-  Stack, Modal, Grid, TextField, Button
+  Stack, Modal, Grid, TextField, Button, FormControlLabel, Switch
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -49,7 +49,6 @@ export default function UserManager() {
     }
   };
 
-
   const handleDelete = async (userId) => {
     try {
       await api.delete(`/User/${userId}`);
@@ -63,12 +62,26 @@ export default function UserManager() {
 
   const handleUpdateUser = async () => {
     try {
-      await api.put(`/User/${editingData.userId}`, editingData);
+      const formData = new FormData();
+      formData.append("userName", editingData.userName);
+      formData.append("displayName", editingData.displayName);
+      formData.append("email", editingData.email);
+      formData.append("phoneNumber", editingData.phoneNumber);
+      formData.append("address", editingData.address);
+      formData.append("isActive", editingData.isActive);
+
+      await api.put(`/User/${editingData.userId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
       toast.success("Cập nhật thành công!");
       setEditingUser(null);
       setEditingData(null);
       fetchData();
-    } catch {
+    } catch (error) {
+      console.error(error);
       toast.error("Cập nhật thất bại!");
     }
   };
@@ -78,6 +91,7 @@ export default function UserManager() {
       <Typography variant="h6" mb={2}>
         Quản lý người dùng
       </Typography>
+
       <List>
         {users.map((user) => (
           <ListItem
@@ -89,7 +103,11 @@ export default function UserManager() {
                   aria-label="edit"
                   onClick={() => {
                     setEditingUser(user);
-                    setEditingData({ ...user });
+                    setEditingData({
+                      ...user,
+                      userName: user.userName || "",
+                      isActive: user.isActive ?? true,
+                    });
                   }}
                 >
                   <EditIcon color="primary" />
@@ -111,6 +129,8 @@ export default function UserManager() {
                   {user.email}
                   <br />
                   Gói: <strong>{user.planName}</strong>
+                  <br />
+                  Trạng thái: <strong>{user.isActive ? "Đang hoạt động" : "Ngừng hoạt động"}</strong>
                 </>
               }
             />
@@ -133,11 +153,20 @@ export default function UserManager() {
           }}
         >
           <Typography variant="body1" color="error" mb={2}>
-            Bạn có chắc chắn muốn xóa <strong>{deleteUser?.displayName}</strong>?
+            Bạn có chắc chắn muốn xóa {" "}
+            <strong>{deleteUser?.displayName}</strong>?
           </Typography>
           <Box display="flex" justifyContent="flex-end" gap={2}>
-            <Button variant="contained" color="error" onClick={() => handleDelete(deleteUser.userId)}>Xóa</Button>
-            <Button variant="outlined" onClick={() => setDeleteUser(null)}>Hủy</Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => handleDelete(deleteUser.userId)}
+            >
+              Xóa
+            </Button>
+            <Button variant="outlined" onClick={() => setDeleteUser(null)}>
+              Hủy
+            </Button>
           </Box>
         </Box>
       </Modal>
@@ -151,25 +180,25 @@ export default function UserManager() {
       >
         <Box
           sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            bgcolor: 'background.paper',
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "background.paper",
             boxShadow: 24,
             borderRadius: 2,
             p: 4,
             width: 600,
-            maxWidth: '95%',
+            maxWidth: "95%",
           }}
         >
           <Typography variant="h6" gutterBottom>
-            Cập nhật người dùng: {editingData?.username}
+            Cập nhật người dùng: {editingData?.userName}
           </Typography>
 
           {editingData && (
             <Grid container spacing={2}>
-              {["displayName", "email", "phoneNumber", "address"].map((field) => (
+              {["userName", "displayName", "email", "phoneNumber", "address"].map((field) => (
                 <Grid item xs={12} sm={6} key={field}>
                   <TextField
                     label={field}
@@ -177,13 +206,33 @@ export default function UserManager() {
                     fullWidth
                     value={editingData[field] || ""}
                     onChange={(e) =>
-                      setEditingData({ ...editingData, [field]: e.target.value })
+                      setEditingData({
+                        ...editingData,
+                        [field]: e.target.value,
+                      })
                     }
                   />
                 </Grid>
               ))}
 
-              <Grid item xs={12} sx={{ textAlign: 'right' }}>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={editingData.isActive}
+                      onChange={(e) =>
+                        setEditingData({
+                          ...editingData,
+                          isActive: e.target.checked,
+                        })
+                      }
+                    />
+                  }
+                  label="Kích hoạt"
+                />
+              </Grid>
+
+              <Grid item xs={12} sx={{ textAlign: "right" }}>
                 <Button variant="contained" onClick={handleUpdateUser}>
                   Lưu cập nhật
                 </Button>
