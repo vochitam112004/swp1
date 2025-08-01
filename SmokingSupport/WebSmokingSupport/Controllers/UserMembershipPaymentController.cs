@@ -66,9 +66,6 @@ namespace WebSmokingSupport.Controllers
         [Route("PaymentExecute")]
         public async Task<IActionResult> PaymentCallBack()
         {
-            // ✅ Thêm dòng log dưới đây để kiểm tra kết nối DB
-            _logger.LogInformation("🔍 Database Connection: {conn}", _context.Database.GetDbConnection().ConnectionString);
-
             var collection = HttpContext.Request.Query;
 
             _logger.LogInformation("MoMo PaymentCallBack received. Query parameters: {Query}", collection.Select(kvp => $"{kvp.Key}={kvp.Value}").ToList());
