@@ -208,10 +208,8 @@ namespace WebSmokingSupport.Controllers
         [HttpPut("{coachId}")]
         [Consumes("multipart/form-data")]
         [Authorize(Roles = "Admin,Coach")]
-        public async Task<ActionResult<DTOCoachResponse>> UpdateCoach(
-     int coachId,
-     [FromForm] DTOCoachForUpdate dto,
-     IFormFile? avatarFile)
+        public async Task<ActionResult<DTOCoachResponse>> UpdateCoach(int coachId,
+        [FromForm] DTOCoachForUpdate dto,IFormFile? avatarFile)
         {
             var coachProfile = await _context.CoachProfiles
                 .Include(c => c.Coach) // Coach là User
@@ -283,29 +281,58 @@ namespace WebSmokingSupport.Controllers
         public async Task<IActionResult> DeleteCoach(int coachId)
         {
             var coachProfile = await _context.CoachProfiles
-                .Include(c => c.Coach) // Coach chính là User
+                .Include(c => c.Appointments)
+                .Include(c => c.Coach)
+                    .ThenInclude(u => u.ChatMessageSenders)
+                .Include(c => c.Coach)
+                    .ThenInclude(u => u.ChatMessageReceivers)
+                .Include(c => c.Coach)
+                    .ThenInclude(u => u.CommunityPosts)
+                .Include(c => c.Coach)
+                    .ThenInclude(u => u.Feedbacks)
                 .FirstOrDefaultAsync(c => c.CoachId == coachId);
 
             if (coachProfile == null)
-            {
-                return NotFound("Coach not found.");
-            }
+                return NotFound($"Coach with ID {coachId} not found.");
 
-            var user = coachProfile.Coach;
+            int deletedAppointments = coachProfile.Appointments.Count;
+            int deletedSentMessages = coachProfile.Coach.ChatMessageSenders.Count;
+            int deletedReceivedMessages = coachProfile.Coach.ChatMessageReceivers.Count;
+            int deletedPosts = coachProfile.Coach.CommunityPosts.Count;
+            int deletedFeedbacks = coachProfile.Coach.Feedbacks.Count;
+
+            // Xóa Appointments
+            _context.Appointments.RemoveRange(coachProfile.Appointments);
+
+            // Xóa ChatMessages (Sender & Receiver)
+            _context.ChatMessages.RemoveRange(coachProfile.Coach.ChatMessageSenders);
+            _context.ChatMessages.RemoveRange(coachProfile.Coach.ChatMessageReceivers);
+
+            // Xóa Posts
+            _context.CommunityPosts.RemoveRange(coachProfile.Coach.CommunityPosts);
+
+            // Xóa Feedbacks
+            _context.Feedbacks.RemoveRange(coachProfile.Coach.Feedbacks);
 
             // Xóa CoachProfile
             _context.CoachProfiles.Remove(coachProfile);
 
-            // Xóa User nếu cần
-            if (user != null)
-            {
-                _context.Users.Remove(user);
-            }
+            // Xóa User
+            _context.Users.Remove(coachProfile.Coach);
 
             await _context.SaveChangesAsync();
 
-            return Ok($"Coach with ID {coachId} deleted successfully.");
+            return Ok(new
+            {
+                Message = $"Coach {coachId} deleted successfully.",
+                DeletedAppointments = deletedAppointments,
+                DeletedSentMessages = deletedSentMessages,
+                DeletedReceivedMessages = deletedReceivedMessages,
+                DeletedPosts = deletedPosts,
+                DeletedFeedbacks = deletedFeedbacks
+            });
         }
+
 
     }
 }
