@@ -47,7 +47,7 @@ export default function AdminPage() {
             fontWeight="bold"
             color="#1976d2"
           >
-            Bảng điều khiển quản trị viên
+            Trang quản lý Breath Free
           </Typography>
 
           <MenuItem

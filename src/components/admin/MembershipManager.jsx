@@ -1,191 +1,185 @@
 import React, { useEffect, useState } from "react";
 import {
-  Box,
-  Typography,
-  List,
-  ListItem,
-  TextField,
-  Button,
-  IconButton,
-  Modal,
-  Grid
+  Box, Typography, TextField, Button, IconButton,
+  Grid, Paper, Tooltip, Modal, Stack
 } from "@mui/material";
-import api from "../../api/axios";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import { toast } from "react-toastify";
+import AddIcon from "@mui/icons-material/Add";
+import api from "../../api/axios";
 
-export default function MembershipManager() {
-  const [packages, setPackages] = useState([]);
-  const [deletePackage, setDeletePackage] = useState(null);
-  const [name, setName] = useState("");
-  const [durationDays, setDurationDays] = useState(0);
-  const [price, setPrice] = useState(0);
-  const [description, setDescription] = useState("");
-  const [editingPackage, setEditingPackage] = useState(null);
-  const [editingData, setEditingData] = useState(null);
+const style = {
+  modalBox: {
+    position: "absolute",
+    top: "50%", left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: 400,
+    bgcolor: "background.paper",
+    boxShadow: 24,
+    borderRadius: 2,
+    p: 4,
+  }
+};
 
-  const fetchPackages = async () => {
-    const res = await api.get("/MembershipPlan");
-    setPackages(res.data);
-  };
+const formatPrice = (price) => price?.toLocaleString("vi-VN") + " VND";
 
-  const addPackage = async () => {
-    if (!name || durationDays <= 0 || price <= 0) {
-      toast.error("Vui lòng điền đầy đủ thông tin gói.");
-      return;
-    }
-    if (packages.some((pkg) => pkg.name === name)) {
-      toast.error("Tên gói đã tồn tại.");
-      return;
-    }
+const MembershipManager = () => {
+  const [plans, setPlans] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ name: "", description: "", price: "", durationDays: "" });
+  const [editingId, setEditingId] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  const fetchPlans = async () => {
     try {
-      await api.post("/MembershipPlan", { name, durationDays, price, description });
-      setName("");
-      setDurationDays(0);
-      setPrice(0);
-      setDescription("");
-      fetchPackages();
-      toast.success("Thêm gói thành công!");
-    } catch (error) {
-      console.error("Error adding package:", error);
-      toast.error("Thêm gói thất bại. Vui lòng thử lại.");
-    }
-  };
-
-  const deletePackageById = async (planId) => {
-    try {
-      await api.delete(`/MembershipPlan/${planId}`);
-      setDeletePackage(null);
-      fetchPackages();
-      toast.success("Xóa gói thành công!");
-    } catch (error) {
-      console.error("Error deleting package:", error);
-      toast.error("Xóa gói thất bại. Vui lòng thử lại.");
-    }
-  };
-
-  const handleUpdateMembership = async (planId) => {
-    try {
-      await api.put(`/MembershipPlan/${planId}`, editingData);
-      toast.success("Cập nhật thành công!");
-      setEditingPackage(null);
-      fetchPackages();
-    } catch {
-      toast.error("Cập nhật thất bại!");
+      const res = await api.get("/MembershipPlan");
+      setPlans(res.data);
+    } catch (err) {
+      console.error("Fetch failed", err);
     }
   };
 
   useEffect(() => {
-    fetchPackages();
+    fetchPlans();
   }, []);
 
+  const handleOpenModal = (plan = null) => {
+    setEditingId(plan?.planId || null);
+    setFormData(plan || { name: "", description: "", price: "", durationDays: "" });
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setFormData({ name: "", description: "", price: "", durationDays: "" });
+    setEditingId(null);
+  };
+
+  const handleSave = async () => {
+    try {
+      const data = {
+        ...formData,
+        price: parseInt(formData.price),
+        durationDays: parseInt(formData.durationDays)
+      };
+      if (editingId) {
+        await api.put(`/MembershipPlan/${editingId}`, data);
+      } else {
+        await api.post("/MembershipPlan", data);
+      }
+      fetchPlans();
+      handleCloseModal();
+    } catch (err) {
+      console.error("Save failed", err);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/MembershipPlan/${deleteConfirm.planId}`);
+      fetchPlans();
+      setDeleteConfirm(null);
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  };
+
   return (
-    <Box display="flex" gap={4} alignItems="flex-start">
-      <Box flex={1}>
-        <Typography variant="h6">Thêm gói thành viên</Typography>
-        <TextField label="Tên gói" value={name} onChange={(e) => setName(e.target.value)} sx={{ my: 1 }} fullWidth />
-        <TextField label="Mô tả" value={description} onChange={(e) => setDescription(e.target.value)} sx={{ my: 1 }} multiline rows={3} fullWidth />
-        <TextField label="Số ngày" value={durationDays} onChange={(e) => setDurationDays(Number(e.target.value))} sx={{ my: 1 }} fullWidth />
-        <TextField label="Giá (VND)" value={price} onChange={(e) => setPrice(Number(e.target.value))} sx={{ my: 1 }} fullWidth />
-        <Button variant="contained" onClick={addPackage} sx={{ mt: 2 }}>
-          Thêm
+    <Box p={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Typography variant="h5" fontWeight={600}>Quản lý gói thành viên</Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal()} sx={{ borderRadius: 2 }}>
+          Thêm gói
         </Button>
       </Box>
 
-      <Box flex={2}>
-        <Typography variant="h6" mb={1}>Danh sách gói</Typography>
-        <List>
-          {packages.map((pkg) => (
-            <ListItem key={pkg.planId} divider sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <Box>
-                <Typography variant="h6">{pkg.name}</Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Thời gian: {pkg.durationDays} ngày – Giá: {pkg.price} VND
-                </Typography>
-                <Typography variant="body2">{pkg.description}</Typography>
+      <Grid container spacing={3}>
+        {plans.map((pkg) => (
+          <Grid item xs={12} md={6} lg={4} key={pkg.planId}>
+            <Paper elevation={4} sx={{ p: 3, borderRadius: 3, height: "100%" }}>
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="h6" fontWeight={600}>{pkg.name}</Typography>
+                  <Typography variant="body2" color="text.secondary" mt={0.5}>
+                    {pkg.durationDays} ngày – {formatPrice(pkg.price)}
+                  </Typography>
+                  <Typography variant="body2" mt={1}>{pkg.description}</Typography>
+                </Box>
+                <Stack direction="row" spacing={1}>
+                  <Tooltip title="Chỉnh sửa">
+                    <IconButton onClick={() => handleOpenModal(pkg)}>
+                      <EditIcon color="primary" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Xóa">
+                    <IconButton onClick={() => setDeleteConfirm(pkg)}>
+                      <DeleteIcon color="error" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
               </Box>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
 
-              <Box>
-                <IconButton onClick={() => { 
-                  setEditingPackage(pkg.planId); 
-                  setEditingData({ ...pkg }); }}>
-                  <EditIcon color="primary" />
-                </IconButton>
-
-                <IconButton 
-                  color="error" 
-                  onClick={() => setDeletePackage(pkg)}>
-                  <DeleteIcon />
-                </IconButton>
-              </Box>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
-
-      <Modal open={!!deletePackage} onClose={() => setDeletePackage(null)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "#fff",
-            p: 3,
-            borderRadius: 2,
-            boxShadow: 24,
-            minWidth: 360,
-          }}
-        >
-          <Typography variant="body1" color="error" mb={2}>
-            Bạn có chắc chắn muốn xóa gói <strong>{deletePackage?.name}</strong>?
+      {/* Modal Thêm / Sửa */}
+      <Modal open={modalOpen} onClose={handleCloseModal}>
+        <Box sx={style.modalBox}>
+          <Typography variant="h6" mb={2} fontWeight={600}>
+            {editingId ? "Chỉnh sửa gói" : "Thêm gói mới"}
           </Typography>
-          <Box display="flex" justifyContent="flex-end" gap={2}>
-            <Button variant="contained" color="error" onClick={() => deletePackageById(deletePackage.planId)}>Xóa</Button>
-            <Button variant="outlined" onClick={() => setDeletePackage(null)}>Hủy</Button>
-          </Box>
+          <Stack spacing={2}>
+            <TextField
+              label="Tên gói"
+              fullWidth
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            />
+            <TextField
+              label="Mô tả"
+              fullWidth
+              multiline
+              minRows={2}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+            <TextField
+              label="Giá"
+              type="number"
+              fullWidth
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            />
+            <TextField
+              label="Số ngày"
+              type="number"
+              fullWidth
+              value={formData.durationDays}
+              onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
+            />
+            <Button variant="contained" fullWidth sx={{ borderRadius: 2 }} onClick={handleSave}>
+              {editingId ? "Lưu thay đổi" : "Thêm"}
+            </Button>
+          </Stack>
         </Box>
       </Modal>
 
-      <Modal open={!!editingPackage} onClose={() => { setEditingPackage(null); setEditingData(null); }}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "#fff",
-            p: 3,
-            borderRadius: 2,
-            boxShadow: 24,
-            width: 500,
-            maxWidth: '95%',
-          }}
-        >
-          <Typography variant="h6" gutterBottom>Cập nhật gói: {editingData?.name}</Typography>
-          {editingData && (
-            <Grid container spacing={2}>
-              {["name", "description", "durationDays", "price"].map((field) => (
-                <Grid item xs={12} key={field}>
-                  <TextField
-                    label={field}
-                    name={field}
-                    type={field === "durationDays" || field === "price" ? "number" : "text"}
-                    fullWidth
-                    value={editingData[field] || ""}
-                    onChange={(e) => setEditingData({ ...editingData, [field]: e.target.value })}
-                  />
-                </Grid>
-              ))}
-              <Grid item xs={12} sx={{ textAlign: 'right' }}>
-                <Button variant="contained" onClick={() => handleUpdateMembership(editingPackage)}>Lưu</Button>
-                <Button variant="text" onClick={() => { setEditingPackage(null); setEditingData(null); }} sx={{ ml: 2 }}>Hủy</Button>
-              </Grid>
-            </Grid>
-          )}
+      {/* Modal xác nhận xóa */}
+      <Modal open={Boolean(deleteConfirm)} onClose={() => setDeleteConfirm(null)}>
+        <Box sx={style.modalBox}>
+          <Typography variant="h6" mb={2} fontWeight={600}>Xác nhận xóa</Typography>
+          <Typography mb={3}>
+            Bạn có chắc muốn xóa gói "<strong>{deleteConfirm?.name}</strong>" không?
+          </Typography>
+          <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Button onClick={() => setDeleteConfirm(null)}>Hủy</Button>
+            <Button color="error" variant="contained" onClick={handleDelete}>Xóa</Button>
+          </Stack>
         </Box>
       </Modal>
     </Box>
   );
-}
+};
+
+export default MembershipManager;
