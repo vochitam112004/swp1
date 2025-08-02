@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "serve .build -s -l $PORT"
+   "start": "serve .build -s -l $PORT"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
