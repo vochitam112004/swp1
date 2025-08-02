@@ -16,7 +16,7 @@ import BlogPostForm from "./components/common/BlogPostForm";
 import BlogDetail from "./components/common/BlogDetail";
 import BXH from "./components/dashboard/BXH";
 import About from "./components/common/About";
-import Profile from "./components/profile/Profile";
+import ProfileTabs from "./components/profile/ProfileTabs";
 import Payment from "./components/common/Payment";
 import RequireAuth from "./components/auth/RequireAuth";
 import ForgotPassword from "./components/auth/ForgotPassword";
@@ -127,7 +127,7 @@ function AppContent() {
             path="/profile"
             element={
               <RequireAuth>
-                <Profile />
+                <ProfileTabs />
               </RequireAuth>
             }
           />

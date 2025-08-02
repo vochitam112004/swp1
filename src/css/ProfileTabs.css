@@ -1,0 +1,202 @@
+/* Profile Tabs Styles */
+.profile-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+.profile-paper {
+  margin: 20px 0;
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+.profile-avatar-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: relative;
+}
+
+.profile-avatar-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.profile-avatar-container > * {
+  position: relative;
+  z-index: 1;
+}
+
+.profile-name {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 600 !important;
+}
+
+/* Tab Styles */
+.MuiTabs-root {
+  background-color: #fafafa;
+}
+
+.MuiTab-root {
+  font-weight: 600 !important;
+  text-transform: none !important;
+  font-size: 16px !important;
+  padding: 16px 24px !important;
+  min-height: auto !important;
+}
+
+.MuiTab-root.Mui-selected {
+  color: #1976d2 !important;
+  font-weight: 700 !important;
+}
+
+.MuiTabs-indicator {
+  height: 3px !important;
+  border-radius: 3px !important;
+}
+
+/* Form Styles */
+.MuiTextField-root {
+  margin-bottom: 16px !important;
+}
+
+.MuiOutlinedInput-root {
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiOutlinedInput-root:hover {
+  transform: translateY(-1px);
+}
+
+.MuiOutlinedInput-root.Mui-focused {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(25, 118, 210, 0.2) !important;
+}
+
+/* Button Styles */
+.MuiButton-contained {
+  border-radius: 25px !important;
+  padding: 12px 32px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiButton-contained:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.MuiButton-outlined {
+  border-radius: 25px !important;
+  padding: 12px 32px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiButton-outlined:hover {
+  transform: translateY(-2px);
+}
+
+/* Paper Styles */
+.MuiPaper-root {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiPaper-root:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Card Styles */
+.MuiCard-root {
+  border-radius: 16px !important;
+  transition: all 0.3s ease !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.MuiCard-root:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Grid Spacing */
+.MuiGrid-item {
+  padding: 8px !important;
+}
+
+/* Typography Improvements */
+.MuiTypography-h5 {
+  font-weight: 700 !important;
+  margin-bottom: 24px !important;
+}
+
+.MuiTypography-h6 {
+  font-weight: 600 !important;
+  margin-bottom: 16px !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 0 10px;
+  }
+  
+  .MuiTab-root {
+    font-size: 14px !important;
+    padding: 12px 16px !important;
+  }
+  
+  .profile-paper {
+    margin: 10px 0;
+  }
+}
+
+/* Animation */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-paper {
+  animation: slideInUp 0.6s ease-out;
+}
+
+/* Loading States */
+.MuiCircularProgress-root {
+  color: #1976d2 !important;
+}
+
+/* Success/Error States */
+.success-text {
+  color: #4caf50 !important;
+  font-weight: 600 !important;
+}
+
+.error-text {
+  color: #f44336 !important;
+  font-weight: 600 !important;
+}
+
+.warning-text {
+  color: #ff9800 !important;
+  font-weight: 600 !important;
+}

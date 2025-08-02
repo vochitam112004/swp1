@@ -13,7 +13,7 @@ import UserProgress from "./UserProgress";
 import UserPlans from "./UserPlans";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import Profile from "../profile/Profile";
+import ProfileTabs from "../profile/ProfileTabs";
 import "../../css/Coach.css";
 import AppointmentList from "./AppointmentList";
 
@@ -105,7 +105,7 @@ export default function CoachDashboard() {
       {tab === 0 && <AssignedUsers />}
       {tab === 1 && <UserProgress />}
       {tab === 2 && <AppointmentList />}
-      {tab === 3 && <Profile />}
+      {tab === 3 && <ProfileTabs />}
     </Box>
   );
 }

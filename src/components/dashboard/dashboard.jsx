@@ -20,7 +20,6 @@ import "../../css/Dashboard.css";
 import BadgeComponents from "./components/BadgeComponents";
 import ProgressTracker from "./components/ProgressTracker";
 import JournalManager from "./components/JournalManager";
-import ProfileManager from "./components/ProfileManager";
 import AppointmentManager from "./components/AppointmentManager";
 import NotificationManager from "./components/NotificationManager";
 import SevenDayProgressChart from "./components/SevenDayProgressChart";
@@ -784,23 +783,6 @@ const Dashboard = () => {
       case TABS.SYSTEM_REPORT:
         return <SystemReportForm />;
       
-      case "profile":
-        return (
-          <ProfileManager
-            memberProfile={memberProfile}
-            setMemberProfile={setMemberProfile}
-            smokingStatus={smokingStatus}
-            setSmokingStatus={setSmokingStatus}
-            quitAttempts={quitAttempts}
-            setQuitAttempts={setQuitAttempts}
-            experienceLevel={experienceLevel}
-            setExperienceLevel={setExperienceLevel}
-            previousAttempts={previousAttempts}
-            setPreviousAttempts={setPreviousAttempts}
-            fetchProfile={fetchProfile}
-          />
-        );
-      
       case TABS.APPOINTMENT:
         return (
           <AppointmentManager
@@ -908,14 +890,6 @@ const Dashboard = () => {
                 onClick={() => setActiveTab("systemreport")}
               >
                 <i className="fas fa-flag me-2"></i>Báo cáo hệ thống
-              </button>
-            </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === "profile" ? "active" : ""}`}
-                onClick={() => setActiveTab("profile")}
-              >
-                <i className="fas fa-user me-2"></i>Hồ sơ cá nhân
               </button>
             </li>
             <li className="nav-item">
