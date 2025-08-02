@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import api from "../../../api/axios";
 import { safeParse } from "../utils/dashboardUtils";
+import { ApiHelper } from "../../../utils/apiHelper";
 
 export const useDashboardData = () => {
   // States
@@ -15,6 +16,17 @@ export const useDashboardData = () => {
   const [experienceLevel, setExperienceLevel] = useState(0);
   const [previousAttempts, setPreviousAttempts] = useState("");
   const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
+  // New smoking habits states
+  const [dailyCigarettes, setDailyCigarettes] = useState(0);
+  const [yearsOfSmoking, setYearsOfSmoking] = useState(0);
+  const [packPrice, setPackPrice] = useState(25000);
+  const [healthConditions, setHealthConditions] = useState("");
+  const [allergies, setAllergies] = useState("");
+  const [medications, setMedications] = useState("");
+  const [previousHealthIssues, setPreviousHealthIssues] = useState("");
+  const [smokingTriggers, setSmokingTriggers] = useState("");
+  const [preferredBrand, setPreferredBrand] = useState("");
+  const [smokingPattern, setSmokingPattern] = useState("");
   const [appointments, setAppointments] = useState([]);
   const [coachList, setCoachList] = useState([]);
   const [planHistory, setPlanHistory] = useState([]);
@@ -67,6 +79,23 @@ export const useDashboardData = () => {
         setQuitAttempts(res.data.quitAttempts || 0);
         setExperienceLevel(res.data.experience_level || 0);
         setPreviousAttempts(res.data.previousAttempts || "");
+        
+        // Set new smoking habits data
+        setDailyCigarettes(res.data.dailyCigarettes || 0);
+        setYearsOfSmoking(res.data.yearsOfSmoking || 0);
+        setPackPrice(res.data.packPrice || 25000);
+        setCigarettesPerPack(res.data.cigarettesPerPack || 20);
+        
+        // Set health information
+        setHealthConditions(res.data.healthConditions || "");
+        setAllergies(res.data.allergies || "");
+        setMedications(res.data.medications || "");
+        setPreviousHealthIssues(res.data.previousHealthIssues || "");
+        
+        // Set additional smoking details
+        setSmokingTriggers(res.data.smokingTriggers || "");
+        setPreferredBrand(res.data.preferredBrand || "");
+        setSmokingPattern(res.data.smokingPattern || "");
       } else {
         toast.warn("Không tìm thấy hồ sơ cá nhân.");
       }
@@ -81,21 +110,21 @@ export const useDashboardData = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [
-        progressLogRes,
-        currentGoalRes,
-        goalPlanRes,
-      ] = await Promise.all([
-        api.get("/ProgressLog/GetProgress-logs"),
-        api.get("/CurrentGoal"),
-        api.get("/GoalPlan/current-goal"),
-      ]);
+      const { progressLogs, currentGoal, goalPlan, errors } = await ApiHelper.fetchAllDashboardData();
+      
+      setProgressLogs(progressLogs);
+      setCurrentGoal(currentGoal);
+      setPlan(goalPlan);
 
-      setProgressLogs(progressLogRes.data);
-      setCurrentGoal(currentGoalRes.data);
-      setPlan(goalPlanRes.data || null);
+      // Log any errors that occurred during fetching
+      if (errors.length > 0) {
+        console.warn("⚠️ Some data could not be loaded:", errors);
+        // Optionally show a warning toast
+        // toast.warn("Một số dữ liệu không thể tải được");
+      }
     } catch (err) {
-      console.error("❌ Lỗi khi fetch dữ liệu:", err);
+      console.error("❌ Critical error fetching dashboard data:", err);
+      toast.error("Không thể tải dữ liệu dashboard");
     } finally {
       setLoading(false);
     }
@@ -118,9 +147,11 @@ export const useDashboardData = () => {
   const fetchAppointments = async () => {
     try {
       const res = await api.get("/Appointment/GetAppointments");
-      setAppointments(res.data);
-    } catch {
-      toast.error("Lấy lịch hẹn thất bại!");
+      setAppointments(res.data || []);
+    } catch (error) {
+      console.error("❌ Appointment Error:", error);
+      toast.error("Không thể tải lịch hẹn: " + (error.response?.data?.message || error.message));
+      setAppointments([]); // Set empty array as fallback
     }
   };
 
@@ -149,6 +180,17 @@ export const useDashboardData = () => {
     experienceLevel,
     previousAttempts,
     cigarettesPerPack,
+    // New smoking habits states
+    dailyCigarettes,
+    yearsOfSmoking,
+    packPrice,
+    healthConditions,
+    allergies,
+    medications,
+    previousHealthIssues,
+    smokingTriggers,
+    preferredBrand,
+    smokingPattern,
     appointments,
     coachList,
     planHistory,
@@ -166,6 +208,17 @@ export const useDashboardData = () => {
     setExperienceLevel,
     setPreviousAttempts,
     setCigarettesPerPack,
+    // New setters
+    setDailyCigarettes,
+    setYearsOfSmoking,
+    setPackPrice,
+    setHealthConditions,
+    setAllergies,
+    setMedications,
+    setPreviousHealthIssues,
+    setSmokingTriggers,
+    setPreferredBrand,
+    setSmokingPattern,
     setAppointments,
     setCoachList,
     setPlanHistory,

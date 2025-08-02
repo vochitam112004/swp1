@@ -3,6 +3,8 @@ import { toast } from 'react-toastify';
 import api from '../../api/axios';
 import '../../css/Dashboard.css';
 import '../../css/PlanTabNew.css';
+import { DateUtils } from '../../utils/dateUtils';
+import { ApiHelper } from '../../utils/apiHelper';
 
 const PlanTabNew = () => {
   const [plan, setPlan] = useState(null);
@@ -27,7 +29,7 @@ const PlanTabNew = () => {
   // Form data for creating new plan
   const [formData, setFormData] = useState({
     totalWeeks: 4,
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: DateUtils.toISODateString(new Date()),
     weeklyReductions: [],
     personalMotivation: ''
   });
@@ -93,6 +95,34 @@ const PlanTabNew = () => {
     }
   }, [weeklyPlans, plan]);
 
+  // Helper function to calculate plan duration
+  const calculatePlanDuration = (planData) => {
+    if (!planData) return { days: 0, weeks: 0 };
+    
+    const startDate = planData.startDate || planData.StartDate;
+    const endDate = planData.targetQuitDate || planData.TargetQuitDate;
+    
+    if (!startDate || !endDate) return { days: 0, weeks: 0 };
+    
+    const days = DateUtils.daysDifference(endDate, startDate);
+    const weeks = Math.ceil(days / 7);
+    
+    return { days, weeks };
+  };
+
+  // Helper function to format plan dates for display
+  const formatPlanDates = (planData) => {
+    if (!planData) return { startDate: 'N/A', endDate: 'N/A' };
+    
+    const startDate = planData.startDate || planData.StartDate;
+    const endDate = planData.targetQuitDate || planData.TargetQuitDate;
+    
+    return {
+      startDate: startDate ? DateUtils.toVietnameseString(startDate) : 'N/A',
+      endDate: endDate ? DateUtils.toVietnameseString(endDate) : 'N/A'
+    };
+  };
+
   const handleEditPlan = () => {
     setShowEditForm(true);
     setShowCreateForm(false);
@@ -103,6 +133,26 @@ const PlanTabNew = () => {
 
   const updateExistingPlan = async () => {
     try {
+      // Validation
+      if (!editFormData.personalMotivation.trim()) {
+        toast.error('Vui lòng nhập động lực cá nhân');
+        return;
+      }
+      
+      if (!editFormData.targetQuitDate) {
+        toast.error('Vui lòng chọn ngày mục tiêu');
+        return;
+      }
+      
+      // Check if target date is after start date
+      const startDate = new Date(plan.startDate || plan.StartDate);
+      const targetDate = new Date(editFormData.targetQuitDate);
+      
+      if (targetDate <= startDate) {
+        toast.error('Ngày mục tiêu phải sau ngày bắt đầu');
+        return;
+      }
+
       // Update main plan
       const planData = {
         personalMotivation: editFormData.personalMotivation,
@@ -122,6 +172,7 @@ const PlanTabNew = () => {
               targetReduction: week.reduction
             });
           }
+          return null;
         });
         
         await Promise.all(updatePromises.filter(Boolean));
@@ -132,12 +183,39 @@ const PlanTabNew = () => {
       await fetchCurrentPlan();
     } catch (error) {
       console.error('Error updating plan:', error);
-      toast.error('Cập nhật kế hoạch thất bại!');
+      toast.error(error.response?.data?.message || 'Cập nhật kế hoạch thất bại!');
     }
   };
 
   const createNewPlan = async () => {
     try {
+      // Validation
+      if (!formData.startDate) {
+        toast.error('Vui lòng chọn ngày bắt đầu');
+        return;
+      }
+      
+      if (!formData.personalMotivation.trim()) {
+        toast.error('Vui lòng nhập động lực cá nhân');
+        return;
+      }
+      
+      if (formData.totalWeeks < 1 || formData.totalWeeks > 52) {
+        toast.error('Thời gian kế hoạch phải từ 1-52 tuần');
+        return;
+      }
+      
+      // Check if start date is not in the past
+      const startDate = new Date(formData.startDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      startDate.setHours(0, 0, 0, 0);
+      
+      if (startDate < today) {
+        toast.error('Ngày bắt đầu không thể là ngày đã qua');
+        return;
+      }
+
       // First create the main plan
       const planData = {
         startDate: formData.startDate,
@@ -151,36 +229,31 @@ const PlanTabNew = () => {
 
       // Then create weekly reduction plans
       const weeklyPlansPromises = formData.weeklyReductions.map((week, index) => {
-        const weekStart = new Date(formData.startDate);
-        weekStart.setDate(weekStart.getDate() + (index * 7));
-        
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6);
+        const weekStart = DateUtils.addWeeks(formData.startDate, index);
+        const weekEnd = DateUtils.addDays(weekStart, 6);
 
-        return api.post('/GoalPlanWeeklyReduction', {
+        return ApiHelper.createWeeklyPlan({
           goalPlanId: createdPlan.id,
           weekNumber: index + 1,
           targetReduction: week.reduction,
-          weekStartDate: weekStart.toISOString().split('T')[0],
-          weekEndDate: weekEnd.toISOString().split('T')[0]
+          weekStartDate: weekStart,
+          weekEndDate: weekEnd
         });
       });
 
       await Promise.all(weeklyPlansPromises);
-      
+
       toast.success('Tạo kế hoạch thành công!');
       setShowCreateForm(false);
       await fetchCurrentPlan();
     } catch (error) {
       console.error('Error creating plan:', error);
-      toast.error('Tạo kế hoạch thất bại!');
+      toast.error(error.response?.data?.message || 'Tạo kế hoạch thất bại!');
     }
-  };
-
-  const calculateEndDate = (startDate, weeks) => {
-    const end = new Date(startDate);
-    end.setDate(end.getDate() + (weeks * 7));
-    return end.toISOString().split('T')[0];
+  };  const calculateEndDate = (startDate, weeks) => {
+    // Use DateUtils for safe date calculation
+    const endDate = DateUtils.addWeeks(startDate, weeks);
+    return DateUtils.toISODateString(endDate);
   };
 
   const handleWeeklyReductionChange = (weekIndex, value) => {
@@ -241,21 +314,21 @@ const PlanTabNew = () => {
               <div className="stat-icon green">✓</div>
               <div className="stat-info">
                 <h4>Ngày bắt đầu</h4>
-                <p>1/8/2025</p>
+                <p>{DateUtils.toVietnameseString(new Date())}</p>
               </div>
             </div>
             <div className="stat-item">
               <div className="stat-icon blue">📊</div>
               <div className="stat-info">
                 <h4>Mục tiêu hoàn thành</h4>
-                <p>26/9/2025</p>
+                <p>{DateUtils.toVietnameseString(DateUtils.addWeeks(new Date(), 8))}</p>
               </div>
             </div>
             <div className="stat-item">
               <div className="stat-icon purple">⏰</div>
               <div className="stat-info">
-                <h4>Thới gian dự kiến</h4>
-                <p>56 ngày</p>
+                <h4>Thời gian dự kiến</h4>
+                <p>{DateUtils.daysDifference(DateUtils.addWeeks(new Date(), 8), new Date())} ngày</p>
               </div>
             </div>
           </div>
@@ -385,8 +458,30 @@ const PlanTabNew = () => {
                 value={formData.startDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
                 className="form-control"
+                min={DateUtils.toISODateString(new Date())}
               />
             </div>
+
+            {/* Plan Summary */}
+            {formData.startDate && formData.totalWeeks > 0 && (
+              <div className="plan-summary alert alert-info">
+                <h5>📋 Tóm tắt kế hoạch:</h5>
+                <div className="row">
+                  <div className="col-md-4">
+                    <strong>Ngày bắt đầu:</strong><br />
+                    {DateUtils.toVietnameseString(formData.startDate)}
+                  </div>
+                  <div className="col-md-4">
+                    <strong>Ngày kết thúc:</strong><br />
+                    {DateUtils.toVietnameseString(calculateEndDate(formData.startDate, formData.totalWeeks))}
+                  </div>
+                  <div className="col-md-4">
+                    <strong>Thời gian dự kiến:</strong><br />
+                    {DateUtils.daysDifference(calculateEndDate(formData.startDate, formData.totalWeeks), formData.startDate)} ngày ({formData.totalWeeks} tuần)
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="weekly-plans">
               <h4>Kế hoạch giảm theo tuần:</h4>
@@ -514,10 +609,13 @@ const PlanTabNew = () => {
           <div className="plan-overview">
             <div className="plan-dates">
               <div className="date-item">
-                <strong>Ngày bắt đầu:</strong> {new Date(plan.startDate || plan.StartDate).toLocaleDateString('vi-VN')}
+                <strong>Ngày bắt đầu:</strong> {formatPlanDates(plan).startDate}
               </div>
               <div className="date-item">
-                <strong>Ngày mục tiêu:</strong> {new Date(plan.targetQuitDate || plan.TargetQuitDate).toLocaleDateString('vi-VN')}
+                <strong>Ngày mục tiêu:</strong> {formatPlanDates(plan).endDate}
+              </div>
+              <div className="date-item">
+                <strong>Thời gian dự kiến:</strong> {calculatePlanDuration(plan).days} ngày ({calculatePlanDuration(plan).weeks} tuần)
               </div>
             </div>
             

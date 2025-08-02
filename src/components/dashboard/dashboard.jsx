@@ -380,7 +380,10 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="col-6 col-md-2">
-              <button className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center">
+              <button 
+                className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center"
+                onClick={() => setActiveTab("appointment")}
+              >
                 <div className="icon-wrapper bg-warning mb-2">
                   <i className="fas fa-calendar-alt text-white"></i>
                 </div>
@@ -391,7 +394,10 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="col-6 col-md-2">
-              <button className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center">
+              <button 
+                className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center"
+                onClick={() => setActiveTab("notifications")}
+              >
                 <div className="icon-wrapper bg-secondary mb-2">
                   <i className="fas fa-history text-white"></i>
                 </div>
@@ -402,7 +408,10 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="col-6 col-md-2">
-              <button className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center">
+              <button 
+                className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center"
+                onClick={() => setActiveTab("achievements")}
+              >
                 <div className="icon-wrapper bg-dark mb-2">
                   <i className="fas fa-trophy text-white"></i>
                 </div>

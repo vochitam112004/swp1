@@ -12,6 +12,7 @@ import {
   ArcElement,
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
+import { DateUtils } from '../../utils/dateUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -31,7 +32,6 @@ const ProgressTab = ({ progressLogs, currentGoal, plan }) => {
 
   // Lọc dữ liệu theo khoảng thời gian
   const getFilteredData = () => {
-    const now = new Date();
     let daysBack = 7;
     
     switch (selectedTimeRange) {
@@ -48,12 +48,12 @@ const ProgressTab = ({ progressLogs, currentGoal, plan }) => {
         daysBack = 7;
     }
 
-    const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
+    const { startDate, endDate } = DateUtils.getDateRange(daysBack);
     
     return progressLogs.filter(log => {
-      const logDate = new Date(log.date || log.logDate);
-      return logDate >= startDate;
-    }).sort((a, b) => new Date(a.date || a.logDate) - new Date(b.date || b.logDate));
+      const logDate = DateUtils.startOfDay(DateUtils.normalizeFields(log).date);
+      return logDate >= startDate && logDate <= endDate;
+    }).sort((a, b) => new Date(DateUtils.normalizeFields(a).date) - new Date(DateUtils.normalizeFields(b).date));
   };
 
   const filteredData = getFilteredData();

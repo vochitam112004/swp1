@@ -1,6 +1,7 @@
 // Dashboard utility functions
 import { toast } from "react-toastify";
 import { BADGES, TIPS } from "../constants/dashboardConstants";
+import { DateUtils } from "../../../utils/dateUtils";
 
 export const safeParse = (key, fallback) => {
   try {
@@ -127,14 +128,10 @@ export const calculateGoalProgress = (currentGoal, plan) => {
 };
 
 export const getGoalDays = (plan) => {
-  if (plan && plan.startDate && plan.targetQuitDate) {
-    const startDate = new Date(plan.startDate);
-    const targetDate = new Date(plan.targetQuitDate);
-    return Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
-  } else if (plan && plan.StartDate && plan.TargetQuitDate) {
-    const startDate = new Date(plan.StartDate);
-    const targetDate = new Date(plan.TargetQuitDate);
-    return Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+  const normalizedPlan = DateUtils.normalizeFields(plan);
+  
+  if (normalizedPlan && normalizedPlan.startDate && normalizedPlan.targetQuitDate) {
+    return DateUtils.daysDifference(normalizedPlan.targetQuitDate, normalizedPlan.startDate);
   }
   return 60; // default
 };

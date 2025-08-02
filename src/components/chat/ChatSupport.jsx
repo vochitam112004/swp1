@@ -82,8 +82,12 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false
       setMessages(msgs);
       // markMessagesAsRead(msgs);
     } catch (err) {
-      console.log(err)
-      setMessages([{ senderId: null, senderDisplayName: "Hệ thống", content: "Không thể tải tin nhắn." }]);
+      console.error("❌ Chat Error:", err);
+      const errorMessage = err.response?.status === 404 
+        ? "Chưa có tin nhắn nào." 
+        : "Không thể tải tin nhắn. Vui lòng thử lại sau.";
+      setMessages([{ senderId: null, senderDisplayName: "Hệ thống", content: errorMessage }]);
+      toast.error("Lỗi tải tin nhắn: " + (err.response?.data?.message || err.message));
     }
   }, [role, targetUserId, selectedCoachId]);
 
@@ -133,8 +137,9 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false
     try {
       await api.post("/ChatMessage/send", newMsg);
       await fetchData();
-    } catch {
-      toast.error("Lỗi kết nối máy chủ!");
+    } catch (error) {
+      console.error("❌ Send Message Error:", error);
+      toast.error("Gửi tin nhắn thất bại: " + (error.response?.data?.message || "Lỗi kết nối máy chủ!"));
     } finally {
       setLoading(false);
     }
