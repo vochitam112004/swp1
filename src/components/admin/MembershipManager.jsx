@@ -93,35 +93,59 @@ const MembershipManager = () => {
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, py: 2 }}>
         {plans.map((pkg) => (
-          <Grid item xs={12} md={6} lg={4} key={pkg.planId}>
-            <Paper elevation={4} sx={{ p: 3, borderRadius: 3, height: "100%" }}>
+          <Box
+            key={pkg.planId}
+            sx={{
+              width: 300,
+              height: 240,
+              flexShrink: 0,
+            }}
+          >
+            <Paper elevation={3} sx={{ p: 2, height: '100%', borderRadius: 2 }}>
               <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography variant="h6" fontWeight={600}>{pkg.name}</Typography>
+                <Box sx={{ pr: 1, width: '100%' }}>
+                  <Typography variant="subtitle1" fontWeight={600} noWrap>
+                    {pkg.name}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary" mt={0.5}>
                     {pkg.durationDays} ngày – {formatPrice(pkg.price)}
                   </Typography>
-                  <Typography variant="body2" mt={1}>{pkg.description}</Typography>
+                  <Typography
+                    variant="body2"
+                    mt={1}
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      fontSize: 13,
+                    }}
+                  >
+                    {pkg.description}
+                  </Typography>
                 </Box>
-                <Stack direction="row" spacing={1}>
+
+                <Stack direction="column" spacing={1}>
                   <Tooltip title="Chỉnh sửa">
-                    <IconButton onClick={() => handleOpenModal(pkg)}>
-                      <EditIcon color="primary" />
+                    <IconButton size="small" onClick={() => handleOpenModal(pkg)}>
+                      <EditIcon fontSize="small" color="primary" />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Xóa">
-                    <IconButton onClick={() => setDeleteConfirm(pkg)}>
-                      <DeleteIcon color="error" />
+                    <IconButton size="small" onClick={() => setDeleteConfirm(pkg)}>
+                      <DeleteIcon fontSize="small" color="error" />
                     </IconButton>
                   </Tooltip>
                 </Stack>
               </Box>
             </Paper>
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
+
 
       {/* Modal Thêm / Sửa */}
       <Modal open={modalOpen} onClose={handleCloseModal}>

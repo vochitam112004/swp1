@@ -9,11 +9,7 @@ import {
   Button
 } from "@mui/material";
 import api from "../../api/axios";
-import "../../css/Membership.css";
 import { useNavigate } from "react-router-dom";
-import StarIcon from '@mui/icons-material/Star';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import BoltIcon from '@mui/icons-material/Bolt';
 
 export default function MembershipList() {
   const [plans, setPlans] = useState([]);
@@ -43,7 +39,13 @@ export default function MembershipList() {
 
   return (
     <Box sx={{ py: 4 }}>
-      <Typography variant="h4" mb={4} textAlign="center" color="primary" fontWeight={700}>
+      <Typography
+        variant="h4"
+        mb={4}
+        textAlign="center"
+        color="primary"
+        fontWeight={700}
+      >
         Chọn gói thành viên phù hợp với bạn
       </Typography>
 
@@ -53,61 +55,95 @@ export default function MembershipList() {
           const isFree = name.includes("miễn phí") || name.includes("cơ bản") || plan.price === 0;
           const isPremium = name.includes("premium");
           const isVIP = name.includes("vip");
-
-          const titleColor = isVIP ? "#d4af37" : isPremium ? "#1976d2" : "#43a047";
-          const Icon = isVIP ? StarIcon : isPremium ? BoltIcon : CheckCircleIcon;
           const buttonText = isFree ? "SỬ DỤNG MIỄN PHÍ" : isVIP ? "ĐĂNG KÝ VIP" : "ĐĂNG KÝ NGAY";
 
           return (
-            <Grid item xs={12} sm={6} md={4} key={plan.planId}>
-              <Card className="membership-card">
-                <CardContent>
+            <Grid
+              item
+              key={plan.planId}
+              sx={{ width: { xs: "100%", sm: 300 } }}
+            >
+              <Card
+                sx={{
+                  height: "100%",
+                  borderRadius: 3,
+                  boxShadow: 3,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  p: 2,
+                }}
+              >
+                <CardContent sx={{ flex: 1 }}>
                   <Typography
-                    className={`membership-title ${isVIP ? "title-vip" : isPremium ? "title-premium" : "title-free"}`}
-                    variant="h5"
+                    variant="h6"
+                    fontWeight={600}
+                    sx={{
+                      color: isVIP ? "#8e24aa" : isPremium ? "#1976d2" : "#2e7d32",
+                      mb: 1,
+                    }}
                   >
                     {plan.name}
                   </Typography>
 
-                  <Typography color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
                     ⏱️ Thời hạn: <strong>{plan.durationDays} ngày</strong>
                   </Typography>
 
                   <Typography
-                    className="membership-price"
-                    sx={{ color: titleColor }}
+                    variant="body1"
+                    fontWeight={600}
+                    sx={{
+                      color: isVIP ? "#8e24aa" : isPremium ? "#1976d2" : "#2e7d32",
+                    }}
                   >
-                    {plan.price === 0
-                      ? "Miễn phí"
-                      : `${plan.price.toLocaleString()}đ`}
-                    <span className="price-sub"> /tháng</span>
+                    {plan.price === 0 ? "Miễn phí" : `${plan.price.toLocaleString()}đ`}
+                    <Typography variant="caption" component="span" sx={{ ml: 0.5 }}>
+                      /tháng
+                    </Typography>
                   </Typography>
 
-                  <Typography className="description">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mt: 1,
+                      color: "text.secondary",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                    }}
+                  >
                     {plan.description}
                   </Typography>
-
-                  <Button
-                    fullWidth
-                    className={`action-btn ${isFree ? "btn-free" : isVIP ? "btn-vip" : "btn-premium"}`}
-                    sx={{
-                      mt: 3,
-                      px: 2,
-                      py: 1.5,
-                      fontWeight: 600,
-                      fontSize: 16,
-                      borderRadius: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 1,
-                    }}
-                    onClick={() => handleSelectPlan(plan.planId)}
-                  >
-                    <Icon fontSize="small" className="btn-icon" />
-                    {buttonText}
-                  </Button>
                 </CardContent>
+
+                <Button
+                  variant="contained"
+                  fullWidth
+                  onClick={() => handleSelectPlan(plan.planId)}
+                  sx={{
+                    mt: 2,
+                    py: 1.2,
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    backgroundColor: isFree
+                      ? "#2e7d32"
+                      : isPremium
+                      ? "#1976d2"
+                      : "#8e24aa",
+                    "&:hover": {
+                      backgroundColor: isFree
+                        ? "#27632a"
+                        : isPremium
+                        ? "#1565c0"
+                        : "#7b1fa2",
+                    },
+                  }}
+                >
+                  {buttonText}
+                </Button>
               </Card>
             </Grid>
           );
