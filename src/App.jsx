@@ -40,7 +40,7 @@ import { useState } from "react";
 
 function AppContent() {
   const location = useLocation();
-  const isSpecialRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/coach");
+  const isSpecialRoute = location.pathname.startsWith("/admin") || location.pathname === "/coach";
   const [showChat, setShowChat] = useState(false);
 
   return (
