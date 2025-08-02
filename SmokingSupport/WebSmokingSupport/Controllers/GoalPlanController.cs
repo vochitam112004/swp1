@@ -30,14 +30,22 @@ namespace WebSmokingSupport.Controllers
             {
                 return Unauthorized("User not authenticated.");
             }
+            var memberProfile = await _context.MemberProfiles
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if (memberProfile == null)
+            {
+                return NotFound("Member profile not found. Please create a profile before accessing goal plans.");
+            }
             var goalPlans = await _context.GoalPlans
                 .Include(gp => gp.Member)
-                .Where(gp => gp.MemberId == userId && gp.isCurrentGoal)
+                .ThenInclude(m => m.User)
+                .Where(gp => gp.MemberId == memberProfile.MemberId && gp.isCurrentGoal == true)
                 .ToListAsync();
             if (goalPlans == null || goalPlans.Count == 0)
             {
-                return NotFound("No current goal plans found for the user.");
+                return NotFound("Bạn không có Goal Plan hiện tại nào đang hoạt động.");
             }
+          
             var goalPlanResponses = goalPlans.Select(gp => new DTOGoalPlanForRead
             {
                 PlanId = gp.PlanId,
@@ -62,6 +70,7 @@ namespace WebSmokingSupport.Controllers
             }
             var goalPlanExisted = await _context.GoalPlans
                 .Include(gp => gp.Member)
+                .ThenInclude(m => m.User)
                 .FirstOrDefaultAsync(gp => gp.PlanId == planId);
             if (goalPlanExisted == null)
             {
@@ -90,6 +99,12 @@ namespace WebSmokingSupport.Controllers
             {
                 return Unauthorized("User not authenticated.");
             }
+            var memberProfileExisted = await _context.MemberProfiles
+                                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if (memberProfileExisted == null)
+            {
+                return NotFound("Member profile not found. Please create a profile before creating a goal plan.");
+            }
             var activeGoalPlan  = await _context.GoalPlans
                 .FirstOrDefaultAsync(gp => gp.MemberId == userId && gp.isCurrentGoal);
             if (activeGoalPlan != null)
@@ -115,7 +130,8 @@ namespace WebSmokingSupport.Controllers
             }
             var newGoalPlan = new GoalPlan
             {
-                MemberId = userId,
+                MemberId = memberProfileExisted.MemberId,
+                
                 StartDate = dto.StartDate,
                 isCurrentGoal = true,
                 EndDate = dto.EndDate,
@@ -126,17 +142,18 @@ namespace WebSmokingSupport.Controllers
             await _context.SaveChangesAsync();
             var goalPlanResponse = new DTOGoalPlanForRead
             {
-                PlanId = activeGoalPlan.PlanId,
-                MemberDisplayName = activeGoalPlan.Member?.User?.DisplayName ?? "Unknown",
-                MemberId = activeGoalPlan.MemberId,
-                StartDate = activeGoalPlan.StartDate,
-                isCurrentGoal = activeGoalPlan.isCurrentGoal,
-                EndDate = activeGoalPlan.EndDate,
-                CreatedAt = activeGoalPlan.CreatedAt,
-                UpdatedAt = activeGoalPlan.UpdatedAt,
-                TotalDays = activeGoalPlan.TotalDays
+                PlanId = newGoalPlan.PlanId,
+                MemberDisplayName = memberProfileExisted.User?.DisplayName ?? "Unknown",
+                MemberId = newGoalPlan.MemberId,
+                StartDate = newGoalPlan.StartDate,
+                isCurrentGoal = newGoalPlan.isCurrentGoal,
+                EndDate = newGoalPlan.EndDate,
+                CreatedAt = newGoalPlan.CreatedAt,
+                UpdatedAt = newGoalPlan.UpdatedAt,
+                TotalDays = newGoalPlan.TotalDays
             };
             return Ok(goalPlanResponse);
         }
+        
     }
 }
