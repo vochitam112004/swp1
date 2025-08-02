@@ -82,12 +82,7 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false
       setMessages(msgs);
       // markMessagesAsRead(msgs);
     } catch (err) {
-      console.error("❌ Chat Error:", err);
-      const errorMessage = err.response?.status === 404 
-        ? "Chưa có tin nhắn nào." 
-        : "Không thể tải tin nhắn. Vui lòng thử lại sau.";
-      setMessages([{ senderId: null, senderDisplayName: "Hệ thống", content: errorMessage }]);
-      toast.error("Lỗi tải tin nhắn: " + (err.response?.data?.message || err.message));
+      console.error(err);
     }
   }, [role, targetUserId, selectedCoachId]);
 

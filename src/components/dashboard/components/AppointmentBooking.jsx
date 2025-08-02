@@ -79,7 +79,7 @@ const AppointmentBooking = ({ onClose, onSuccess }) => {
         status: 'Pending'
       };
 
-      await api.post('/Appointment', bookingData);
+      await api.post('/Appointment/CreateAppointment', bookingData);
       toast.success('Đặt lịch hẹn thành công! Huấn luyện viên sẽ xác nhận sớm.');
       
       if (onSuccess) onSuccess();

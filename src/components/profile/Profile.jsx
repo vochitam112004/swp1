@@ -11,6 +11,12 @@ import { baseApiUrl } from "../../api/axios";
 
 export default function Profile() {
   const { user } = useAuth();
+  const [data, setData] = useState({
+    cigarettesSmoked: 0,
+    experienceLevel: 0,
+    pricePerPack: 0,
+    cigarettesPerPack: 0,
+  });
   const [profile, setProfile] = useState(null);
   const [edit, setEdit] = useState(false);
   const [form, setForm] = useState(null);
@@ -20,6 +26,7 @@ export default function Profile() {
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [passwords, setPasswords] = useState({ old: "", new1: "", new2: "" });
+  const [triggerFactors, setTriggerFactors] = useState([]);
 
   useEffect(() => {
     api.get("/User")
@@ -40,6 +47,46 @@ export default function Profile() {
         setForm(mapped);
       })
       .catch(() => toast.error("Không lấy được profile!"));
+  }, []);
+
+  useEffect(() => {
+    api.get('/TriggerFactor/Get-MyTriggerFactor')
+      .then((res) => {
+        const names = res.data.map((trigger) => trigger.name);
+        setTriggerFactors(names);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch trigger factors", err);
+      });
+  }, []);
+
+
+  useEffect(() => {
+    api.get("/MemberProfile/GetMyMemberProfile")
+      .then((res) => {
+        const {
+          cigarettesSmoked,
+          experienceLevel,
+          pricePerPack,
+          cigarettesPerPack,
+          health,
+          quitAttempts,
+          personalMotivation,
+        } = res.data;
+
+        setData({
+          cigarettesSmoked,
+          experienceLevel,
+          pricePerPack,
+          cigarettesPerPack,
+          health,
+          quitAttempts,
+          personalMotivation,
+        });
+      })
+      .catch((err) => {
+        console.error("Lỗi khi lấy dữ liệu hồ sơ hút thuốc:", err);
+      });
   }, []);
 
   useEffect(() => {
@@ -85,7 +132,7 @@ export default function Profile() {
         allergies: form.allergies || "",
         medications: form.medications || "",
       };
-      
+
       Object.assign(body, smokingHabitsData);
     }
 
@@ -199,13 +246,13 @@ export default function Profile() {
         <Typography className="profile-info"><strong>Loại người dùng:</strong> {profile.userType}</Typography>
         <Typography className="profile-info"><strong>SĐT:</strong> {profile.phoneNumber || "Chưa cập nhật"}</Typography>
         <Typography className="profile-info"><strong>Địa chỉ:</strong> {profile.address || "Chưa cập nhật"}</Typography>
-        
+
         {/* Smoking Habits Information for Members */}
         {user?.userType === "Member" && (
-          <Box sx={{ 
-            mt: 3, 
-            p: 3, 
-            background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(30, 136, 229, 0.1) 100%)', 
+          <Box sx={{
+            mt: 3,
+            p: 3,
+            background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(30, 136, 229, 0.1) 100%)',
             borderRadius: 3,
             border: '1px solid rgba(33, 150, 243, 0.2)',
             position: 'relative',
@@ -219,10 +266,10 @@ export default function Profile() {
               height: '3px',
               background: 'linear-gradient(90deg, #2196f3, #03a9f4, #2196f3)',
             }} />
-            
-            <Typography variant="h6" sx={{ 
-              color: '#1976d2', 
-              fontWeight: 'bold', 
+
+            <Typography variant="h6" sx={{
+              color: '#1976d2',
+              fontWeight: 'bold',
               mb: 3,
               display: 'flex',
               alignItems: 'center',
@@ -231,73 +278,66 @@ export default function Profile() {
               <span style={{ fontSize: '1.5rem' }}>🚬</span>
               Thông tin hút thuốc
             </Typography>
-            
+
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 2 }}>
               <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e3f2fd' }}>
                 <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '0.9rem', mb: 0.5 }}>
                   ĐIẾU THUỐC MỖI NGÀY
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#333', fontWeight: 'bold' }}>
-                  {profile.dailyCigarettes || 0} <span style={{ fontSize: '0.8rem', color: '#666' }}>điếu</span>
+                  {data.cigarettesSmoked || 0} <span style={{ fontSize: '0.8rem', color: '#666' }}>điếu</span>
                 </Typography>
               </Box>
-              
+
               <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e3f2fd' }}>
                 <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '0.9rem', mb: 0.5 }}>
                   SỐ NĂM HÚT THUỐC
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#333', fontWeight: 'bold' }}>
-                  {profile.yearsOfSmoking || 0} <span style={{ fontSize: '0.8rem', color: '#666' }}>năm</span>
+                  {data.experienceLevel || 0} <span style={{ fontSize: '0.8rem', color: '#666' }}>năm</span>
                 </Typography>
               </Box>
-              
+
               <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e3f2fd' }}>
                 <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '0.9rem', mb: 0.5 }}>
                   GIÁ 1 GÓI THUỐC
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#333', fontWeight: 'bold' }}>
-                  {(profile.packPrice || 25000).toLocaleString('vi-VN')} <span style={{ fontSize: '0.8rem', color: '#666' }}>VND</span>
+                  {data.pricePerPack.toLocaleString()} <span style={{ fontSize: '0.8rem', color: '#666' }}>VND</span>
                 </Typography>
               </Box>
-              
+
               <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e3f2fd' }}>
                 <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '0.9rem', mb: 0.5 }}>
                   ĐIẾU TRONG 1 GÓI
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#333', fontWeight: 'bold' }}>
-                  {profile.cigarettesPerPack || 20} <span style={{ fontSize: '0.8rem', color: '#666' }}>điếu</span>
+                  {data.cigarettesPerPack} <span style={{ fontSize: '0.8rem', color: '#666' }}>điếu</span>
                 </Typography>
               </Box>
             </Box>
-            
-            {profile.preferredBrand && (
+
+            {triggerFactors >= 0 && (
               <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e3f2fd', mb: 2 }}>
                 <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '0.9rem', mb: 0.5 }}>
-                  THƯƠNG HIỆU ƯA THÍCH
+                  YẾU TỐ KÍCH THÍCH
                 </Typography>
                 <Typography sx={{ color: '#333', fontWeight: 500 }}>
-                  {profile.preferredBrand}
+                  {triggerFactors.map((name, index) => (
+                    <li key={index} style={{ color: '#333', fontWeight: 500 }}>
+                      {name}
+                    </li>
+                  ))}
                 </Typography>
               </Box>
             )}
-            
-            {profile.smokingTriggers && (
-              <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e3f2fd', mb: 2 }}>
-                <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '0.9rem', mb: 0.5 }}>
-                  TÌNH HUỐNG KÍCH THÍCH
-                </Typography>
-                <Typography sx={{ color: '#333', fontWeight: 500 }}>
-                  {profile.smokingTriggers}
-                </Typography>
-              </Box>
-            )}
-            
+
             {/* Health Information */}
-            {(profile.healthConditions || profile.allergies || profile.medications) && (
+            {data && (
               <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(76, 175, 80, 0.05)', borderRadius: 2, border: '1px solid rgba(76, 175, 80, 0.2)' }}>
-                <Typography variant="subtitle2" sx={{ 
-                  color: '#4caf50', 
-                  fontWeight: 'bold', 
+                <Typography variant="subtitle2" sx={{
+                  color: '#4caf50',
+                  fontWeight: 'bold',
                   mb: 2,
                   display: 'flex',
                   alignItems: 'center',
@@ -306,49 +346,47 @@ export default function Profile() {
                   <span style={{ fontSize: '1.2rem' }}>💚</span>
                   Thông tin sức khỏe
                 </Typography>
-                
+
                 <Box sx={{ display: 'grid', gap: 2 }}>
-                  {profile.healthConditions && (
-                    <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1, border: '1px solid #e8f5e8' }}>
-                      <Typography sx={{ color: '#4caf50', fontWeight: 600, fontSize: '0.85rem', mb: 0.5 }}>
-                        TÌNH TRẠNG SỨC KHỎE
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.9rem', color: '#333' }}>
-                        {profile.healthConditions}
-                      </Typography>
-                    </Box>
-                  )}
-                  {profile.allergies && (
-                    <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1, border: '1px solid #e8f5e8' }}>
-                      <Typography sx={{ color: '#4caf50', fontWeight: 600, fontSize: '0.85rem', mb: 0.5 }}>
-                        DỊ ỨNG
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.9rem', color: '#333' }}>
-                        {profile.allergies}
-                      </Typography>
-                    </Box>
-                  )}
-                  {profile.medications && (
-                    <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1, border: '1px solid #e8f5e8' }}>
-                      <Typography sx={{ color: '#4caf50', fontWeight: 600, fontSize: '0.85rem', mb: 0.5 }}>
-                        THUỐC ĐANG DÙNG
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.9rem', color: '#333' }}>
-                        {profile.medications}
-                      </Typography>
-                    </Box>
-                  )}
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1, border: '1px solid #e8f5e8' }}>
+                    <Typography sx={{ color: '#4caf50', fontWeight: 600, fontSize: '0.85rem', mb: 0.5 }}>
+                      TÌNH TRẠNG SỨC KHỎE
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.9rem', color: '#333' }}>
+                      {data.health}
+                    </Typography>
+                  </Box>
                 </Box>
               </Box>
             )}
-            
+            {data && (
+              <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1, border: '1px solid #e8f5e8' }}>
+                <Typography sx={{ color: '#4caf50', fontWeight: 600, fontSize: '0.85rem', mb: 0.5 }}>
+                  Số lần thử cai thuốc
+                </Typography>
+                <Typography sx={{ fontSize: '0.9rem', color: '#333' }}>
+                  {data.quitAttempts}
+                </Typography>
+              </Box>
+            )}
+            {data && (
+              <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1, border: '1px solid #e8f5e8' }}>
+                <Typography sx={{ color: '#4caf50', fontWeight: 600, fontSize: '0.85rem', mb: 0.5 }}>
+                  Động lực cá nhân
+                </Typography>
+                <Typography sx={{ fontSize: '0.9rem', color: '#333' }}>
+                  {data.personalMotivation}
+                </Typography>
+              </Box>
+            )}
+
             {/* Cost Calculation */}
-            {profile.dailyCigarettes > 0 && profile.packPrice > 0 && (
-              <Box sx={{ 
-                mt: 3, 
-                p: 3, 
-                background: 'linear-gradient(135deg, #fff3cd, #ffeaa7)', 
-                borderRadius: 2, 
+            {/* {data.dailyCigarettes > 0 && profile.packPrice > 0 && (
+              <Box sx={{
+                mt: 3,
+                p: 3,
+                background: 'linear-gradient(135deg, #fff3cd, #ffeaa7)',
+                borderRadius: 2,
                 border: '2px solid #ffd54f',
                 textAlign: 'center',
                 position: 'relative',
@@ -362,9 +400,9 @@ export default function Profile() {
                   height: '3px',
                   background: 'linear-gradient(90deg, #ff9800, #ffc107, #ff9800)',
                 }} />
-                
-                <Typography variant="h6" sx={{ 
-                  color: '#e65100', 
+
+                <Typography variant="h6" sx={{
+                  color: '#e65100',
                   fontWeight: 'bold',
                   mb: 1,
                   display: 'flex',
@@ -375,8 +413,8 @@ export default function Profile() {
                   <span style={{ fontSize: '1.5rem' }}>💰</span>
                   Chi phí ước tính hàng tháng
                 </Typography>
-                <Typography variant="h4" sx={{ 
-                  color: '#d32f2f', 
+                <Typography variant="h4" sx={{
+                  color: '#d32f2f',
                   fontWeight: 'bold',
                   textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
@@ -386,10 +424,10 @@ export default function Profile() {
                   *Tính dựa trên thói quen hút thuốc hiện tại
                 </Typography>
               </Box>
-            )}
+            )} */}
           </Box>
         )}
-        
+
         <Typography className="profile-createdAt">
           Ngày tạo: {new Date(profile.createdAt).toLocaleDateString("vi-VN")}
         </Typography>
@@ -422,9 +460,9 @@ export default function Profile() {
 
         {edit && (
           <form onSubmit={handleProfileUpdate} className="edit-form" style={{ marginTop: 24 }}>
-            <Typography variant="h6" sx={{ 
-              mb: 3, 
-              color: '#1976d2', 
+            <Typography variant="h6" sx={{
+              mb: 3,
+              color: '#1976d2',
               fontWeight: 'bold',
               display: 'flex',
               alignItems: 'center',
@@ -433,7 +471,7 @@ export default function Profile() {
               <span style={{ fontSize: '1.5rem' }}>✏️</span>
               Chỉnh sửa thông tin cá nhân
             </Typography>
-            
+
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 2 }}>
               <TextField
                 label="Tên hiển thị"
@@ -442,7 +480,7 @@ export default function Profile() {
                 onChange={e => setForm({ ...form, displayName: e.target.value })}
                 fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     '&:hover': {
@@ -459,7 +497,7 @@ export default function Profile() {
                 onChange={e => setForm({ ...form, email: e.target.value })}
                 fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     '&:hover': {
@@ -469,7 +507,7 @@ export default function Profile() {
                 }}
               />
             </Box>
-            
+
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 2 }}>
               <TextField
                 label="Số điện thoại"
@@ -478,7 +516,7 @@ export default function Profile() {
                 onChange={e => setForm({ ...form, phoneNumber: e.target.value })}
                 fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     '&:hover': {
@@ -494,7 +532,7 @@ export default function Profile() {
                 onChange={e => setForm({ ...form, address: e.target.value })}
                 fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     '&:hover': {
@@ -504,13 +542,13 @@ export default function Profile() {
                 }}
               />
             </Box>
-            
+
             {/* Smoking Habits Fields for Members */}
             {user?.userType === "Member" && (
-              <Box sx={{ 
-                mt: 3, 
-                p: 3, 
-                background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(30, 136, 229, 0.1) 100%)', 
+              <Box sx={{
+                mt: 3,
+                p: 3,
+                background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(30, 136, 229, 0.1) 100%)',
                 borderRadius: 3,
                 border: '1px solid rgba(33, 150, 243, 0.2)',
                 position: 'relative',
@@ -524,10 +562,10 @@ export default function Profile() {
                   height: '3px',
                   background: 'linear-gradient(90deg, #2196f3, #03a9f4, #2196f3)',
                 }} />
-                
-                <Typography variant="h6" sx={{ 
-                  color: '#1976d2', 
-                  fontWeight: 'bold', 
+
+                <Typography variant="h6" sx={{
+                  color: '#1976d2',
+                  fontWeight: 'bold',
                   mb: 3,
                   display: 'flex',
                   alignItems: 'center',
@@ -536,7 +574,7 @@ export default function Profile() {
                   <span style={{ fontSize: '1.5rem' }}>🚬</span>
                   Thông tin hút thuốc
                 </Typography>
-                
+
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 2 }}>
                   <TextField
                     label="Số điếu thuốc mỗi ngày"
@@ -545,7 +583,7 @@ export default function Profile() {
                     value={form.dailyCigarettes || ""}
                     onChange={e => setForm({ ...form, dailyCigarettes: e.target.value })}
                     inputProps={{ min: 0, max: 100 }}
-                    sx={{ 
+                    sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'white',
                         borderRadius: 2,
@@ -562,7 +600,7 @@ export default function Profile() {
                     value={form.yearsOfSmoking || ""}
                     onChange={e => setForm({ ...form, yearsOfSmoking: e.target.value })}
                     inputProps={{ min: 0, max: 100 }}
-                    sx={{ 
+                    sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'white',
                         borderRadius: 2,
@@ -573,7 +611,7 @@ export default function Profile() {
                     }}
                   />
                 </Box>
-                
+
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 2 }}>
                   <TextField
                     label="Giá 1 gói thuốc (VND)"
@@ -582,7 +620,7 @@ export default function Profile() {
                     value={form.packPrice || ""}
                     onChange={e => setForm({ ...form, packPrice: e.target.value })}
                     inputProps={{ min: 1000, step: 1000 }}
-                    sx={{ 
+                    sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'white',
                         borderRadius: 2,
@@ -595,11 +633,11 @@ export default function Profile() {
                   <TextField
                     label="Số điếu trong 1 gói"
                     name="cigarettesPerPack"
-                    type="number"  
+                    type="number"
                     value={form.cigarettesPerPack || ""}
                     onChange={e => setForm({ ...form, cigarettesPerPack: e.target.value })}
                     inputProps={{ min: 1, max: 50 }}
-                    sx={{ 
+                    sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'white',
                         borderRadius: 2,
@@ -610,7 +648,7 @@ export default function Profile() {
                     }}
                   />
                 </Box>
-                
+
                 <TextField
                   label="Thương hiệu thuốc ưa thích"
                   name="preferredBrand"
@@ -618,7 +656,7 @@ export default function Profile() {
                   onChange={e => setForm({ ...form, preferredBrand: e.target.value })}
                   fullWidth
                   margin="normal"
-                  sx={{ 
+                  sx={{
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'white',
                       borderRadius: 2,
@@ -628,7 +666,7 @@ export default function Profile() {
                     }
                   }}
                 />
-                
+
                 <TextField
                   label="Tình huống kích thích hút thuốc"
                   name="smokingTriggers"
@@ -639,7 +677,7 @@ export default function Profile() {
                   rows={2}
                   margin="normal"
                   placeholder="Ví dụ: căng thẳng, uống cà phê, gặp bạn bè..."
-                  sx={{ 
+                  sx={{
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: 'white',
                       borderRadius: 2,
@@ -649,12 +687,12 @@ export default function Profile() {
                     }
                   }}
                 />
-                
+
                 {/* Health Information */}
                 <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(76, 175, 80, 0.05)', borderRadius: 2, border: '1px solid rgba(76, 175, 80, 0.2)' }}>
-                  <Typography variant="subtitle1" sx={{ 
-                    color: '#4caf50', 
-                    fontWeight: 'bold', 
+                  <Typography variant="subtitle1" sx={{
+                    color: '#4caf50',
+                    fontWeight: 'bold',
                     mb: 2,
                     display: 'flex',
                     alignItems: 'center',
@@ -663,7 +701,7 @@ export default function Profile() {
                     <span style={{ fontSize: '1.2rem' }}>💚</span>
                     Thông tin sức khỏe
                   </Typography>
-                  
+
                   <TextField
                     label="Tình trạng sức khỏe"
                     name="healthConditions"
@@ -673,7 +711,7 @@ export default function Profile() {
                     multiline
                     rows={2}
                     margin="normal"
-                    sx={{ 
+                    sx={{
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'white',
                         borderRadius: 2,
@@ -683,7 +721,7 @@ export default function Profile() {
                       }
                     }}
                   />
-                  
+
                   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
                     <TextField
                       label="Dị ứng"
@@ -691,7 +729,7 @@ export default function Profile() {
                       value={form.allergies || ""}
                       onChange={e => setForm({ ...form, allergies: e.target.value })}
                       margin="normal"
-                      sx={{ 
+                      sx={{
                         '& .MuiOutlinedInput-root': {
                           backgroundColor: 'white',
                           borderRadius: 2,
@@ -707,7 +745,7 @@ export default function Profile() {
                       value={form.medications || ""}
                       onChange={e => setForm({ ...form, medications: e.target.value })}
                       margin="normal"
-                      sx={{ 
+                      sx={{
                         '& .MuiOutlinedInput-root': {
                           backgroundColor: 'white',
                           borderRadius: 2,
@@ -721,10 +759,10 @@ export default function Profile() {
                 </Box>
               </Box>
             )}
-            
+
             <Box sx={{ mt: 2 }}>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 variant="contained"
                 sx={{
                   background: 'linear-gradient(45deg, #4caf50, #66bb6a)',
@@ -743,10 +781,10 @@ export default function Profile() {
               >
                 💾 Lưu thay đổi
               </Button>
-              <Button 
-                variant="outlined" 
-                onClick={() => setEdit(false)} 
-                sx={{ 
+              <Button
+                variant="outlined"
+                onClick={() => setEdit(false)}
+                sx={{
                   ml: 2,
                   borderRadius: '25px',
                   padding: '12px 32px',
@@ -810,8 +848,8 @@ export default function Profile() {
               sx={{ mt: 2 }}
             />
             <Box className="password-form-buttons">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 variant="contained"
                 sx={{
                   background: 'linear-gradient(45deg, #ff9800, #ffb74d)',
@@ -830,13 +868,13 @@ export default function Profile() {
               >
                 🔄 Đổi mật khẩu
               </Button>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 onClick={() => {
                   setShowPasswordForm(false);
                   setStep(1);
                 }}
-                sx={{ 
+                sx={{
                   borderRadius: '25px',
                   padding: '12px 32px',
                   fontWeight: 600,
@@ -867,15 +905,15 @@ export default function Profile() {
                 <Box className="badges-grid">
                   {badges.map((b, idx) => (
                     <Box key={b.badgeId || idx} className="badge-item">
-                      <img 
+                      <img
                         src={
                           b.iconUrl?.startsWith("http")
                             ? b.iconUrl
                             : `${baseApiUrl}${b.iconUrl}`
-                        } 
-                        alt={b.name} 
-                        width={60} 
-                        height={60} 
+                        }
+                        alt={b.name}
+                        width={60}
+                        height={60}
                       />
                       <Typography variant="body2" fontWeight={600}>{b.name}</Typography>
                     </Box>
