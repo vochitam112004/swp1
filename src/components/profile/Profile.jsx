@@ -64,15 +64,13 @@ export default function Profile() {
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
 
-    const body = {
-      userName: form.username,
-      displayName: form.displayName,
-      avatarUrl: form.avatarUrl,
-      email: form.email,
-      phoneNumber: form.phoneNumber,
-      address: form.address,
-      isActive: form.isActive ?? true,
-    };
+    const formData = new FormData();
+    formData.append("UserName", form.username || "");
+    formData.append("DisplayName", form.displayName || "");
+    formData.append("Email", form.email || "");
+    formData.append("PhoneNumber", form.phoneNumber || "");
+    formData.append("Address", form.address || "");
+    formData.append("IsActive", form.isActive ?? true); // boolean
 
     // Add smoking habits data for members
     if (user?.userType === "Member") {
@@ -92,14 +90,20 @@ export default function Profile() {
     }
 
     try {
-      await api.put("/User/My-Update", body);
+      await api.put("/User/My-Update", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       toast.success("Cập nhật thông tin thành công!");
       setProfile({ ...profile, ...form });
       setEdit(false);
-    } catch {
+    } catch (err) {
+      console.log(err)
       toast.error("Cập nhật thất bại!");
     }
   };
+
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -109,13 +113,20 @@ export default function Profile() {
     }
 
     const formData = new FormData();
-    formData.append("avatar", file);
+    formData.append("UserName", profile.username);
+    formData.append("DisplayName", profile.displayName);
+    formData.append("Email", profile.email);
+    formData.append("PhoneNumber", profile.phoneNumber || "");
+    formData.append("Address", profile.address || "");
+    formData.append("IsActive", profile.isActive ?? true);
+    formData.append("AvatarFile", file); // ✅ tên đúng
 
     try {
       const res = await api.put("/User/My-Update", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      const imageUrl = res.data.avatarUrl || form.avatarUrl;
+
+      const imageUrl = res.data.avatarUrl || profile.avatarUrl;
       setProfile({ ...profile, avatarUrl: imageUrl });
       setForm(f => ({ ...f, avatarUrl: imageUrl }));
       toast.success("Cập nhật ảnh đại diện thành công!");
@@ -123,6 +134,7 @@ export default function Profile() {
       toast.error("Cập nhật ảnh đại diện thất bại!");
     }
   };
+
 
   const requestOtp = async () => {
     try {
@@ -168,10 +180,10 @@ export default function Profile() {
         <Box className="profile-avatar-container">
           <Avatar
             src={
-              profile.avatarUrl ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.displayName || profile.username)}`
+              profile.avatarUrl
+                ? `${baseApiUrl}${profile.avatarUrl}`
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.displayName || profile.username)}`
             }
-            className="profile-avatar"
           />
           <label>
             <input type="file" accept="image/*" hidden onChange={handleAvatarChange} />
