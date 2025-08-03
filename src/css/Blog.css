@@ -696,3 +696,20 @@
   color: #333;
   white-space: pre-line;
 }
+
+.blog__edit-button {
+  display: inline-block;
+  padding: 9px 18px;
+  background-color: #1976d2; /* Màu xanh của Material UI */
+  color: white;
+  font-size: 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  margin-top: 8px;
+}
+
+.blog__edit-button:hover {
+  background-color: #115293; /* Màu hover */
+  text-decoration: none;
+}

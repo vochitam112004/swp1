@@ -4,6 +4,8 @@ import api from "../../api/axios";
 import { toast } from "react-toastify";
 import "../../css/Blog.css";
 import { Button } from "@mui/material";
+import { baseApiUrl } from "../../api/axios";
+import { useAuth } from "../auth/AuthContext";
 
 function removeVietnameseTones(str) {
   return str
@@ -22,6 +24,7 @@ export default function Blog() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { user } = useAuth();
 
   const token = localStorage.getItem("authToken");
 
@@ -120,7 +123,7 @@ export default function Blog() {
               />
               <i className="fas fa-search search-icon"></i>
             </div>
-            
+
             <div className="blog-tags">
               {tags.map((tag) => (
                 <button
@@ -148,7 +151,7 @@ export default function Blog() {
           {/* Posts List */}
           <div className="posts-section">
             <h3 className="section-title">Bài viết nổi bật</h3>
-            
+
             {loading ? (
               <div className="blog__loading">Đang tải bài viết...</div>
             ) : error ? (
@@ -166,12 +169,9 @@ export default function Blog() {
                     <Link to={`/blog/${post.postId}`} className="post-link">
                       <div className="post-card-content">
                         <div className="post-image">
-                          <img 
-                            src={post.imageUrl || "/images/blog1.jpg"} 
+                          <img
+                            src={post.imageUrl ? `${baseApiUrl}${post.imageUrl}` : "/images/blog1.jpg"}
                             alt={post.title}
-                            onError={(e) => {
-                              e.target.src = "/images/blog1.jpg";
-                            }}
                           />
                           <div className="post-badge">Bài viết</div>
                         </div>
@@ -200,8 +200,8 @@ export default function Blog() {
                         </div>
                       </div>
                     </Link>
-                    
-                    {token && (
+
+                    {token && user?.userId === post.userId && (
                       <button
                         className="blog__delete-button"
                         onClick={(e) => handleDelete(e, post.postId)}
@@ -209,6 +209,14 @@ export default function Blog() {
                       >
                         Xóa bài viết
                       </button>
+                    )}
+                    {token && user?.userId === post.userId && (
+                      <Link
+                        to={`/blog/edit/${post.postId}`}
+                        className="blog__edit-button"
+                      >
+                        Sửa bài
+                      </Link>
                     )}
                   </div>
                 ))}
@@ -221,9 +229,8 @@ export default function Blog() {
                   <button
                     key={i + 1}
                     onClick={() => setPage(i + 1)}
-                    className={`blog__pagination-button ${
-                      page === i + 1 ? "blog__pagination-button--active" : ""
-                    }`}
+                    className={`blog__pagination-button ${page === i + 1 ? "blog__pagination-button--active" : ""
+                      }`}
                   >
                     {i + 1}
                   </button>
@@ -241,12 +248,9 @@ export default function Blog() {
               {recentPosts.map((post) => (
                 <Link key={post.postId} to={`/blog/${post.postId}`} className="recent-post-item">
                   <div className="recent-post-image">
-                    <img 
-                      src={post.imageUrl || "/images/blog1.jpg"} 
+                    <img
+                      src={post.imageUrl ? `${baseApiUrl}${post.imageUrl}` : "/images/blog1.jpg"}
                       alt={post.title}
-                      onError={(e) => {
-                        e.target.src = "/images/blog1.jpg";
-                      }}
                     />
                   </div>
                   <div className="recent-post-content">
@@ -267,4 +271,4 @@ export default function Blog() {
     </div>
   );
 }
- 
+

@@ -278,3 +278,27 @@
     height: 40px !important;
   }
 }
+
+.ranking-badge-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.rank-card .rank-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.rank-card .badge-icon {
+    width: 24px;
+    height: 24px;
+}

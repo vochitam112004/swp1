@@ -17,36 +17,66 @@ export default function BlogDetail() {
     const fetchPost = async () => {
       try {
         setLoading(true);
+        setError("");
         const res = await api.get("/CommunityPost");
+
+        if (!Array.isArray(res.data)) {
+          throw new Error("Dữ liệu bài viết không hợp lệ.");
+        }
+
         const found = res.data.find(p => p.postId === parseInt(postId));
         if (found) {
-          found.imageUrl = found.imageUrlPath; // Gán đúng URL
           setPost(found);
         } else {
           setError("Không tìm thấy bài viết.");
         }
-      } catch {
+      } catch (err) {
         setError("Không thể tải bài viết.");
       } finally {
         setLoading(false);
       }
     };
+
     if (postId) fetchPost();
   }, [postId]);
 
   const back = () => navigate("/blog");
 
-  if (loading) return <div className="blog-detail-container"><CircularProgress /><p>Đang tải...</p></div>;
-  if (error) return (
-    <div className="blog-detail-container">
-      <Alert severity="error">{error}</Alert>
-      <Button variant="contained" onClick={back} startIcon={<ArrowBackIcon />}>Quay lại</Button>
-    </div>
-  );
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return "/images/blog1.jpg";
+    return imagePath.startsWith("http") ? imagePath : `${baseApiUrl}${imagePath}`;
+  };
 
-  if (!post) return null;
+  if (loading) {
+    return (
+      <div className="blog-detail-container">
+        <CircularProgress />
+        <p>Đang tải...</p>
+      </div>
+    );
+  }
 
-  const fullImgUrl = post.imageUrl?.startsWith("http") ? post.imageUrl : `${baseApiUrl}${post.imageUrl}`;
+  if (error) {
+    return (
+      <div className="blog-detail-container">
+        <Alert severity="error">{error}</Alert>
+        <Button variant="contained" onClick={back} startIcon={<ArrowBackIcon />}>
+          Quay lại
+        </Button>
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className="blog-detail-container">
+        <Alert severity="warning">Không tìm thấy bài viết phù hợp.</Alert>
+        <Button variant="contained" onClick={back} startIcon={<ArrowBackIcon />}>
+          Quay lại
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="blog-detail-container">
@@ -55,16 +85,17 @@ export default function BlogDetail() {
       </Button>
 
       <article>
-        <h1 className="blog-detail-title">{post.title}</h1>
+        <h1 className="blog-detail-title">{post.title || "(Không có tiêu đề)"}</h1>
         <div className="blog-detail-meta">
           <span>{post.displayName || "Ẩn danh"}</span> •{" "}
           <span>{new Date(post.createdAt).toLocaleDateString("vi-VN")}</span>
         </div>
 
-        {post.imageUrl && !imageError && (
+        {!imageError && (
           <img
+            width={"50%"}
             className="blog-detail-image"
-            src={fullImgUrl}
+            src={getImageUrl(post.imageUrl || post.imageUrlPath)}
             alt={post.title}
             onError={() => setImageError(true)}
           />
@@ -72,11 +103,14 @@ export default function BlogDetail() {
 
         {imageError && (
           <div style={{ marginTop: 10, color: "red" }}>
-            Không thể tải hình ảnh. <a href={fullImgUrl} target="_blank" rel="noreferrer">Mở trong tab mới</a>
+            Không thể tải hình ảnh.{" "}
+            <a href={getImageUrl(post.imageUrl || post.imageUrlPath)} target="_blank" rel="noreferrer">
+              Mở trong tab mới
+            </a>
           </div>
         )}
 
-        <div className="blog-detail-content-text">{post.content}</div>
+        <div className="blog-detail-content-text">{post.content || "(Không có nội dung)"}</div>
       </article>
     </div>
   );

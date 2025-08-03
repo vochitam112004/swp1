@@ -8,6 +8,7 @@ import "../../css/Blog.css";
 export default function BlogPostForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("authToken");
@@ -19,18 +20,30 @@ export default function BlogPostForm() {
     }
   }, [token, navigate]);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
       toast.error("Vui lòng nhập tiêu đề và nội dung!");
       return;
     }
+
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("Title", title);
       formData.append("Content", content);
       formData.append("CreatedAt", new Date().toISOString());
+
+      if (imageFile) {
+        formData.append("ImageUrl", imageFile); // ImageUrl là field nhận file
+      }
 
       await api.post("/CommunityPost", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -70,6 +83,13 @@ export default function BlogPostForm() {
         onChange={(e) => setContent(e.target.value)}
         required
         rows={8}
+      />
+
+      <input
+        type="file"
+        accept="image/*"
+        className="blog-form__input"
+        onChange={handleImageChange}
       />
 
       <button type="submit" disabled={loading} className="blog-form__submit">

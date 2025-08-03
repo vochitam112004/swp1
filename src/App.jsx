@@ -36,6 +36,7 @@ import Researchers from "./components/common/researchers";
 import ChatSupport from "./components/chat/ChatSupport";
 import PaymentCallback from "./components/common/PaymentCallback";
 import { UserProvider } from "./contexts/UserContext";
+import BlogEditForm from "./components/common/BlogEditForm";
 import { useState } from "react";
 
 function AppContent() {
@@ -105,6 +106,7 @@ function AppContent() {
           <Route path="/blog/:postId" element={<BlogDetail />} />
           <Route path="/bxh" element={<BXH />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/blog/edit/:postId" element={<BlogEditForm />} />
           <Route
             path="/dashboard"
             element={

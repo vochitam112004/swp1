@@ -10,53 +10,78 @@ import {
 import { useEffect, useState } from "react";
 import api from '../../api/axios';
 import "../../css/BXH.css";
+import { baseApiUrl } from "../../api/axios";
 
 export default function BXH() {
   const [ranking, setRanking] = useState([]);
+  const [badges, setBadges] = useState([]);
   const [timeFilter, setTimeFilter] = useState('all');
 
   const handleTimeFilterChange = (event) => {
     setTimeFilter(event.target.value);
   };
 
+  const getBadgeForScore = (score, allBadges) => {
+    return allBadges.find(badge => score >= badge.requiredScore) || null;
+  };
+
   useEffect(() => {
-    const fetchRanking = async () => {
+    const fetchData = async () => {
       try {
-        const rankingRes = await api.get("/Ranking/GetAllRankings");
-        console.log("rankingRes:", rankingRes)
+        const [rankingRes, badgesRes] = await Promise.all([
+          api.get("/Ranking/GetAllRankings"),
+          api.get("/Badge/GetAllBadge")
+        ]);
 
         const rankingData = Array.isArray(rankingRes.data) ? rankingRes.data : [];
-        
-        // Sắp xếp theo score giảm dần
-        const sortedRanking = rankingData.sort((a, b) => b.score - a.score);
+        const badgesData = Array.isArray(badgesRes.data) ? badgesRes.data : [];
+
+        const sortedBadges = badgesData.sort((a, b) => b.requiredScore - a.requiredScore);
+        setBadges(sortedBadges);
+
+        const rankingWithBadges = rankingData.map(user => ({
+          ...user,
+          badge: getBadgeForScore(user.score, sortedBadges)
+        }));
+
+        const sortedRanking = rankingWithBadges.sort((a, b) => b.score - a.score);
         setRanking(sortedRanking);
+
       } catch (error) {
-        console.error("Lỗi lấy bảng xếp hạng:", error);
+        console.error("Lỗi lấy dữ liệu bảng xếp hạng hoặc huy hiệu:", error);
       }
     };
 
-    fetchRanking();
-  }, []);
+    fetchData();
+  }, [timeFilter]);
 
-  // Lấy top 3 và danh sách còn lại
   const top3 = ranking.slice(0, 3);
-  const restOfRanking = ranking.slice(3);
 
-  // Tính toán số tiền tiết kiệm (giả sử 1 gói thuốc = 50,000 VND)
   const calculateSavings = (days) => {
     const pricePerPack = 50000;
-    const packsPerDay = 1; // Giả sử 1 gói/ngày
+    const packsPerDay = 1;
     return days * packsPerDay * pricePerPack;
   };
 
-  // Format số tiền
   const formatMoney = (amount) => {
     return new Intl.NumberFormat('vi-VN').format(amount);
   };
 
+  const renderBadge = (badge) => {
+    if (!badge) {
+        return <Typography className="rank-badge">Tân binh</Typography>;
+    }
+    return (
+        <Typography component="div" className="rank-badge">
+            {/* FIX 1: Thêm baseApiUrl vào src của icon */}
+            {badge.iconUrl && <img src={`${baseApiUrl}${badge.iconUrl}`} alt={badge.name} className="badge-icon" />}
+            {badge.name}
+        </Typography>
+    );
+  }
+
   return (
     <div className="bxh-container">
-      {/* Header */}
       <div className="bxh-header">
         <Typography variant="h4" className="bxh-title">
           Bảng xếp hạng cộng đồng
@@ -66,7 +91,6 @@ export default function BXH() {
           trong cộng đồng QuitSmoke
         </Typography>
         
-        {/* Time Filter */}
         <Box className="time-filter">
           <FormControl size="small">
             <Select
@@ -83,11 +107,9 @@ export default function BXH() {
         </Box>
       </div>
 
-      {/* Top 3 Section */}
       <div className="top3-section">
         {top3.length >= 2 && (
           <div className="top3-container">
-            {/* Rank 2 */}
             <div className="rank-card rank-2">
               <Avatar
                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -97,7 +119,7 @@ export default function BXH() {
                 sx={{ width: 80, height: 80 }}
               />
               <Typography className="rank-name">{top3[1]?.userName || "Ẩn danh"}</Typography>
-              <Typography className="rank-badge">Hạng 2</Typography>
+              {renderBadge(top3[1]?.badge)}
               <Typography className="rank-days">{top3[1]?.score || 0}</Typography>
               <Typography className="rank-label">ngày không hút thuốc</Typography>
               <Typography className="rank-savings">
@@ -105,7 +127,6 @@ export default function BXH() {
               </Typography>
             </div>
 
-            {/* Rank 1 */}
             <div className="rank-card rank-1">
               <Avatar
                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -115,7 +136,7 @@ export default function BXH() {
                 sx={{ width: 100, height: 100 }}
               />
               <Typography className="rank-name">{top3[0]?.userName || "Ẩn danh"}</Typography>
-              <Typography className="rank-badge champion">Vô địch</Typography>
+              {renderBadge(top3[0]?.badge)}
               <Typography className="rank-days">{top3[0]?.score || 0}</Typography>
               <Typography className="rank-label">ngày không hút thuốc</Typography>
               <Typography className="rank-savings">
@@ -123,7 +144,6 @@ export default function BXH() {
               </Typography>
             </div>
 
-            {/* Rank 3 */}
             {top3.length >= 3 && (
               <div className="rank-card rank-3">
                 <Avatar
@@ -134,7 +154,7 @@ export default function BXH() {
                   sx={{ width: 80, height: 80 }}
                 />
                 <Typography className="rank-name">{top3[2]?.userName || "Ẩn danh"}</Typography>
-                <Typography className="rank-badge">Hạng 3</Typography>
+                {renderBadge(top3[2]?.badge)}
                 <Typography className="rank-days">{top3[2]?.score || 0}</Typography>
                 <Typography className="rank-label">ngày không hút thuốc</Typography>
                 <Typography className="rank-savings">
@@ -146,7 +166,6 @@ export default function BXH() {
         )}
       </div>
 
-      {/* Detailed Ranking List */}
       <div className="detailed-ranking">
         <Typography variant="h6" className="section-title">
           Bảng xếp hạng chi tiết
@@ -165,9 +184,16 @@ export default function BXH() {
                 />
                 <div className="ranking-info">
                   <Typography className="ranking-name">{user.userName || "Ẩn danh"}</Typography>
-                  <Typography className="ranking-badge">
-                    {index === 0 ? "Vô địch" : index === 1 ? "Hạng 2" : index === 2 ? "Hạng 3" : "Hạng 4"}
-                  </Typography>
+                  <div className="ranking-badge-container">
+                    {user.badge?.iconUrl && (
+                        /* FIX 3: Xóa width={50} để dùng CSS */
+                        <img src={`${baseApiUrl}${user.badge.iconUrl}`} alt={user.badge.name} className="badge-icon" />
+                    )}
+                    {/* FIX 2: Thêm lại tên huy hiệu */}
+                    <Typography className="ranking-badge-name">
+                      {user.badge?.name || 'Tân binh'}
+                    </Typography>
+                  </div>
                 </div>
               </div>
               
