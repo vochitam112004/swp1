@@ -274,7 +274,7 @@ const Dashboard = () => {
               <div className="icon-wrapper bg-success mx-auto mb-2">
                 <i className="fas fa-calendar-check text-white"></i>
               </div>
-              <div className="fw-bold">Kỷ lục tuần liệt</div>
+              <div className="fw-bold">Kỷ lục liên tiếp</div>
               <h4 className="text-dark mb-0 fw-bold">{currentGoal?.smokeFreeDays || 23}</h4>
               <small className="text-muted">ngày</small>
               <div className="mt-2">
@@ -304,7 +304,7 @@ const Dashboard = () => {
               <div className="icon-wrapper bg-danger mx-auto mb-2">
                 <i className="fas fa-smoking-ban text-white"></i>
               </div>
-              <div className="fw-bold">Cải thiện sức khỏe đầu</div>
+              <div className="fw-bold">Cải thiện sức khỏe dần</div>
               <h4 className="text-dark mb-0 fw-bold">{progress.health || 78}</h4>
               <small className="text-muted">/100</small>
               <div className="mt-2">
@@ -319,7 +319,7 @@ const Dashboard = () => {
               <div className="icon-wrapper bg-warning mx-auto mb-2">
                 <i className="fas fa-chart-line text-white"></i>
               </div>
-              <div className="fw-bold">Kết tư nguy dàng lý</div>
+              <div className="fw-bold">Kể từ ngày đăng ký</div>
               <h4 className="text-dark mb-0 fw-bold">{progress.riskReduction || 273}</h4>
               <small className="text-muted">ngày</small>
               <div className="mt-2">
