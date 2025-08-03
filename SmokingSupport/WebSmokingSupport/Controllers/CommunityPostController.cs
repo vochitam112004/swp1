@@ -82,7 +82,7 @@ namespace WebSmokingSupport.Controllers
         }
         [Authorize(Roles = "Member")]
         [HttpPost("Update/{postId}")]
-        public async Task<ActionResult<DTOCommunityPostForRead>> UpdatePost(int postId, [FromForm] DTOComunityPostForUpdate dto , [FromServices] IWebHostEnvironment _env)
+        public async Task<ActionResult<DTOCommunityPostForRead>> UpdatePost(int postId, [FromForm] DTOComunityPostForUpdate dto, [FromServices] IWebHostEnvironment _env)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
@@ -100,7 +100,7 @@ namespace WebSmokingSupport.Controllers
             {
                 post.Content = dto.Content;
             }
-            if(dto.ImageUrl != null && dto.ImageUrl .Length > 0)
+            if (dto.ImageUrl != null && dto.ImageUrl.Length > 0)
             {
                 var uploadPath = Path.Combine(_env.ContentRootPath, "uploads", "Post");
                 if (!Directory.Exists(uploadPath))
@@ -113,7 +113,7 @@ namespace WebSmokingSupport.Controllers
                 {
                     await dto.ImageUrl.CopyToAsync(stream);
                 }
-                post.ImageUrl = $"/uploads/Post/{fileName}"; 
+                post.ImageUrl = $"/uploads/Post/{fileName}";
             }
 
             post.CreatedAt = DateTime.UtcNow;
@@ -134,10 +134,19 @@ namespace WebSmokingSupport.Controllers
         [Authorize(Roles = "Member , Admin")]
         public async Task<IActionResult> DeletePost(int postId)
         {
-            var post = await _context.CommunityPosts.FindAsync(postId);
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Unauthorized("User not authenticated.");
+            }
+            int userId = int.Parse(userIdClaim.Value);
+            var post = await _context.CommunityPosts.
+                Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.PostId == postId && p.UserId == userId);
             if (post == null)
             {
-                return NotFound("Post not found.");
+                return NotFound("Post not found or user not host post");
             }
             _context.CommunityPosts.Remove(post);
             await _context.SaveChangesAsync();
