@@ -1,23 +1,13 @@
+// ChatSupport component with clean structure and improved consistency
 import { useState, useEffect, useCallback } from "react";
 import api from "../../api/axios";
 import { toast } from "react-toastify";
 
-const getCurrentUser = () => {
-  return JSON.parse(localStorage.getItem("user") || "{}");
-};
+const getCurrentUser = () => JSON.parse(localStorage.getItem("user") || "{}");
+const getUserRole = () => getCurrentUser()?.userType === "Coach" ? "coach" : "user";
 
-const getUserRole = () => {
-  const user = getCurrentUser();
-  return user.userType === "Coach" ? "coach" : "user";
-};
-
-const getMessageColor = (fromId, currentUserId) => {
-  return fromId === currentUserId ? "#e3f2fd" : "#fff3cd";
-};
-
-const getSenderLabel = (fromId, currentUserId, senderName) => {
-  return fromId === currentUserId ? "Bạn" : senderName;
-};
+const getMessageColor = (fromId, currentUserId) => (fromId === currentUserId ? "#e3f2fd" : "#fff3cd");
+const getSenderLabel = (fromId, currentUserId, senderName) => (fromId === currentUserId ? "Bạn" : senderName);
 
 const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false }) => {
   const [messages, setMessages] = useState([]);
@@ -29,60 +19,29 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false
   const currentUser = getCurrentUser();
   const role = getUserRole();
 
-  const ITEM_HEIGHT = 48;
-  const ITEM_PADDING_TOP = 8;
-  const MenuProps = {
-    PaperProps: {
-      style: {
-        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-        width: 250,
-      },
-    },
-  };
-
-  // const markMessagesAsRead = async (msgs) => {
-  //   for (const msg of msgs) {
-  //     if (!msg.isRead && msg.messageId) {
-  //       try {
-  //         await api.post(`/ChatMessage/mark-as-read/${msg.messageId}`);
-  //       } catch (err) {
-  //         console.error("Không thể đánh dấu tin nhắn đã đọc", msg.messageId, err);
-  //       }
-  //     }
-  //   }
-  // };
-
   const fetchData = useCallback(async () => {
     if (role === "user") {
       try {
         const coachRes = await api.get("/ChatMessage/available-contacts");
         setCoaches(coachRes.data);
       } catch (err) {
-        console.log(err)
+        console.log("Không thể tải danh sách HLV", err);
       }
     }
 
-    let url = null;
-    if (role === "coach" && targetUserId) {
-      url = `/ChatMessage/history/${targetUserId}`;
-    } else if (role === "user" && selectedCoachId) {
-      url = `/ChatMessage/history/${selectedCoachId}`;
-    }
-
+    let url = "";
+    if (role === "coach" && targetUserId) url = `/ChatMessage/history/${targetUserId}`;
+    if (role === "user" && selectedCoachId) url = `/ChatMessage/history/${selectedCoachId}`;
     if (!url) return;
 
     try {
       const res = await api.get(url);
-      const msgs = res.data.length
-        ? res.data.map((msg) => ({
-          ...msg,
-          from: msg.senderId,
-        }))
+      const msgs = res.data?.length
+        ? res.data.map((msg) => ({ ...msg, from: msg.senderId }))
         : [{ senderId: null, senderDisplayName: "Hệ thống", content: "Xin chào! Tôi có thể giúp gì cho bạn?" }];
       setMessages(msgs);
-      // markMessagesAsRead(msgs);
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi tải lịch sử tin nhắn", err);
     }
   }, [role, targetUserId, selectedCoachId]);
 
@@ -94,16 +53,10 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false
   }, [fetchData]);
 
   useEffect(() => {
-    const fetchRecentChats = async () => {
-      try {
-        const res = await api.get("/ChatMessage/recent-chat");
-        setRecentChats(res.data);
-      } catch {
-        console.error("Không thể lấy danh sách trò chuyện gần đây");
-      }
-    };
     if (role === "coach") {
-      fetchRecentChats();
+      api.get("/ChatMessage/recent-chat")
+        .then((res) => setRecentChats(res.data))
+        .catch(() => console.error("Không thể lấy danh sách trò chuyện gần đây"));
     }
   }, [role]);
 
@@ -113,10 +66,7 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false
     if (!trimmedInput || (!targetUserId && !selectedCoachId)) return;
 
     const receiverId = role === "user" ? selectedCoachId : targetUserId;
-    const newMsg = {
-      receiverId: receiverId,
-      content: trimmedInput,
-    };
+    const newMsg = { receiverId, content: trimmedInput };
 
     setMessages((prev) => [
       ...prev,
@@ -133,8 +83,7 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false
       await api.post("/ChatMessage/send", newMsg);
       await fetchData();
     } catch (error) {
-      console.error("❌ Send Message Error:", error);
-      toast.error("Gửi tin nhắn thất bại: " + (error.response?.data?.message || "Lỗi kết nối máy chủ!"));
+      toast.error("Gửi tin nhắn thất bại: " + (error.response?.data?.message || "Lỗi kết nối!"));
     } finally {
       setLoading(false);
     }
@@ -144,50 +93,30 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false
     <div style={isModal ? styles.chatContainerModal : styles.chatContainer}>
       {!isModal && (
         <div style={styles.header}>
-          Nhắn tin: {targetDisplayName}
+          {targetDisplayName}
           <span style={{ float: "right", cursor: "pointer" }} onClick={onClose}>✕</span>
         </div>
       )}
+
       {role === "user" && !targetUserId && (
-        <div style={{ padding: "16px 24px 8px 24px", borderBottom: "1px solid #e3e3e3", background: "#f5f7fa" }}>
-          <label style={{ fontWeight: 600, color: "#1976d2", marginBottom: 6, display: "block" }}>
-            Chọn huấn luyện viên:
-          </label>
+        <div style={styles.dropdownContainer}>
+          <label style={styles.label}>Chọn huấn luyện viên:</label>
           <select
             value={selectedCoachId}
             onChange={(e) => setSelectedCoachId(e.target.value)}
-            style={{
-              width: "100%",
-              marginTop: 4,
-              padding: "10px 12px",
-              borderRadius: 8,
-              border: "1px solid #bfc8d6",
-              background: "#fff",
-              fontSize: 15,
-              color: "#222",
-              outline: "none",
-              transition: "border-color 0.2s",
-              boxShadow: "0 1px 2px #0001",
-            }}
+            style={styles.select}
           >
             <option value="">-- Chọn --</option>
             {coaches.map((coach) => (
-              <option key={coach.userId} value={coach.userId}>
-                {coach.displayName}
-              </option>
+              <option key={coach.userId} value={coach.userId}>{coach.displayName}</option>
             ))}
           </select>
         </div>
       )}
+
       <div style={isModal ? styles.messageListModal : styles.messageList}>
         {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            style={{
-              textAlign: msg.senderId === currentUser.id ? "right" : "left",
-              marginBottom: 8,
-            }}
-          >
+          <div key={idx} style={{ textAlign: msg.senderId === currentUser.id ? "right" : "left", marginBottom: 8 }}>
             <span
               style={{
                 ...styles.messageBubble,
@@ -209,11 +138,7 @@ const ChatSupport = ({ targetUserId, onClose, targetDisplayName, isModal = false
           style={styles.inputField}
           disabled={loading}
         />
-        <button
-          type="submit"
-          style={styles.sendButton}
-          disabled={loading}
-        >
+        <button type="submit" style={styles.sendButton} disabled={loading}>
           Gửi
         </button>
       </form>
@@ -235,7 +160,7 @@ const styles = {
     flexDirection: "column",
     overflow: "hidden",
     fontFamily: "sans-serif",
-    height: "400px"
+    height: "400px",
   },
   chatContainerModal: {
     background: "#fff",
@@ -250,6 +175,28 @@ const styles = {
     padding: "12px 16px",
     fontWeight: 600,
     fontSize: 16,
+  },
+  dropdownContainer: {
+    padding: "16px 24px 8px 24px",
+    borderBottom: "1px solid #e3e3e3",
+    background: "#f5f7fa",
+  },
+  label: {
+    fontWeight: 600,
+    color: "#1976d2",
+    marginBottom: 6,
+    display: "block",
+  },
+  select: {
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid #bfc8d6",
+    background: "#fff",
+    fontSize: 15,
+    color: "#222",
+    outline: "none",
+    boxShadow: "0 1px 2px #0001",
   },
   messageList: {
     flex: 1,

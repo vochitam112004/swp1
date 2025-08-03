@@ -23,7 +23,6 @@ import JournalManager from "./components/JournalManager";
 import AppointmentManager from "./components/AppointmentManager";
 import NotificationManager from "./components/NotificationManager";
 import SevenDayProgressChart from "./components/SevenDayProgressChart";
-import SystemReportForm from "../common/SystemReportForm";
 import NotificationHistory from "./NotificationHistory";
 import PlanTabNew from "./PlanTabNew";
 import ProgressTab from "./ProgressTab";
@@ -882,14 +881,6 @@ const Dashboard = () => {
                 onClick={() => setActiveTab("report")}
               >
                 <i className="fas fa-chart-bar me-2"></i>Báo cáo nâng cao
-              </button>
-            </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === "systemreport" ? "active" : ""}`}
-                onClick={() => setActiveTab("systemreport")}
-              >
-                <i className="fas fa-flag me-2"></i>Báo cáo hệ thống
               </button>
             </li>
             <li className="nav-item">

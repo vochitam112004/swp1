@@ -27,7 +27,7 @@ const CoachList = () => {
         // Nếu endpoint trên không hoạt động, thử endpoint khác
         response = await api.get('/Coach');
       }
-      
+
       const coachData = response.data || [];
       // Đảm bảo data có cấu trúc đúng
       const formattedCoaches = coachData.map(coach => ({
@@ -37,7 +37,7 @@ const CoachList = () => {
         email: coach.email,
         avatarUrl: coach.avatarUrl || coach.avatar
       }));
-      
+
       setCoaches(formattedCoaches);
     } catch (error) {
       console.error('Lỗi khi lấy danh sách huấn luyện viên:', error);
@@ -84,13 +84,13 @@ const CoachList = () => {
       <div className="coach-selection-section">
         <h2>Chọn huấn luyện viên phù hợp</h2>
         <p>Tất cả huấn luyện viên của chúng tôi là chuyên gia có kinh nghiệm và cải nghiện thuốc lá</p>
-        
+
         {coaches.length > 0 ? (
           <div className="coaches-grid">
             {coaches.map((coach) => (
               <div key={coach.userId} className="coach-card">
                 <div className="coach-avatar">
-                  <img 
+                  <img
                     src={coach.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(coach.displayName || coach.username)}&background=4285f4&color=fff&size=80`}
                     alt={coach.displayName}
                     onError={(e) => {
@@ -99,30 +99,30 @@ const CoachList = () => {
                   />
                   <div className="online-indicator"></div>
                 </div>
-                
+
                 <div className="coach-info">
                   <h3>{coach.displayName}</h3>
                   <p className="coach-specialty">Chuyên gia tâm lý cai nghiện</p>
                   <p className="coach-experience">6 năm kinh nghiệm</p>
-                  
+
                   <div className="coach-rating">
                     {[...Array(5)].map((_, i) => (
                       <i key={i} className="fas fa-star"></i>
                     ))}
                     <span>4.9</span>
                   </div>
-                  
+
                   <div className="coach-stats">
                     <span>Phản hồi • 5 phút</span>
                   </div>
-                  
+
                   <div className="coach-status">
                     <span className="status-indicator online"></span>
                     <span>Đang online</span>
                   </div>
                 </div>
-                
-                <button 
+
+                <button
                   className="start-chat-btn"
                   onClick={() => handleStartChat(coach)}
                 >
@@ -151,7 +151,7 @@ const CoachList = () => {
             <p>Mọi cuộc trò chuyện được mã hóa và bảo mật hoàn toàn</p>
           </div>
         </div>
-        
+
         <div className="feature-item">
           <div className="feature-icon">
             <i className="fas fa-clock"></i>
@@ -161,7 +161,7 @@ const CoachList = () => {
             <p>Huấn luyện viên sẽ phản hồi trong vòng 5 phút hoặc ít hơn</p>
           </div>
         </div>
-        
+
         <div className="feature-item">
           <div className="feature-icon">
             <i className="fas fa-user-graduate"></i>
@@ -175,33 +175,12 @@ const CoachList = () => {
 
       {/* Chat Modal */}
       {showChat && selectedCoach && (
-        <div className="chat-overlay">
-          <div className="chat-modal">
-            <div className="chat-header">
-              <div className="coach-info-header">
-                <img 
-                  src={selectedCoach.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCoach.displayName || selectedCoach.username)}&background=4285f4&color=fff&size=40`}
-                  alt={selectedCoach.displayName}
-                  className="coach-avatar-small"
-                />
-                <div>
-                  <h4>{selectedCoach.displayName}</h4>
-                  <span>Chuyên gia tâm lý cai nghiện • Đang online</span>
-                </div>
-              </div>
-              <button className="close-chat-btn" onClick={handleCloseChat}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <ChatSupport
-              targetUserId={selectedCoach.userId}
-              targetDisplayName={selectedCoach.displayName}
-              onClose={handleCloseChat}
-              isModal={true}
-            />
-          </div>
-        </div>
+        <ChatSupport
+          targetUserId={selectedCoach.userId}
+          targetDisplayName={selectedCoach.displayName}
+          onClose={handleCloseChat}
+          isModal={false}
+        />
       )}
     </div>
   );
