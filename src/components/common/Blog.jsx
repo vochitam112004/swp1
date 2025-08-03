@@ -164,62 +164,65 @@ export default function Blog() {
               </div>
             ) : (
               <div className="posts-grid">
-                {paginatedPosts.map((post) => (
-                  <div key={post.postId} className="post-card">
-                    <Link to={`/blog/${post.postId}`} className="post-link">
-                      <div className="post-card-content">
-                        <div className="post-image">
-                          <img
-                            src={post.imageUrl ? `${baseApiUrl}${post.imageUrl}` : "/images/blog1.jpg"}
-                            alt={post.title}
-                          />
-                          <div className="post-badge">Bài viết</div>
-                        </div>
-                        <div className="post-info">
-                          <div className="post-meta">
-                            <span className="post-date">
-                              {new Date(post.createdAt).toLocaleDateString('vi-VN')}
-                            </span>
-                            <span className="post-category">
-                              {post.category === 'health' && 'Sức khỏe'}
-                              {post.category === 'psychology' && 'Tâm lý'}
-                              {post.category === 'tips' && 'Mẹo vặt'}
-                              {post.category === 'story' && 'Câu chuyện'}
-                              {!post.category && 'Bài viết'}
-                            </span>
+                {paginatedPosts.map((post) => {
+                  const isOwner = token && user?.userId === post.userId;
+                  return (
+                    <div key={post.postId} className="post-card">
+                      <Link to={`/blog/${post.postId}`} className="post-link">
+                        <div className="post-card-content">
+                          <div className="post-image">
+                            <img
+                              src={post.imageUrl ? `${baseApiUrl}${post.imageUrl}` : "/images/blog1.jpg"}
+                              alt={post.title}
+                            />
+                            <div className="post-badge">Bài viết</div>
                           </div>
-                          <h3 className="post-title">
-                            {post.title || "(Không có tiêu đề)"}
-                          </h3>
-                          <p className="post-excerpt">
-                            {post.content?.slice(0, 120) || "(Không có nội dung)"}...
-                          </p>
-                          <div className="post-author">
-                            Tác giả: {post.displayName || "Ẩn danh"}
+                          <div className="post-info">
+                            <div className="post-meta">
+                              <span className="post-date">
+                                {new Date(post.createdAt).toLocaleDateString('vi-VN')}
+                              </span>
+                              <span className="post-category">
+                                {post.category === 'health' && 'Sức khỏe'}
+                                {post.category === 'psychology' && 'Tâm lý'}
+                                {post.category === 'tips' && 'Mẹo vặt'}
+                                {post.category === 'story' && 'Câu chuyện'}
+                                {!post.category && 'Bài viết'}
+                              </span>
+                            </div>
+                            <h3 className="post-title">
+                              {post.title || "(Không có tiêu đề)"}
+                            </h3>
+                            <p className="post-excerpt">
+                              {post.content?.slice(0, 120) || "(Không có nội dung)"}...
+                            </p>
+                            <div className="post-author">
+                              Tác giả: {post.displayName || "Ẩn danh"}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
-
-                    {token && user?.userId === post.userId && (
-                      <button
-                        className="blog__delete-button"
-                        onClick={(e) => handleDelete(e, post.postId)}
-                        type="button"
-                      >
-                        Xóa bài viết
-                      </button>
-                    )}
-                    {token && user?.userId === post.userId && (
-                      <Link
-                        to={`/blog/edit/${post.postId}`}
-                        className="blog__edit-button"
-                      >
-                        Sửa bài
                       </Link>
-                    )}
-                  </div>
-                ))}
+
+                      {isOwner && (
+                        <>
+                          <button
+                            className="blog__delete-button"
+                            onClick={(e) => handleDelete(e, post.postId)}
+                            type="button"
+                          >
+                            Xóa bài viết
+                          </button>
+                          <Link
+                            to={`/blog/edit/${post.postId}`}
+                            className="blog__edit-button"
+                          >
+                            Sửa bài
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
 

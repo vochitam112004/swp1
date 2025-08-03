@@ -250,7 +250,7 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  overflow: hidden;
+  z-index: 1;
 }
 
 .post-excerpt {
@@ -260,7 +260,6 @@
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .post-author {
