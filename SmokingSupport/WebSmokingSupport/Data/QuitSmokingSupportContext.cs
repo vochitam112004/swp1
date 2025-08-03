@@ -281,7 +281,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.HasOne(gp => gp.Member) 
                   .WithMany(m => m.GoalPlans) 
                   .HasForeignKey(gp => gp.MemberId) 
-                  .OnDelete(DeleteBehavior.SetNull);
+                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(g => new { g.MemberId, g.isCurrentGoal })
                   .IsUnique()
@@ -344,12 +344,10 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasForeignKey<MemberProfile>(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade) 
                 .HasConstraintName("FK__MemberPro__user__286302EC");
-
-            entity.HasMany(m => m.ProgressLogs)
-                  .WithOne(pl => pl.Member)
-                  .HasForeignKey(pl => pl.MemberId) 
-                  .OnDelete(DeleteBehavior.Cascade);
-
+            entity.HasMany(m => m.GoalPlans)
+                .WithOne(gp => gp.Member)
+                .HasForeignKey(gp => gp.MemberId)
+                .OnDelete(DeleteBehavior.Cascade);
             entity.Property(e => e.PricePerPack)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("price_per_pack");
@@ -432,26 +430,36 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.HasKey(e => e.LogId).HasName("PK__Progress__9E2397E0C035413C");
             entity.ToTable("ProgressLog");
 
-            entity.Property(e => e.LogId).HasColumnName("log_id");
-            entity.Property(e => e.CigarettesSmoked).HasColumnName("cigarettes_smoked");
+            entity.Property(e => e.LogId)
+                .HasColumnName("log_id");
+            entity.Property(e => e.CigarettesSmoked)
+                .HasColumnName("cigarettes_smoked");
             entity.Property(e => e.LogDate)
                 .HasColumnName("log_date")
                 .HasColumnType("date");
-            entity.Property(e => e.MemberId).HasColumnName("member_id");
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
                 .HasColumnType("datetime")
                 .HasDefaultValueSql("GETUTCDATE()");
-            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasColumnType("datetime");
             entity.Property(e => e.GoalPlanId)
-            .HasColumnName("goal_plan_id")
-            .IsRequired(false);
-            entity.HasIndex(p => new { p.MemberId, p.LogDate });
+                .HasColumnName("goal_plan_id")
+                .IsRequired();
             entity.Property(e => e.Notes)
                 .IsUnicode(true)
                 .HasColumnName("notes");
             entity.Property(e => e.CigarettesSmoked)
               .HasColumnName("cigarettes_per_pack");
+            entity.HasOne(p => p.GoalPlan)
+                .WithMany(g => g.ProgressLogs)
+                .HasForeignKey(p => p.GoalPlanId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(p => p.Member)
+                .WithMany(m => m.ProgressLogs)
+                .HasForeignKey(p => p.MemberId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Ranking>(entity =>

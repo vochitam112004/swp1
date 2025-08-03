@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebSmokingSupport.Data;
 
@@ -11,9 +12,11 @@ using WebSmokingSupport.Data;
 namespace WebSmokingSupport.Migrations
 {
     [DbContext(typeof(QuitSmokingSupportContext))]
-    partial class QuitSmokingSupportContextModelSnapshot : ModelSnapshot
+    [Migration("20250803175105_casede4")]
+    partial class casede4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -514,7 +517,7 @@ namespace WebSmokingSupport.Migrations
 
                     b.HasKey("PlanId");
 
-                    b.ToTable("MembershipPlans", (string)null);
+                    b.ToTable("MembershipPlans");
                 });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.Notification", b =>
@@ -883,7 +886,7 @@ namespace WebSmokingSupport.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserMembershipHistories", (string)null);
+                    b.ToTable("UserMembershipHistories");
                 });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.Appointment", b =>

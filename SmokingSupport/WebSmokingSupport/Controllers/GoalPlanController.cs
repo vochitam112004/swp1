@@ -48,7 +48,6 @@ namespace WebSmokingSupport.Controllers
             var goalPlanResponses = goalPlans.Select(gp => new DTOGoalPlanForRead
             {
                 PlanId = gp.PlanId,
-                MemberId = gp.MemberId,
                 MemberDisplayName = gp.Member?.User?.DisplayName ?? "Unknown",
                 StartDate = gp.StartDate,
                 isCurrentGoal = gp.isCurrentGoal,
@@ -87,7 +86,6 @@ namespace WebSmokingSupport.Controllers
             var goalPlanResponses = goalPlans.Select(gp => new DTOGoalPlanForRead
             {
                 PlanId = gp.PlanId,
-                MemberId = gp.MemberId,
                 MemberDisplayName = gp.Member?.User?.DisplayName ?? "Unknown",
                 StartDate = gp.StartDate,
                 isCurrentGoal = gp.isCurrentGoal,
@@ -161,7 +159,6 @@ namespace WebSmokingSupport.Controllers
                 {
                     var log = new ProgressLog
                     {
-                        MemberId = memberProfileExisted.MemberId,
                         GoalPlanId = newGoalPlan.PlanId,
                         LogDate = currentDate.ToDateTime(TimeOnly.MinValue),
                         CigarettesSmoked = 0,
@@ -184,7 +181,6 @@ namespace WebSmokingSupport.Controllers
                 {
                     PlanId = newGoalPlan.PlanId,
                     MemberDisplayName = memberProfileExisted.User?.DisplayName ?? "Unknown",
-                    MemberId = newGoalPlan.MemberId,
                     StartDate = newGoalPlan.StartDate,
                     EndDate = newGoalPlan.EndDate,
                     isCurrentGoal = newGoalPlan.isCurrentGoal,
@@ -245,7 +241,6 @@ namespace WebSmokingSupport.Controllers
             {
                 PlanId = activeGoalPlan.PlanId,
                 MemberDisplayName = activeGoalPlan.Member?.User?.DisplayName ?? "Unknown",
-                MemberId = activeGoalPlan.MemberId,
                 StartDate = activeGoalPlan.StartDate,
                 isCurrentGoal = activeGoalPlan.isCurrentGoal,
                 EndDate = activeGoalPlan.EndDate,
@@ -282,9 +277,7 @@ namespace WebSmokingSupport.Controllers
             {
                 return NotFound($"Goal plan not found for the specified plan ID = {planId}.");
             }
-            goalPlanExisted.isCurrentGoal = false;
-            goalPlanExisted.UpdatedAt = DateTime.UtcNow;
-            await _goalPlanRepository.UpdateAsync(goalPlanExisted);
+            _context.GoalPlans.Remove(goalPlanExisted);
             await _context.SaveChangesAsync();
             return NoContent();
         }

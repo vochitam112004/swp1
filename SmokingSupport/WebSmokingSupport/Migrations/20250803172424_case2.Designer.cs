@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebSmokingSupport.Data;
 
@@ -11,9 +12,11 @@ using WebSmokingSupport.Data;
 namespace WebSmokingSupport.Migrations
 {
     [DbContext(typeof(QuitSmokingSupportContext))]
-    partial class QuitSmokingSupportContextModelSnapshot : ModelSnapshot
+    [Migration("20250803172424_case2")]
+    partial class case2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -514,7 +517,7 @@ namespace WebSmokingSupport.Migrations
 
                     b.HasKey("PlanId");
 
-                    b.ToTable("MembershipPlans", (string)null);
+                    b.ToTable("MembershipPlans");
                 });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.Notification", b =>
@@ -621,7 +624,6 @@ namespace WebSmokingSupport.Migrations
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<int?>("GoalPlanId")
-                        .IsRequired()
                         .HasColumnType("int")
                         .HasColumnName("goal_plan_id");
 
@@ -630,7 +632,8 @@ namespace WebSmokingSupport.Migrations
                         .HasColumnName("log_date");
 
                     b.Property<int?>("MemberId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("member_id");
 
                     b.Property<string>("Mood")
                         .HasColumnType("nvarchar(max)");
@@ -655,7 +658,7 @@ namespace WebSmokingSupport.Migrations
 
                     b.HasIndex("GoalPlanId");
 
-                    b.HasIndex("MemberId");
+                    b.HasIndex("MemberId", "LogDate");
 
                     b.ToTable("ProgressLog", (string)null);
                 });
@@ -883,7 +886,7 @@ namespace WebSmokingSupport.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserMembershipHistories", (string)null);
+                    b.ToTable("UserMembershipHistories");
                 });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.Appointment", b =>
@@ -1056,8 +1059,7 @@ namespace WebSmokingSupport.Migrations
                     b.HasOne("WebSmokingSupport.Entity.GoalPlan", "GoalPlan")
                         .WithMany("ProgressLogs")
                         .HasForeignKey("GoalPlanId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("WebSmokingSupport.Entity.MemberProfile", "Member")
                         .WithMany("ProgressLogs")
