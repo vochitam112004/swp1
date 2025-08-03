@@ -50,7 +50,6 @@ const AppointmentManager = () => {
                 <TableCell>Ngày</TableCell>
                 <TableCell>Thời gian</TableCell>
                 <TableCell>Coach</TableCell>
-                <TableCell>Trạng thái</TableCell>
                 <TableCell>Ghi chú</TableCell>
                 <TableCell>Meeting Link</TableCell>
                 <TableCell>Hành động</TableCell>
@@ -62,7 +61,6 @@ const AppointmentManager = () => {
                   <TableCell>{formatDate(appointment.appointmentDate)}</TableCell>
                   <TableCell>{appointment.startTime} - {appointment.endTime}</TableCell>
                   <TableCell>{appointment.coachName || "Coach"}</TableCell>
-                  <TableCell>{appointment.status}</TableCell>
                   <TableCell>{appointment.notes || "-"}</TableCell>
                   <TableCell>
                     {appointment.meetingLink ? (
