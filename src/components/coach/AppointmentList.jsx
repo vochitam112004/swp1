@@ -11,15 +11,11 @@ import {
     Box,
     IconButton
 } from '@mui/material'
-import ChatIcon from '@mui/icons-material/Chat'
 import { Link } from '@mui/material'
 import api from '../../api/axios'
-import ChatSupport from "../chat/ChatSupport"
 
 export default function AppointmentList() {
     const [appointments, setAppointments] = useState([])
-    const [selectedUserId, setSelectedUserId] = useState(null)
-    const [selectedDisplayName, setSelectedDisplayName] = useState("")
 
     useEffect(() => {
         const fetchAppointments = async () => {
@@ -33,25 +29,6 @@ export default function AppointmentList() {
 
         fetchAppointments()
     }, [])
-
-    const handleChat = (userId, displayName) => {
-        setSelectedUserId(userId)
-        setSelectedDisplayName(displayName)
-    }
-
-    const handleCloseChat = () => {
-        setSelectedUserId(null)
-        setSelectedDisplayName("")
-    }
-
-    const uniqueMemberUserIds = new Set();
-    const filteredAppointments = appointments.filter((item) => {
-        if (!uniqueMemberUserIds.has(item.memberUserId)) {
-            uniqueMemberUserIds.add(item.memberUserId)
-            return true;
-        }
-        return false;
-    });
 
     return (
         <div>
@@ -68,7 +45,6 @@ export default function AppointmentList() {
                                     <TableCell>Thời gian</TableCell>
                                     <TableCell>Ghi chú</TableCell>
                                     <TableCell>Link Online</TableCell>
-                                    <TableCell>Nhắn tin</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -87,13 +63,6 @@ export default function AppointmentList() {
                                                 'Chưa có'
                                             )}
                                         </TableCell>
-                                        <TableCell>
-                                            {filteredAppointments.some(appt => appt.memberUserId === item.memberUserId) && (
-                                                <IconButton onClick={() => handleChat(item.memberUserId, item.memberName)}>
-                                                    <ChatIcon sx={{ color: '#1976d2' }} />
-                                                </IconButton>
-                                            )}
-                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -101,14 +70,6 @@ export default function AppointmentList() {
                     </TableContainer>
                 )}
             </Box>
-
-            {selectedUserId && (
-                <ChatSupport
-                    targetUserId={selectedUserId}
-                    targetDisplayName={selectedDisplayName}
-                    onClose={handleCloseChat}
-                />
-            )}
         </div>
     )
 }

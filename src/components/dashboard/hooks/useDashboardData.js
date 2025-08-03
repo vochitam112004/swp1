@@ -40,13 +40,14 @@ export const useDashboardData = () => {
   });
   const [plan, setPlan] = useState(null);
   const [currentGoal, setCurrentGoal] = useState(null);
-  
+
   const fetchedRef = useRef(false);
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
   // Check membership
   useEffect(() => {
+    if (authLoading || !user) return;
     const checkMembership = async () => {
       try {
         const res = await api.get("/UserMemberShipHistory/my-history");
@@ -79,19 +80,19 @@ export const useDashboardData = () => {
         setQuitAttempts(res.data.quitAttempts || 0);
         setExperienceLevel(res.data.experience_level || 0);
         setPreviousAttempts(res.data.previousAttempts || "");
-        
+
         // Set new smoking habits data
         setDailyCigarettes(res.data.dailyCigarettes || 0);
         setYearsOfSmoking(res.data.yearsOfSmoking || 0);
         setPackPrice(res.data.packPrice || 25000);
         setCigarettesPerPack(res.data.cigarettesPerPack || 20);
-        
+
         // Set health information
         setHealthConditions(res.data.healthConditions || "");
         setAllergies(res.data.allergies || "");
         setMedications(res.data.medications || "");
         setPreviousHealthIssues(res.data.previousHealthIssues || "");
-        
+
         // Set additional smoking details
         setSmokingTriggers(res.data.smokingTriggers || "");
         setPreferredBrand(res.data.preferredBrand || "");
@@ -111,7 +112,7 @@ export const useDashboardData = () => {
     setLoading(true);
     try {
       const { progressLogs, currentGoal, goalPlan, errors } = await ApiHelper.fetchAllDashboardData();
-      
+
       setProgressLogs(progressLogs);
       setCurrentGoal(currentGoal);
       setPlan(goalPlan);
@@ -133,7 +134,7 @@ export const useDashboardData = () => {
   // Fetch coach list
   const fetchCoachList = async () => {
     if (!user?.id) return;
-    
+
     try {
       const res = await api.get("/ChatMessage/available-contacts");
       setCoachList(res.data || []);
@@ -147,13 +148,17 @@ export const useDashboardData = () => {
   const fetchAppointments = async () => {
     try {
       const res = await api.get("/Appointment/GetAppointments");
-      setAppointments(res.data || []);
+
+      setAppointments(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
-      console.error("❌ Appointment Error:", error);
-      toast.error("Không thể tải lịch hẹn: " + (error.response?.data?.message || error.message));
-      setAppointments([]); // Set empty array as fallback
+      console.error("Appointment Error:", error);
+      setAppointments([]);
     }
   };
+  
+  useEffect(() => {
+    fetchAppointments();
+  }, [])
 
   // Effects
   useEffect(() => {
@@ -200,7 +205,7 @@ export const useDashboardData = () => {
     progress,
     plan,
     currentGoal,
-    
+
     // Setters
     setMemberProfile,
     setSmokingStatus,
@@ -227,7 +232,7 @@ export const useDashboardData = () => {
     setProgress,
     setPlan,
     setCurrentGoal,
-    
+
     // Functions
     fetchProfile,
     fetchAllData,

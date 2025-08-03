@@ -779,15 +779,9 @@ const Dashboard = () => {
           </div>
         );
       
-      case TABS.SYSTEM_REPORT:
-        return <SystemReportForm />;
-      
       case TABS.APPOINTMENT:
         return (
           <AppointmentManager
-            appointments={appointments}
-            coachList={coachList}
-            fetchAppointments={fetchAppointments}
           />
         );
       
