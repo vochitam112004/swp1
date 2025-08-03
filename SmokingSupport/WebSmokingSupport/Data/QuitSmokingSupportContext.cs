@@ -203,10 +203,12 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.HasOne(d => d.Post).WithMany(p => p.CommunityInteractions)
                 .HasForeignKey(d => d.PostId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__Community__post___4F7CD00D");
 
             entity.HasOne(d => d.User).WithMany(p => p.CommunityInteractions)
                 .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK__Community__user___5070F446");
         });
 

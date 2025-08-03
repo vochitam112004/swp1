@@ -81,12 +81,13 @@ namespace WebSmokingSupport.Controllers
             return Ok(new { message = "Post created successfully." });
         }
         [Authorize(Roles = "Member")]
-        [HttpPut("{postId}")]
+        [HttpPost("Update/{postId}")]
         public async Task<ActionResult<DTOCommunityPostForRead>> UpdatePost(int postId, [FromForm] DTOComunityPostForUpdate dto , [FromServices] IWebHostEnvironment _env)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
             var post = await _context.CommunityPosts
+                .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.PostId == postId && p.UserId == userId);
             if (post == null)
                 return NotFound("Post not found or you're not the owner.");
@@ -112,7 +113,7 @@ namespace WebSmokingSupport.Controllers
                 {
                     await dto.ImageUrl.CopyToAsync(stream);
                 }
-                post.ImageUrl = $"/uploads/Post/{fileName}"; // Lưu đường dẫn hình ảnh
+                post.ImageUrl = $"/uploads/Post/{fileName}"; 
             }
 
             post.CreatedAt = DateTime.UtcNow;
@@ -125,7 +126,7 @@ namespace WebSmokingSupport.Controllers
                 Content = post.Content,
                 CreatedAt = post.CreatedAt,
                 ImageUrl = post.ImageUrl,
-                DisplayName = post.User != null ? post.User.DisplayName : "Ẩn danh"
+                DisplayName = post.User?.DisplayName ?? "Ẩn danh"
             };
             return Ok(updatedPost);
         }
