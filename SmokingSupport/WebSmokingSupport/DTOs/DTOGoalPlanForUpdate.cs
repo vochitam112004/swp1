@@ -2,10 +2,10 @@
 {
     public class DTOGoalPlanForUpdate
     {
-       
-        public DateOnly? TargetQuitDate { get; set; }
-        public bool? isCurrentGoal { get; set; }
-        public string? PersonalMotivation { get; set; }
-     
+        public DateOnly? StartDate { get; set; } // ngày bắt đầu kế hoạch
+        public DateOnly? EndDate { get; set; } // ngày kết thúc kế hoạch
+        public bool? IsCurrentGoal { get; set; } = true; // đánh dấu kế hoạch hiện tại
+        public DateTime UpdatedAt { get; set; }
+
     }
 }
