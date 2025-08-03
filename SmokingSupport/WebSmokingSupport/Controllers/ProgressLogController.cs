@@ -1,29 +1,91 @@
-﻿//using Microsoft.AspNetCore.Http;
-//using Microsoft.AspNetCore.Mvc;
-//using WebSmokingSupport.Data;
-//using WebSmokingSupport.Interfaces;
-//using WebSmokingSupport.Entity;
-//using System.Security.Claims;
-//using Microsoft.AspNetCore.Authorization;
-//using WebSmokingSpport.DTOs;
-//namespace WebSmokingSupport.Controllers
-//{
-//    [Route("api/[controller]")]
-//    [ApiController]
-//    public class ProgressLogController : ControllerBase
-//    {
-//        private readonly QuitSmokingSupportContext _context;
-//        private readonly IGenericRepository<ProgressLog> _progressLogRepository;
-//        public ProgressLogController(QuitSmokingSupportContext context, IGenericRepository<ProgressLog> progressLogRepository)
-//        {
-//            _context = context;
-//            _progressLogRepository = progressLogRepository;
-//        }
-//        [HttpGet("GetAllProgressLog")]
-//        [Authorize(Roles = "Member ,Coach")]
-//        public async Task<ActionResult<DTOProgressLogForRead>> GetAllProgressLog()
-//        {
-
-//        }
-//    }
-//}
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using WebSmokingSupport.Data;
+using WebSmokingSupport.Interfaces;
+using WebSmokingSupport.Entity;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using WebSmokingSpport.DTOs;
+using Microsoft.EntityFrameworkCore;
+namespace WebSmokingSupport.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProgressLogController : ControllerBase
+    {
+        private readonly QuitSmokingSupportContext _context;
+        private readonly IGenericRepository<ProgressLog> _progressLogRepository;
+        public ProgressLogController(QuitSmokingSupportContext context, IGenericRepository<ProgressLog> progressLogRepository)
+        {
+            _context = context;
+            _progressLogRepository = progressLogRepository;
+        }
+        [HttpGet("GetMyAllProgressLog")]
+        [Authorize(Roles = "Member")]
+        public async Task<ActionResult<DTOProgressLogForRead>> GetAllProgressLog()
+        {
+            var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaims == null)
+            {
+                return Unauthorized("User not authenticated.");
+            }
+            int userId = int.Parse(userIdClaims);
+            var memberProfile = await _context.MemberProfiles
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if(memberProfile == null)
+            {
+                return NotFound("Member profile not found for the authenticated user.");
+            }
+            var ProgressLogExsited  = await _context.ProgressLogs
+                .Where(pl => pl.MemberId == memberProfile.MemberId)
+                .OrderByDescending(pl => pl.CreatedAt)
+                .Select(pl => new DTOProgressLogForRead
+                {
+                    LogId = pl.LogId,
+                    MemberId = pl.MemberId,
+                    LogDate = pl.LogDate,
+                    CigarettesSmoked = pl.CigarettesSmoked,
+                    CreatedAt = pl.CreatedAt,
+                    UpdatedAt = pl.UpdatedAt
+                }).ToListAsync();
+            if (ProgressLogExsited == null || !ProgressLogExsited.Any())
+            {
+                return NotFound("No progress logs found for the authenticated user.");
+            }
+            return Ok(ProgressLogExsited);
+        }
+        [HttpGet("GetProgressLogByDate/{LongDate}")]
+        [Authorize(Roles = "Member")]
+        public async Task<ActionResult<DTOProgressLogForRead>> GetProgressLogByDate(DateTime LongDate)
+        {
+            var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaims == null)
+            {
+                return Unauthorized("User not authenticated.");
+            }
+            int userId = int.Parse(userIdClaims);
+            var memberProfile = await _context.MemberProfiles
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if (memberProfile == null)
+            {
+                return NotFound("Member profile not found for the authenticated user.");
+            }
+            var ProgressLogExsited = await _context.ProgressLogs
+                .Where(pl => pl.MemberId == memberProfile.MemberId && pl.LogDate == LongDate)
+                .Select(pl => new DTOProgressLogForRead
+                {
+                    LogId = pl.LogId,
+                    MemberId = pl.MemberId,
+                    LogDate = pl.LogDate,
+                    CigarettesSmoked = pl.CigarettesSmoked,
+                    CreatedAt = pl.CreatedAt,
+                    UpdatedAt = pl.UpdatedAt
+                }).FirstOrDefaultAsync();
+            if (ProgressLogExsited == null)
+            {
+                return NotFound($"No progress log found for the date {LongDate}.");
+            }
+            return Ok(ProgressLogExsited);
+        }
+    }
+}

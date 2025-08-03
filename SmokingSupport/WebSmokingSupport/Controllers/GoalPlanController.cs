@@ -25,9 +25,21 @@ namespace WebSmokingSupport.Controllers
         [Authorize(Roles = "Coach, Admin,Member")]
         public async Task<ActionResult<IEnumerable<DTOGoalPlanForRead>>> GetAllGoalPlans()
         {
+            var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaims, out int userId))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+            var memberProfile = await _context.MemberProfiles
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if (memberProfile == null)
+            {
+                return NotFound("Member profile not found. Please create a profile before accessing goal plans.");
+            }
             var goalPlans = await _context.GoalPlans
                 .Include(gp => gp.Member)
                 .ThenInclude(m => m.User)
+                .Where(gp => gp.MemberId == memberProfile.MemberId)
                 .ToListAsync();
             if (goalPlans == null || goalPlans.Count == 0)
             {
@@ -86,36 +98,6 @@ namespace WebSmokingSupport.Controllers
             }).ToList();
             return Ok(goalPlanResponses);
         }
-        [HttpGet("GetGoalPlanById/{planId}")]
-        [Authorize(Roles = "Coach, Admin")]
-        public async Task<ActionResult<DTOGoalPlanForRead>> GetGoalPlanById(int planId)
-        {
-            if (planId <= 0)
-            {
-                return BadRequest($"Invalid plan ID = {planId}.");
-            }
-            var goalPlanExisted = await _context.GoalPlans
-                .Include(gp => gp.Member)
-                .ThenInclude(m => m.User)
-                .FirstOrDefaultAsync(gp => gp.PlanId == planId);
-            if (goalPlanExisted == null)
-            {
-                return NotFound($"Goal plan not found for the specified plan ID = {planId}.");
-            }
-            var goalPlanResponse = new DTOGoalPlanForRead
-            {
-                PlanId = goalPlanExisted.PlanId,
-                MemberDisplayName = goalPlanExisted.Member?.User?.DisplayName ?? "Unknown",
-                MemberId = goalPlanExisted.MemberId,
-                StartDate = goalPlanExisted.StartDate,
-                isCurrentGoal = goalPlanExisted.isCurrentGoal,
-                EndDate = goalPlanExisted.EndDate,
-                CreatedAt = goalPlanExisted.CreatedAt,
-                UpdatedAt = goalPlanExisted.UpdatedAt,
-                TotalDays = goalPlanExisted.TotalDays
-            };
-            return Ok(goalPlanResponse);
-        }
         [HttpPost("CreateGoalPlan")]
         [Authorize(Roles = "Member")]
         public async Task<ActionResult<DTOGoalPlanForRead>> CreateGoalPlan([FromBody] DTOGoalPlanForCreate dto)
@@ -127,12 +109,14 @@ namespace WebSmokingSupport.Controllers
             }
 
             var memberProfileExisted = await _context.MemberProfiles
+                .Include(mp => mp.User)
                 .FirstOrDefaultAsync(mp => mp.UserId == userId);
 
             if (memberProfileExisted == null)
             {
                 return NotFound("Member profile not found. Please create a profile before creating a goal plan.");
             }
+
             if (dto.StartDate > dto.EndDate)
                 return BadRequest("Start date cannot be after end date.");
 
@@ -157,7 +141,7 @@ namespace WebSmokingSupport.Controllers
                     }
                     else
                     {
-                        return BadRequest("You already have an active goal plan. Please Delete GoalPlan old or complete it before creating a new one.");
+                        return BadRequest("You already have an active goal plan. Please delete the old plan or complete it before creating a new one.");
                     }
                 }
 
@@ -172,7 +156,24 @@ namespace WebSmokingSupport.Controllers
                 };
 
                 await _goalPlanRepository.CreateAsync(newGoalPlan);
+                var currentDate = newGoalPlan.StartDate;
+                while (currentDate <= newGoalPlan.EndDate)
+                {
+                    var log = new ProgressLog
+                    {
+                        GoalPlanId = newGoalPlan.PlanId,
+                        LogDate = currentDate.ToDateTime(TimeOnly.MinValue),
+                        CigarettesSmoked = 0,
+                        Notes = null
+                    };
+
+                    _context.ProgressLogs.Add(log);
+
+                    currentDate = currentDate.AddDays(1);
+                }
+                //await _context.ProgressLogs.AddRangeAsync(progressLogs);
                 await _context.SaveChangesAsync();
+
                 await transaction.CommitAsync();
 
                 var goalPlanResponse = new DTOGoalPlanForRead
@@ -196,6 +197,7 @@ namespace WebSmokingSupport.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
         [HttpPut("UpdateMyGoalPlan")]
         [Authorize(Roles = "Member")]
         public async Task<ActionResult<DTOGoalPlanForRead>> UpdateGoalPlan([FromBody] DTOGoalPlanForUpdate dto)

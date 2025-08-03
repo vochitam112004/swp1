@@ -58,7 +58,6 @@ namespace WebSmokingSupport.Controllers
                 var name = payload.Name;
                 var avatarUrl = payload.Picture;
 
-                // Kiểm tra người dùng đã tồn tại chưa
                 var user = await _userRepository.GetByEmailAsync(email);
 
                 if (user == null)

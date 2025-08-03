@@ -96,7 +96,6 @@ namespace WebSmokingSupport.Controllers
             
             await _appointmentRepository.CreateAsync(appointment);
 
-            // Load lại appointment vừa tạo kèm Member và Coach
             var createdAppointment = await _context.Appointments
                 .Include(a => a.Member).ThenInclude(m => m.User)
                 .Include(a => a.Coach).ThenInclude(c => c.Coach)
@@ -118,6 +117,7 @@ namespace WebSmokingSupport.Controllers
                 Status = appointment.Status,
                 UpdatedAt = appointment.UpdatedAt
             });
+
         }
         [HttpGet("GetAppointments")]
         [Authorize(Roles = "Member, Coach, Admin")]
@@ -164,9 +164,7 @@ namespace WebSmokingSupport.Controllers
             {
                 AppointmentId = a.AppointmentId,
                 MemberId = a.MemberId,
-                MemberUserId = a.Member?.UserId,
                 CoachId = a.CoachId,
-                CoachUserId = a.Coach?.UserId,
                 MemberName = a.Member?.User?.DisplayName ?? "Unknown Member",
                 CoachName = a.Coach?.Coach?.DisplayName ?? "Unknown Coach",
                 AppointmentDate = a.AppointmentDate,
