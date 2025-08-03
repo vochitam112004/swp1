@@ -147,8 +147,8 @@ export default function ManageCoach() {
   };
 
   return (
-    <Box p={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} >
+    <Box sx={{ bgcolor: 'white', minHeight: '80vh', px: 3, py: 2, position: 'relative' }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <TextField
           size="small"
           placeholder="Tìm theo tên coach..."
@@ -161,13 +161,13 @@ export default function ManageCoach() {
         </Button>
       </Box>
 
-      <Box display="flex" gap={4} mb={2} bgcolor="#f9f9f9" p={2} borderRadius={1}>
+      <Box display="flex" gap={4} mb={2} bgcolor="#f5f7fa" p={2} borderRadius={2}>
         <Typography>Tổng số: <strong>{countStats.total}</strong></Typography>
         <Typography>Đang hoạt động: <strong>{countStats.active}</strong></Typography>
         <Typography>Tạm khóa: <strong>{countStats.locked}</strong></Typography>
       </Box>
 
-      <Paper>
+      <Paper elevation={0} sx={{ borderRadius: 2 }}>
         {filteredCoaches.map((coach) => (
           <Box key={coach.coachId} display="flex" alignItems="center" justifyContent="space-between" p={2} borderBottom="1px solid #eee">
             <Box display="flex" alignItems="center">
@@ -178,7 +178,7 @@ export default function ManageCoach() {
                 <Typography variant="body2">Coach ID: {coach.username}</Typography>
               </Box>
             </Box>
-            <Box display="flex" alignItems="center" gap={2}>
+            <Box display="flex" alignItems="center" gap={1}>
               <Chip
                 label={coach.isActive ? "Hoạt động" : "Tạm khóa"}
                 color={coach.isActive ? "success" : "default"}
@@ -197,93 +197,36 @@ export default function ManageCoach() {
 
       {/* Modal Edit */}
       <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)}>
-  <Box
-    sx={{
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      backgroundColor: "#fff",
-      p: 3,
-      width: 500,
-      borderRadius: 2,
-      boxShadow: 24,
-    }}
-  >
-    <Typography variant="h6" gutterBottom>
-      Cập nhật Coach
-    </Typography>
-    <Grid container spacing={2}>
-      {[
-        "userName",
-        "displayName",
-        "email",
-        "phoneNumber",
-        "address",
-        "specialization",
-      ].map((field) => (
-        <Grid item xs={12} key={field}>
-          <TextField
-            label={fieldLabels[field] || field}
-            fullWidth
-            value={editingData?.[field] || ""}
-            onChange={(e) =>
-              setEditingData({ ...editingData, [field]: e.target.value })
-            }
-          />
-        </Grid>
-      ))}
-
-      {/* ✅ Thêm Switch bật/tắt hoạt động */}
-      <Grid item xs={12}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={editingData?.isActive ?? true}
-              onChange={(e) =>
-                setEditingData({
-                  ...editingData,
-                  isActive: e.target.checked,
-                })
-              }
-            />
-          }
-          label="Hoạt động"
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <Button variant="contained" onClick={handleUpdateCoach}>
-          Lưu
-        </Button>
-      </Grid>
-    </Grid>
-  </Box>
-</Modal>
-
+        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#fff", p: 3, width: 500, borderRadius: 2, boxShadow: 24 }}>
+          <Typography variant="h6" gutterBottom>Cập nhật Coach</Typography>
+          <Grid container spacing={2}>
+            {["userName", "displayName", "email", "phoneNumber", "address", "specialization"].map((field) => (
+              <Grid item xs={12} key={field}>
+                <TextField
+                  label={fieldLabels[field] || field}
+                  fullWidth
+                  value={editingData?.[field] || ""}
+                  onChange={(e) => setEditingData({ ...editingData, [field]: e.target.value })}
+                />
+              </Grid>
+            ))}
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={<Switch checked={editingData?.isActive ?? true} onChange={(e) => setEditingData({ ...editingData, isActive: e.target.checked })} />}
+                label="Hoạt động"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button variant="contained" onClick={handleUpdateCoach}>Lưu</Button>
+            </Grid>
+          </Grid>
+        </Box>
+      </Modal>
 
       {/* Modal Create */}
       <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 500,
-            minHeight: 400,
-            bgcolor: "background.paper",
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 3,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Thêm Coach
-          </Typography>
-
+        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 500, minHeight: 400, bgcolor: "background.paper", borderRadius: 2, boxShadow: 24, p: 3, display: "flex", flexDirection: "column" }}>
+          <Typography variant="h6" gutterBottom>Thêm Coach</Typography>
           <Box sx={{ flexGrow: 1 }}>
             <Grid container spacing={2}>
               {["username", "passWord", "displayName", "email", "phoneNumber", "address", "specialization"].map((field) => (
@@ -298,15 +241,11 @@ export default function ManageCoach() {
               ))}
             </Grid>
           </Box>
-
           <Box sx={{ mt: "auto", pt: 2, display: "flex", justifyContent: "center" }}>
-            <Button variant="contained" onClick={handleCreateCoach}>
-              Tạo
-            </Button>
+            <Button variant="contained" onClick={handleCreateCoach}>Tạo</Button>
           </Box>
         </Box>
       </Modal>
-
 
       {/* Dialog Delete */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

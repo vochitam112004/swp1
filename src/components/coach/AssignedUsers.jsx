@@ -69,6 +69,20 @@ export default function AssignedUsers() {
         />
       </Box>
 
+      <Box sx={{ mb: 2, bgcolor: '#f8f9fa', py: 1, px: 2, borderRadius: 1 }}>
+        <Stack direction="row" spacing={4}>
+          <Typography variant="body2">
+            Tổng số: <strong>{users.length}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Đang hoạt động: <strong>{users.filter(u => u.isActive).length}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Tạm khóa: <strong>{users.filter(u => !u.isActive).length}</strong>
+          </Typography>
+        </Stack>
+      </Box>
+
       {/* User List */}
       {filteredUsers.map((user, index) => (
         <Box
