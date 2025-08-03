@@ -60,14 +60,8 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!memberProfile?.memberId) {
-      toast.error("Không tìm thấy thông tin hồ sơ!");
-      return;
-    }
-
     try {
-      const updateData = {
-        memberId: memberProfile.memberId,
+      let updateData = {
         smokingStatus: formData.smokingStatus,
         quitAttempts: parseInt(formData.quitAttempts) || 0,
         experienceLevel: parseInt(formData.experienceLevel) || 0,
@@ -81,9 +75,17 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
         smokingPattern: formData.smokingPattern,
       };
 
-      await api.put(`/MemberProfile/${memberProfile.memberId}`, updateData);
+      if (memberProfile?.memberId) {
+        // Update existing member profile
+        updateData.memberId = memberProfile.memberId;
+        await api.put(`/MemberProfile/${memberProfile.memberId}`, updateData);
+        setMemberProfile({ ...memberProfile, ...updateData });
+      } else {
+        // Create new member profile for coaches who don't have one
+        const response = await api.post('/MemberProfile', updateData);
+        setMemberProfile(response.data);
+      }
       
-      setMemberProfile({ ...memberProfile, ...updateData });
       setIsEditing(false);
       toast.success("Đã cập nhật thông tin hút thuốc thành công!");
     } catch (err) {
@@ -109,7 +111,7 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
     setIsEditing(false);
   };
 
-  if (!memberProfile) {
+  if (memberProfile === null) {
     return (
       <Box sx={{ textAlign: 'center', py: 5 }}>
         <Typography variant="h5" color="textSecondary" sx={{ mb: 2 }}>
@@ -311,7 +313,7 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
         </Paper>
 
         {/* Statistics Display */}
-        {memberProfile && (
+        {(memberProfile?.memberId || Object.keys(memberProfile || {}).length > 0) && (
           <Paper sx={{ p: 3, mb: 3, backgroundColor: '#f5f5f5' }}>
             <Typography variant="h6" sx={{ mb: 2, color: '#d32f2f' }}>
               📊 Thống kê chi phí

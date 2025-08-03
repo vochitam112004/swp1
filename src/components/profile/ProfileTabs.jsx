@@ -79,30 +79,30 @@ export default function ProfileTabs() {
     fetchUserProfile();
   }, []);
 
-  // Fetch member profile for Members
+  // Fetch member profile for all users
   useEffect(() => {
-    if (!user || user.userType !== "Member") return;
+    if (!user) return;
 
     const fetchMemberProfile = async () => {
       try {
-        const res = await api.get("/MemberProfile/GetMyMemberProfile");
-        setMemberProfile(res.data);
+        let res;
+        try {
+          res = await api.get("/MemberProfile/GetMyMemberProfile");
+          setMemberProfile(res.data);
+        } catch (error) {
+          // If user doesn't have member profile, create empty one for display
+          console.log("No member profile found, creating empty one");
+          setMemberProfile({});
+        }
       } catch (error) {
         console.error("Error fetching member profile:", error);
-        // Don't show error toast as member profile might not exist yet
+        setMemberProfile({});
       } finally {
         setLoading(false);
       }
     };
 
     fetchMemberProfile();
-  }, [user]);
-
-  // For non-members, set loading to false
-  useEffect(() => {
-    if (!user || user.userType !== "Member") {
-      setLoading(false);
-    }
   }, [user]);
 
   const handleTabChange = (event, newValue) => {
@@ -195,13 +195,9 @@ export default function ProfileTabs() {
             scrollButtons="auto"
           >
             <Tab label="Thông tin tài khoản" {...a11yProps(0)} />
-            {user?.userType === "Member" && (
-              <>
-                <Tab label="Thông tin hút thuốc" {...a11yProps(1)} />
-                <Tab label="Thông tin sức khỏe" {...a11yProps(2)} />
-                <Tab label="Huy hiệu & Thành viên" {...a11yProps(3)} />
-              </>
-            )}
+            <Tab label="Thông tin hút thuốc" {...a11yProps(1)} />
+            <Tab label="Thông tin sức khỏe" {...a11yProps(2)} />
+            <Tab label="Huy hiệu & Thành viên" {...a11yProps(3)} />
           </Tabs>
         </Box>
 
@@ -213,27 +209,23 @@ export default function ProfileTabs() {
           />
         </TabPanel>
 
-        {user?.userType === "Member" && (
-          <>
-            <TabPanel value={activeTab} index={1}>
-              <SmokingHabitsTab 
-                memberProfile={memberProfile} 
-                setMemberProfile={setMemberProfile}
-              />
-            </TabPanel>
+        <TabPanel value={activeTab} index={1}>
+          <SmokingHabitsTab 
+            memberProfile={memberProfile} 
+            setMemberProfile={setMemberProfile}
+          />
+        </TabPanel>
 
-            <TabPanel value={activeTab} index={2}>
-              <HealthTab 
-                memberProfile={memberProfile} 
-                setMemberProfile={setMemberProfile}
-              />
-            </TabPanel>
+        <TabPanel value={activeTab} index={2}>
+          <HealthTab 
+            memberProfile={memberProfile} 
+            setMemberProfile={setMemberProfile}
+          />
+        </TabPanel>
 
-            <TabPanel value={activeTab} index={3}>
-              <BadgesTab />
-            </TabPanel>
-          </>
-        )}
+        <TabPanel value={activeTab} index={3}>
+          <BadgesTab />
+        </TabPanel>
       </Paper>
     </Box>
   );

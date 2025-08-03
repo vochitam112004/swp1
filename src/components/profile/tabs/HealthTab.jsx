@@ -42,35 +42,40 @@ export default function HealthTab({ memberProfile, setMemberProfile }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!memberProfile?.memberId) {
-      toast.error("Không tìm thấy thông tin hồ sơ!");
-      return;
-    }
-
     try {
-      const updateData = {
-        memberId: memberProfile.memberId,
+      let updateData = {
         healthConditions: formData.healthConditions,
         allergies: formData.allergies,
         medications: formData.medications,
         previousHealthIssues: formData.previousHealthIssues,
-        // Keep existing smoking data
-        smokingStatus: memberProfile.smokingStatus,
-        quitAttempts: memberProfile.quitAttempts,
-        experienceLevel: memberProfile.experienceLevel,
-        previousAttempts: memberProfile.previousAttempts,
-        dailyCigarettes: memberProfile.dailyCigarettes,
-        yearsOfSmoking: memberProfile.yearsOfSmoking,
-        packPrice: memberProfile.packPrice,
-        cigarettesPerPack: memberProfile.cigarettesPerPack,
-        smokingTriggers: memberProfile.smokingTriggers,
-        preferredBrand: memberProfile.preferredBrand,
-        smokingPattern: memberProfile.smokingPattern,
       };
 
-      await api.put(`/MemberProfile/${memberProfile.memberId}`, updateData);
+      if (memberProfile?.memberId) {
+        // Update existing member profile
+        updateData = {
+          ...updateData,
+          memberId: memberProfile.memberId,
+          // Keep existing smoking data
+          smokingStatus: memberProfile.smokingStatus,
+          quitAttempts: memberProfile.quitAttempts,
+          experienceLevel: memberProfile.experienceLevel,
+          previousAttempts: memberProfile.previousAttempts,
+          dailyCigarettes: memberProfile.dailyCigarettes,
+          yearsOfSmoking: memberProfile.yearsOfSmoking,
+          packPrice: memberProfile.packPrice,
+          cigarettesPerPack: memberProfile.cigarettesPerPack,
+          smokingTriggers: memberProfile.smokingTriggers,
+          preferredBrand: memberProfile.preferredBrand,
+          smokingPattern: memberProfile.smokingPattern,
+        };
+        await api.put(`/MemberProfile/${memberProfile.memberId}`, updateData);
+        setMemberProfile({ ...memberProfile, ...updateData });
+      } else {
+        // Create new member profile for coaches who don't have one
+        const response = await api.post('/MemberProfile', updateData);
+        setMemberProfile(response.data);
+      }
       
-      setMemberProfile({ ...memberProfile, ...updateData });
       setIsEditing(false);
       toast.success("Đã cập nhật thông tin sức khỏe thành công!");
     } catch (err) {
@@ -89,7 +94,7 @@ export default function HealthTab({ memberProfile, setMemberProfile }) {
     setIsEditing(false);
   };
 
-  if (!memberProfile) {
+  if (memberProfile === null) {
     return (
       <Box sx={{ textAlign: 'center', py: 5 }}>
         <Typography variant="h5" color="textSecondary" sx={{ mb: 2 }}>

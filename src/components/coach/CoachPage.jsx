@@ -9,12 +9,14 @@ import {
   MenuItem,
   Stack,
 } from "@mui/material";
-import AssignedUsers from "./AssignedUsers";
-import UserProgress from "./UserProgress";
-import AppointmentList from "./AppointmentList";
-import ProfileTabs from "../profile/ProfileTabs";
+import UserPlans from "./UserPlans";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
+import ProfileTabs from "../profile/ProfileTabs";
+import UserProfileList from "./UserProfileList";
+import UserProgress from "./UserProgress";
+import "../../css/Coach.css";
+import AppointmentList from "./AppointmentList";
 
 export default function CoachDashboard() {
   const [tab, setTab] = useState(0);
@@ -23,6 +25,8 @@ export default function CoachDashboard() {
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleTabChange = (event, newValue) => {
+    event.preventDefault();
+    event.stopPropagation();
     setTab(newValue);
   };
 
@@ -113,6 +117,9 @@ export default function CoachDashboard() {
               minWidth: "auto",
               mr: 3,
               color: "#333",
+              "&:focus": {
+                outline: "none"
+              }
             },
             "& .Mui-selected": {
               color: "#1976d2 !important",
@@ -123,7 +130,7 @@ export default function CoachDashboard() {
             },
           }}
         >
-          <Tab label="Danh sách người dùng" />
+          <Tab label="Hồ sơ thành viên" />
           <Tab label="Tiến trình & Sức khỏe" />
           <Tab label="Danh sách lịch hẹn" />
           <Tab label="Hồ sơ cá nhân" />
@@ -132,7 +139,7 @@ export default function CoachDashboard() {
 
       {/* Nội dung tab */}
       <Box sx={{ px: 4, py: 3 }}>
-        {tab === 0 && <AssignedUsers />}
+        {tab === 0 && <UserProfileList />}
         {tab === 1 && <UserProgress />}
         {tab === 2 && <AppointmentList />}
         {tab === 3 && <ProfileTabs />}
