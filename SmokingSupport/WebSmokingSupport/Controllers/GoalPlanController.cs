@@ -161,17 +161,21 @@ namespace WebSmokingSupport.Controllers
                 {
                     var log = new ProgressLog
                     {
+                        MemberId = memberProfileExisted.MemberId,
                         GoalPlanId = newGoalPlan.PlanId,
                         LogDate = currentDate.ToDateTime(TimeOnly.MinValue),
                         CigarettesSmoked = 0,
-                        Notes = null
+                        Notes = null,
+                        Mood = null,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+
                     };
 
                     _context.ProgressLogs.Add(log);
 
                     currentDate = currentDate.AddDays(1);
                 }
-                //await _context.ProgressLogs.AddRangeAsync(progressLogs);
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -249,7 +253,6 @@ namespace WebSmokingSupport.Controllers
                 UpdatedAt = activeGoalPlan.UpdatedAt,
                 TotalDays = activeGoalPlan.TotalDays
             };
-
             return Ok(goalPlanResponse);
         }
         [HttpDelete("{planId}")]

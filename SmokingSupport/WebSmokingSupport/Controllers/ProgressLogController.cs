@@ -31,6 +31,7 @@ namespace WebSmokingSupport.Controllers
             }
             int userId = int.Parse(userIdClaims);
             var memberProfile = await _context.MemberProfiles
+                .Include(mp => mp.User) 
                 .FirstOrDefaultAsync(mp => mp.UserId == userId);
             if(memberProfile == null)
             {
@@ -38,11 +39,17 @@ namespace WebSmokingSupport.Controllers
             }
             var ProgressLogExsited  = await _context.ProgressLogs
                 .Where(pl => pl.MemberId == memberProfile.MemberId)
-                .OrderByDescending(pl => pl.CreatedAt)
+                .OrderByDescending(pl => pl.LogDate)
                 .Select(pl => new DTOProgressLogForRead
                 {
                     LogId = pl.LogId,
                     MemberId = pl.MemberId,
+                    ProgressLogMemberName = memberProfile.User.DisplayName,
+                    Notes = pl.Notes,
+                    Mood = pl.Mood,
+                    Triggers = pl.Triggers,
+                    Symptoms = pl.Symptoms,
+                    GoalPlanId = pl.GoalPlanId,
                     LogDate = pl.LogDate,
                     CigarettesSmoked = pl.CigarettesSmoked,
                     CreatedAt = pl.CreatedAt,
@@ -56,7 +63,7 @@ namespace WebSmokingSupport.Controllers
         }
         [HttpGet("GetProgressLogByDate/{LongDate}")]
         [Authorize(Roles = "Member")]
-        public async Task<ActionResult<DTOProgressLogForRead>> GetProgressLogByDate(DateTime LongDate)
+        public async Task<ActionResult<DTOProgressLogForRead>> GetProgressLogByDate(DateOnly LongDate)
         {
             var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaims == null)
@@ -65,17 +72,26 @@ namespace WebSmokingSupport.Controllers
             }
             int userId = int.Parse(userIdClaims);
             var memberProfile = await _context.MemberProfiles
+                .Include(mp => mp.User) 
                 .FirstOrDefaultAsync(mp => mp.UserId == userId);
             if (memberProfile == null)
             {
                 return NotFound("Member profile not found for the authenticated user.");
             }
             var ProgressLogExsited = await _context.ProgressLogs
-                .Where(pl => pl.MemberId == memberProfile.MemberId && pl.LogDate == LongDate)
+                .Where(pl => pl.MemberId == memberProfile.MemberId &&
+                       DateOnly.FromDateTime(pl.LogDate) == LongDate)
+                .OrderByDescending(pl => pl.LogDate)
                 .Select(pl => new DTOProgressLogForRead
                 {
                     LogId = pl.LogId,
                     MemberId = pl.MemberId,
+                    ProgressLogMemberName = memberProfile.User.DisplayName,
+                    Notes = pl.Notes,
+                    Mood = pl.Mood,
+                    Triggers = pl.Triggers,
+                    Symptoms = pl.Symptoms,
+                    GoalPlanId = pl.GoalPlanId,
                     LogDate = pl.LogDate,
                     CigarettesSmoked = pl.CigarettesSmoked,
                     CreatedAt = pl.CreatedAt,
