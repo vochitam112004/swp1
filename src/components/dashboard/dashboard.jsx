@@ -206,18 +206,18 @@ const Dashboard = () => {
   };
 
   const fetchProgressLogsByPlanId = async (planId) => {
-  try {
-    const res = await api.get(`/GoalPlan/GetHistoryGoalPlan/${planId}`);
-    // res.data.progressLogs là mảng log, res.data.goalPlan là kế hoạch
-    setHistoryProgressLogs(res.data.progressLogs || []);
-    if (!res.data.progressLogs || res.data.progressLogs.length === 0) {
-      toast.info("Không có tiến trình nào cho kế hoạch này!");
+    try {
+      const res = await api.get(`/GoalPlan/GetHistoryGoalPlan/${planId}`);
+      // res.data.progressLogs là mảng log, res.data.goalPlan là kế hoạch
+      setHistoryProgressLogs(res.data.progressLogs || []);
+      if (!res.data.progressLogs || res.data.progressLogs.length === 0) {
+        toast.info("Không có tiến trình nào cho kế hoạch này!");
+      }
+    } catch (error) {
+      toast.error("Không lấy được tiến trình kế hoạch này!");
+      setHistoryProgressLogs([]);
     }
-  } catch (error) {
-    toast.error("Không lấy được tiến trình kế hoạch này!");
-    setHistoryProgressLogs([]);
-  }
-};
+  };
 
   // Loading states
   if (authLoading || loading) {
@@ -661,26 +661,26 @@ const Dashboard = () => {
             <h3>Lịch sử kế hoạch</h3>
             {completedPlans.length > 0 ? (
               <div className="table-responsive">
-                <table className="table table-striped">
+                <table className="table table-striped align-middle">
                   <thead>
                     <tr>
-                      <th>Người tạo</th>
-                      <th>Ngày bắt đầu</th>
-                      <th>Ngày kết thúc</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
+                      <th className="text-center">Người tạo</th>
+                      <th className="text-center">Ngày bắt đầu</th>
+                      <th className="text-center">Ngày kết thúc</th>
+                      <th className="text-center">Trạng thái</th>
+                      <th className="text-center">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
                     {completedPlans.map((historyPlan, idx) => (
                       <tr key={idx}>
-                        <td>{historyPlan.memberDisplayName}</td>
-                        <td>{new Date(historyPlan.startDate).toLocaleDateString()}</td>
-                        <td>{new Date(historyPlan.endDate).toLocaleDateString()}</td>
-                        <td>
-                          <span className="badge bg-success">Hoàn thành hoặc Tạm ngưng</span>
+                        <td className="text-center">{historyPlan.memberDisplayName}</td>
+                        <td className="text-center">{new Date(historyPlan.startDate).toLocaleDateString('vi-VN')}</td>
+                        <td className="text-center">{new Date(historyPlan.endDate).toLocaleDateString('vi-VN')}</td>
+                        <td className="text-center">
+                          <span className="badge bg-success">Hoàn thành/Tạm ngưng</span>
                         </td>
-                        <td>
+                        <td className="text-center">
                           <button
                             className="btn btn-info btn-sm me-2"
                             onClick={async () => {
@@ -688,7 +688,7 @@ const Dashboard = () => {
                               await fetchProgressLogsByPlanId(historyPlan.planId);
                             }}
                           >
-                            Xem tiến trình
+                            <i className="fas fa-eye me-1"></i>Xem tiến trình
                           </button>
                           <button
                             className="btn btn-danger btn-sm"
@@ -705,7 +705,7 @@ const Dashboard = () => {
                               }
                             }}
                           >
-                            Xóa
+                            <i className="fas fa-trash me-1"></i>Xóa
                           </button>
                         </td>
                       </tr>
@@ -714,37 +714,66 @@ const Dashboard = () => {
                 </table>
                 {selectedHistoryPlan && (
                   <div className="mt-4">
-                    <h4>Tiến trình của kế hoạch: {selectedHistoryPlan.memberDisplayName}</h4>
+                    <h4>
+                      Tiến trình của kế hoạch: <span className="text-primary fw-bold">{selectedHistoryPlan.memberDisplayName}</span>
+                    </h4>
                     {historyProgressLogs.length > 0 ? (
-                      <table className="table table-bordered">
-                        <thead>
-                          <tr>
-                            <th>Ngày ghi nhận</th>
-                            <th>Số điếu thuốc</th>
-                            <th>Tâm trạng</th>
-                            <th>Yếu tố kích hoạt</th>
-                            <th>Triệu chứng</th>
-                            <th>Ghi chú</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {historyProgressLogs.map((log, idx) => (
-                            <tr key={idx}>
-                              <td>{new Date(log.logDate).toLocaleDateString()}</td>
-                              <td>{log.cigarettesSmoked}</td>
-                              <td>{log.mood || ""}</td>
-                              <td>{log.triggers || ""}</td>
-                              <td>{log.symptoms || ""}</td>
-                              <td>{log.notes || ""}</td>
+                      <div className="table-responsive">
+                        <table className="table table-bordered align-middle">
+                          <thead className="table-light">
+                            <tr>
+                              <th className="text-center">Ngày ghi nhận</th>
+                              <th className="text-center">Số điếu thuốc</th>
+                              <th className="text-center">Tâm trạng</th>
+                              <th className="text-center">Yếu tố kích hoạt</th>
+                              <th className="text-center">Triệu chứng</th>
+                              <th className="text-center">Ghi chú</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {historyProgressLogs.map((log, idx) => {
+                              const moodMap = {
+                                'rat_vui': { label: 'Rất vui', emoji: '😊', color: 'success' },
+                                'vui': { label: 'Vui', emoji: '😄', color: 'success' },
+                                'binh_thuong': { label: 'Bình thường', emoji: '😐', color: 'warning' },
+                                'buon': { label: 'Buồn', emoji: '😟', color: 'warning' },
+                                'rat_buon': { label: 'Rất buồn', emoji: '😢', color: 'danger' }
+                              };
+                              const moodInfo = moodMap[log.mood] || { label: 'Không rõ', emoji: '❓', color: 'secondary' };
+                              return (
+                                <tr key={idx}>
+                                  <td className="text-center">{new Date(log.logDate).toLocaleDateString('vi-VN')}</td>
+                                  <td className="text-center">
+                                    <span className={`badge ${log.cigarettesSmoked === 0 ? 'bg-success' : log.cigarettesSmoked <= 5 ? 'bg-warning' : 'bg-danger'}`}>
+                                      {log.cigarettesSmoked || 0} điếu
+                                    </span>
+                                  </td>
+                                  <td className="text-center">
+                                    <span className={`badge bg-${moodInfo.color}`}>
+                                      {moodInfo.emoji} {moodInfo.label}
+                                    </span>
+                                  </td>
+                                  <td>{log.triggers || <span className="text-muted">Không có</span>}</td>
+                                  <td>{log.symptoms || <span className="text-muted">Không có</span>}</td>
+                                  <td>
+                                    {log.notes
+                                      ? <span title={log.notes}>{log.notes.length > 30 ? log.notes.slice(0, 30) + "..." : log.notes}</span>
+                                      : <span className="text-muted">Không có</span>
+                                    }
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     ) : (
-                      <div className="text-muted">Chưa có tiến trình cho kế hoạch này.</div>
+                      <div className="text-muted py-4 text-center">
+                        <i className="fas fa-info-circle me-2"></i>Chưa có tiến trình cho kế hoạch này.
+                      </div>
                     )}
                     <button className="btn btn-secondary mt-2" onClick={() => setSelectedHistoryPlan(null)}>
-                      Đóng
+                      <i className="fas fa-arrow-left me-2"></i>Đóng
                     </button>
                   </div>
                 )}
