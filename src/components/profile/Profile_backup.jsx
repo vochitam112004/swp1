@@ -5,6 +5,8 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useAuth } from "../auth/AuthContext";
+import { TriggerFactorService } from "../../api/triggerFactorService";
+import ApiHelper from "../../utils/apiHelper";
 import "../../css/Profile.css";
 import "../../css/SmokingHabits.css";
 import { baseApiUrl } from "../../api/axios";
@@ -50,13 +52,14 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    api.get('/api/TriggerFactor/Get-MyTriggerFactor')
-      .then((res) => {
-        const names = res.data.map((trigger) => trigger.name);
+    ApiHelper.fetchMyTriggerFactors()
+      .then((triggers) => {
+        const names = triggers.map((trigger) => trigger.name);
         setTriggerFactors(names);
       })
       .catch((err) => {
         console.error("Failed to fetch trigger factors", err);
+        toast.error(err.message || "Không thể tải yếu tố kích thích");
       });
   }, []);
 
@@ -96,14 +99,10 @@ export default function Profile() {
       .then(res => setHistory(Array.isArray(res.data) ? res.data : []))
       .catch(() => toast.error("Không lấy được lịch sử gói thành viên!"));
 
-    api.get("/Badge/My-Badge")
+    api.get("/Badge/get-my-badges")
       .then((res) => {
-        const data = res.data;
-        if (Array.isArray(data)) {
-          setBadges(data);
-        } else if (data?.iconUrl) {
-          setBadges([data]);
-        }
+        const data = res.data?.badges || [];
+        setBadges(data);
       })
       .catch(() => toast.error("Không lấy được huy hiệu!"));
   }, [user]);

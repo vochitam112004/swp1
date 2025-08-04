@@ -180,8 +180,8 @@ export default function UnifiedProfilePage() {
 
   const fetchBadges = async () => {
     try {
-      const badgesRes = await api.get("/Badge/user-badges");
-      setBadges(badgesRes.data || []);
+      const badgesRes = await api.get("/Badge/get-my-badges");
+      setBadges(badgesRes.data?.badges || []);
     } catch (error) {
       if (error.response?.status !== 404) {
         throw error;

@@ -1,11 +1,11 @@
   import axios from "axios";
 
 
-  export const baseApiUrl = "https://3d455987a5f1.ngrok-free.app" // dùng để up ảnh từ máy
+  export const baseApiUrl = "https://681e8423c309.ngrok-free.app" // dùng để up ảnh từ máy
 
   const api = axios.create({
 
-    baseURL: "https://3d455987a5f1.ngrok-free.app /api", // Thay bằng base URL backend của bạn
+    baseURL: "https://681e8423c309.ngrok-free.app/api", // Thay bằng base URL backend của bạn
     headers: {
       "Content-Type": "application/json"
     }

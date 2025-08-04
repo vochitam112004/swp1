@@ -28,13 +28,9 @@ export default function AccountTab({ profile, setProfile }) {
   useEffect(() => {
     const fetchBadges = async () => {
       try {
-        const res = await api.get("/Badge/My-Badge");
-        const data = res.data;
-        if (Array.isArray(data)) {
-          setBadges(data);
-        } else if (data?.iconUrl) {
-          setBadges([data]);
-        }
+        const res = await api.get("/Badge/get-my-badges");
+        const data = res.data?.badges || [];
+        setBadges(data);
       } catch (error) {
         console.error("Error fetching badges:", error);
         toast.error("Không lấy được huy hiệu!");

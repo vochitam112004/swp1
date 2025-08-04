@@ -15,13 +15,21 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton
+  IconButton,
+  Alert
 } from "@mui/material";
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import api from "../../../api/axios";
+import { TriggerFactorService } from "../../../api/triggerFactorService";
+import ApiHelper from "../../../utils/apiHelper";
+import { useAuth } from "../../auth/AuthContext";
+import { getAvailableActions } from "../../../utils/triggerFactorPermissions";
 
 export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
+  const { user } = useAuth();
+  const actions = getAvailableActions(user);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [triggerFactors, setTriggerFactors] = useState([]);
   const [isAddingTrigger, setIsAddingTrigger] = useState(false);
@@ -59,14 +67,12 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
   const fetchTriggerFactors = async () => {
     try {
       console.log('Fetching trigger factors...');
-      // Remove /api prefix as the 404 error suggests it's not needed
-      const response = await api.get('/TriggerFactor/Get-MyTriggerFactor');
-      console.log('Trigger factors response:', response.data);
-      setTriggerFactors(response.data || []);
+      const triggerFactors = await ApiHelper.fetchMyTriggerFactors();
+      console.log('Trigger factors response:', triggerFactors);
+      setTriggerFactors(triggerFactors);
     } catch (error) {
       console.error('Error fetching trigger factors:', error);
-      console.error('Error details:', error.response?.data);
-      toast.error('Không thể tải danh sách yếu tố kích thích: ' + (error.response?.data?.message || error.message));
+      toast.error(error.message || 'Không thể tải danh sách yếu tố kích thích');
     }
   };
 
@@ -76,74 +82,62 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
       return;
     }
 
+    // Check permission
+    if (!actions.canCreateTrigger) {
+      toast.error('Bạn không có quyền tạo yếu tố kích thích mới. Chỉ huấn luyện viên mới có thể thực hiện.');
+      return;
+    }
+
     try {
-      // Create the trigger factor - remove /api prefix
-      const createResponse = await api.post('/TriggerFactor/Create-TriggerFactor', {
-        name: newTriggerName.trim(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        memberTriggers: [] // Initialize as empty array as per API structure
-      });
+      console.log('Creating and assigning trigger factor:', newTriggerName.trim());
       
-      console.log('Create response:', createResponse.data);
+      // Use the helper function that creates and assigns in one call
+      await ApiHelper.createAndAssignTriggerFactor(newTriggerName.trim());
       
-      // The API might return the created trigger factor directly
-      if (createResponse.data) {
-        // Extract triggerId from response (could be nested in different places)
-        const triggerId = createResponse.data.triggerId || createResponse.data.id;
-        
-        if (triggerId) {
-          try {
-            // Assign trigger to current member - remove /api prefix
-            await api.post('/TriggerFactor/assign', [triggerId]);
-            await fetchTriggerFactors(); // Refresh the list
-            setNewTriggerName('');
-            setIsAddingTrigger(false);
-            toast.success('Đã thêm và gán yếu tố kích thích mới');
-          } catch (assignError) {
-            console.error('Error assigning trigger factor:', assignError);
-            toast.error('Đã tạo yếu tố nhưng không thể gán cho bạn. Vui lòng thử lại.');
-          }
-        } else {
-          console.error('No triggerId found in response:', createResponse.data);
-          toast.error('Không thể lấy ID của yếu tố vừa tạo');
-        }
-      }
+      // Refresh the list and reset form
+      await fetchTriggerFactors();
+      setNewTriggerName('');
+      setIsAddingTrigger(false);
+      toast.success('Đã thêm và gán yếu tố kích thích mới');
     } catch (error) {
       console.error('Error adding trigger factor:', error);
-      console.error('Error details:', error.response?.data);
-      toast.error(error.response?.data?.message || 'Không thể thêm yếu tố kích thích');
+      toast.error(error.message || 'Không thể thêm yếu tố kích thích');
     }
   };
 
   const handleDeleteTrigger = async (triggerId) => {
+    // Check permission - Members can only remove from their own list
+    if (!actions.canRemoveFromSelf) {
+      toast.error('Bạn không có quyền xóa yếu tố kích thích');
+      return;
+    }
+
     try {
-      // Remove trigger factor from member - remove /api prefix
-      await api.delete(`/TriggerFactor/removeTriggerFactorAtMember/${triggerId}`);
+      console.log('Removing trigger factor from member:', triggerId);
+      await ApiHelper.removeTriggerFactorFromMember(triggerId);
       setTriggerFactors(prev => prev.filter(trigger => trigger.triggerId !== triggerId));
       toast.success('Đã xóa yếu tố kích thích khỏi danh sách của bạn');
     } catch (error) {
       console.error('Error removing trigger factor:', error);
-      toast.error('Không thể xóa yếu tố kích thích');
+      toast.error(error.message || 'Không thể xóa yếu tố kích thích');
     }
   };
 
   const handleUpdateTrigger = async (triggerId, updatedData) => {
+    // Check permission - Only coaches can update
+    if (!actions.canUpdateTrigger) {
+      toast.error('Bạn không có quyền cập nhật yếu tố kích thích. Chỉ huấn luyện viên mới có thể thực hiện.');
+      return;
+    }
+
     try {
-      const updatePayload = {
-        triggerId: triggerId,
-        name: updatedData.name,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Remove /api prefix
-      await api.put(`/TriggerFactor/Update-TriggerFactor/${triggerId}`, updatePayload);
+      console.log('Updating trigger factor:', triggerId, updatedData);
+      await ApiHelper.updateTriggerFactor(triggerId, updatedData);
       await fetchTriggerFactors(); // Refresh the list
       toast.success('Đã cập nhật yếu tố kích thích');
     } catch (error) {
       console.error('Error updating trigger factor:', error);
-      toast.error('Không thể cập nhật yếu tố kích thích');
+      toast.error(error.message || 'Không thể cập nhật yếu tố kích thích');
     }
   };
 
@@ -232,24 +226,35 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
     );
   }
 
-  return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-          🚬💚 Sức khỏe & Thói quen hút thuốc
-        </Typography>
-        {!isEditing && (
-          <Button 
-            variant="contained"
-            onClick={() => setIsEditing(true)}
-            startIcon={<span>✏️</span>}
+    return (
+      <Box>
+        {/* User Role Information */}
+        {actions.userRole && (
+          <Alert 
+            severity={actions.isCoach ? "success" : "info"} 
+            sx={{ mb: 3 }}
           >
-            Chỉnh sửa
-          </Button>
+            <strong>Quyền hạn của bạn:</strong> {' '}
+            {actions.isCoach && "Huấn luyện viên - Có thể tạo, cập nhật, xóa và gán yếu tố kích thích cho thành viên"}
+            {actions.isMember && "Thành viên - Chỉ có thể xóa yếu tố kích thích khỏi danh sách của mình"}
+            {actions.isAdmin && "Quản trị viên - Có toàn quyền quản lý yếu tố kích thích"}
+          </Alert>
         )}
-      </Box>
 
-      <form onSubmit={handleSubmit}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+            🚬💚 Sức khỏe & Thói quen hút thuốc
+          </Typography>
+          {!isEditing && (
+            <Button 
+              variant="contained"
+              onClick={() => setIsEditing(true)}
+              startIcon={<span>✏️</span>}
+            >
+              Chỉnh sửa
+            </Button>
+          )}
+        </Box>      <form onSubmit={handleSubmit}>
         {/* Basic Smoking Information */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography 
@@ -547,10 +552,11 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
               size="small"
               startIcon={<AddIcon />}
               onClick={() => setIsAddingTrigger(true)}
-              disabled={!isEditing}
+              disabled={!isEditing || !actions.canCreateTrigger}
               sx={{
                 fontSize: '0.875rem',
-                fontWeight: 500
+                fontWeight: 500,
+                display: actions.canCreateTrigger ? 'inline-flex' : 'none'
               }}
             >
               Thêm yếu tố
@@ -565,8 +571,8 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
                   label={trigger.name}
                   variant="outlined"
                   color="primary"
-                  deleteIcon={isEditing ? <DeleteIcon /> : null}
-                  onDelete={isEditing ? () => handleDeleteTrigger(trigger.triggerId) : undefined}
+                  deleteIcon={(isEditing && actions.canRemoveFromSelf) ? <DeleteIcon /> : null}
+                  onDelete={(isEditing && actions.canRemoveFromSelf) ? () => handleDeleteTrigger(trigger.triggerId) : undefined}
                   sx={{
                     fontSize: '0.875rem',
                     fontWeight: 500,

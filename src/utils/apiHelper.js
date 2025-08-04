@@ -1,5 +1,6 @@
 import api from "../api/axios";
 import { DateUtils } from "./dateUtils";
+import { TriggerFactorService } from "../api/triggerFactorService";
 
 export const ApiHelper = {
   fetchProgressLogs: async () => {
@@ -181,6 +182,109 @@ export const ApiHelper = {
         .filter((result) => result.status === "rejected")
         .map((result) => result.reason?.message || "Unknown error"),
     };
+  },
+
+  // TriggerFactor API functions
+  fetchAllTriggerFactors: async () => {
+    try {
+      return await TriggerFactorService.getAllTriggerFactors();
+    } catch (error) {
+      console.error("❌ Error fetching all trigger factors:", error);
+      throw error;
+    }
+  },
+
+  fetchMyTriggerFactors: async () => {
+    try {
+      return await TriggerFactorService.getMyTriggerFactors();
+    } catch (error) {
+      console.error("❌ Error fetching my trigger factors:", error);
+      throw error;
+    }
+  },
+
+  createTriggerFactor: async (name) => {
+    try {
+      return await TriggerFactorService.createTriggerFactor({ name });
+    } catch (error) {
+      console.error("❌ Error creating trigger factor:", error);
+      throw error;
+    }
+  },
+
+  createAndAssignTriggerFactor: async (name) => {
+    try {
+      return await TriggerFactorService.createAndAssignTriggerFactor(name);
+    } catch (error) {
+      console.error("❌ Error creating and assigning trigger factor:", error);
+      throw error;
+    }
+  },
+
+  // COACH SPECIFIC: Create and assign to specific member
+  createAndAssignTriggerFactorToMember: async (name, memberId) => {
+    try {
+      return await TriggerFactorService.createAndAssignToMember(name, memberId);
+    } catch (error) {
+      console.error("❌ Error creating and assigning trigger factor to member:", error);
+      throw error;
+    }
+  },
+
+  // COACH SPECIFIC: Get member's trigger factors
+  getMemberTriggerFactors: async (memberId) => {
+    try {
+      return await TriggerFactorService.getMemberTriggerFactors(memberId);
+    } catch (error) {
+      console.error("❌ Error fetching member trigger factors:", error);
+      throw error;
+    }
+  },
+
+  // COACH SPECIFIC: Assign existing triggers to member
+  assignTriggerFactorsToMember: async (memberId, triggerIds) => {
+    try {
+      return await TriggerFactorService.assignTriggerFactorsToMember(memberId, triggerIds);
+    } catch (error) {
+      console.error("❌ Error assigning trigger factors to member:", error);
+      throw error;
+    }
+  },
+
+  updateTriggerFactor: async (id, updateData) => {
+    try {
+      return await TriggerFactorService.updateTriggerFactor(id, updateData);
+    } catch (error) {
+      console.error("❌ Error updating trigger factor:", error);
+      throw error;
+    }
+  },
+
+  removeTriggerFactorFromMember: async (triggerId) => {
+    try {
+      return await TriggerFactorService.removeTriggerFactorFromMember(triggerId);
+    } catch (error) {
+      console.error("❌ Error removing trigger factor from member:", error);
+      throw error;
+    }
+  },
+
+  assignTriggerFactorsToCurrentUser: async (triggerIds) => {
+    try {
+      return await TriggerFactorService.assignTriggerFactorsToCurrentUser(triggerIds);
+    } catch (error) {
+      console.error("❌ Error assigning trigger factors to current user:", error);
+      throw error;
+    }
+  },
+
+  deleteTriggerFactor: async (id) => {
+    try {
+      return await TriggerFactorService.deleteTriggerFactor(id);
+    } catch (error) {
+      console.error("❌ Error deleting trigger factor:", error);
+      throw error;
+    }
   },
 };
 

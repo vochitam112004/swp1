@@ -8,7 +8,8 @@ import {
   CardContent
 } from "@mui/material";
 import { toast } from "react-toastify";
-import api, { baseApiUrl } from "../../../api/axios";
+import { baseApiUrl } from "../../../api/axios";
+import badgeService from "../../../api/badgeService";
 
 export default function BadgesTab() {
   const [badges, setBadges] = useState([]);
@@ -17,12 +18,11 @@ export default function BadgesTab() {
   useEffect(() => {
     const fetchBadges = async () => {
       try {
-        const res = await api.get("/Badge/My-Badge");
-        const data = res.data;
-        if (Array.isArray(data)) {
-          setBadges(data);
-        } else if (data?.iconUrl) {
-          setBadges([data]);
+        const result = await badgeService.getMyBadges();
+        if (result.success) {
+          setBadges(result.badges);
+        } else {
+          throw new Error(result.error);
         }
       } catch (error) {
         console.error("Error fetching badges:", error);
