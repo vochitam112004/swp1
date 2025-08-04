@@ -256,10 +256,10 @@ const Dashboard = () => {
           <div className="d-flex justify-content-between align-items-center">
             <div>
               <h3 className="mb-1">Chào mừng trở lại, {memberProfile?.displayName || user?.fullName || 'Người dùng'}</h3>
-              <p className="mb-0 opacity-75">Bạn đã không hút thuốc được {currentGoal?.smokeFreeDays || 0} ngày</p>
+              <p className="mb-0 opacity-75">Bạn đã không hút thuốc được {currentGoal?.daysReducedSmoking || 0} ngày</p>
             </div>
             <div className="text-end">
-              <h2 className="mb-0">{(progress.moneySaved || 345000).toLocaleString()}đ</h2>
+              <h2 className="mb-0">{(currentGoal?.totalMoneySaved || 0).toLocaleString()}đ</h2>
               <small className="opacity-75">Tiền đã tiết kiệm</small>
             </div>
           </div>
@@ -275,7 +275,7 @@ const Dashboard = () => {
                 <i className="fas fa-calendar-check text-white"></i>
               </div>
               <div className="fw-bold">Kỷ lục liên tiếp</div>
-              <h4 className="text-dark mb-0 fw-bold">{currentGoal?.smokeFreeDays || 23}</h4>
+              <h4 className="text-dark mb-0 fw-bold">{currentGoal?.daysReducedSmoking || 0}</h4>
               <small className="text-muted">ngày</small>
               <div className="mt-2">
                 <small className="text-success">Ngày không hút thuốc</small>
@@ -290,7 +290,7 @@ const Dashboard = () => {
                 <i className="fas fa-coins text-white"></i>
               </div>
               <div className="fw-bold">Tổng số tiền tiết kiệm</div>
-              <h4 className="text-dark mb-0 fw-bold">{(progress.moneySaved || 345000).toLocaleString()}</h4>
+              <h4 className="text-dark mb-0 fw-bold">{(currentGoal?.totalMoneySaved || 0).toLocaleString()}</h4>
               <small className="text-muted">đ</small>
               <div className="mt-2">    
                 <small className="text-primary">Tiền tiết kiệm</small>
@@ -758,7 +758,7 @@ const Dashboard = () => {
                     <h5>Thống kê tổng quát</h5>
                     <p>Tổng số lần cai: {quitHistory.length + 1}</p>
                     <p>Kỷ lục: {Math.max(...[...quitHistory.map(h => h.daysNoSmoke), progress.daysNoSmoke], 0)} ngày</p>
-                    <p>Tổng tiền tiết kiệm: {(quitHistory.reduce((sum, h) => sum + (h.moneySaved || 0), 0) + progress.moneySaved).toLocaleString()}đ</p>
+                    <p>Tổng tiền tiết kiệm: {(currentGoal?.totalMoneySaved || 0).toLocaleString()}đ</p>
                   </div>
                 </div>
               </div>

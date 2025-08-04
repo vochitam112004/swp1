@@ -146,20 +146,35 @@ export const ApiHelper = {
     }
   },
 
+  fetchCurrentGoal: async () => {
+    try {
+      const response = await api.get("/CurrentGoal");
+      console.log("📊 CurrentGoal API Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error fetching current goal:", error);
+      return null;
+    }
+  },
+
   fetchAllDashboardData: async () => {
     const results = await Promise.allSettled([
       ApiHelper.fetchProgressLogs(),
       ApiHelper.fetchGoalPlan(),
+      ApiHelper.fetchCurrentGoal(),
     ]);
 
-    const [progressLogsResult, goalPlanResult] = results;
+    const [progressLogsResult, goalPlanResult, currentGoalResult] = results;
 
     return {
       progressLogs:
         progressLogsResult.status === "fulfilled"
           ? progressLogsResult.value
           : [],
-      currentGoal: null,
+      currentGoal:
+        currentGoalResult.status === "fulfilled"
+          ? currentGoalResult.value
+          : null,
       goalPlan:
         goalPlanResult.status === "fulfilled" ? goalPlanResult.value : null,
       errors: results
