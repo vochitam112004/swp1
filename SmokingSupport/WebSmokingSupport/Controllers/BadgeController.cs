@@ -16,44 +16,16 @@ namespace WebSmokingSupport.Controllers
     [Authorize]
     public class BadgeController : ControllerBase
     {
+        private readonly ILogger<BadgeController> _logger;
         private readonly QuitSmokingSupportContext _context;
         private readonly IGenericRepository<Badge> _badgeRepository;
         private readonly IRankingService _rankingService;
-        public BadgeController(QuitSmokingSupportContext context, IGenericRepository<Badge> badgeRepository, IRankingService rankingService)
+        public BadgeController(QuitSmokingSupportContext context, IGenericRepository<Badge> badgeRepository, IRankingService rankingService , ILogger<BadgeController> logger)
         {
             _context = context;
             _badgeRepository = badgeRepository;
             _rankingService = rankingService;
-        }
-        [HttpGet("My-Badge")]
-        [Authorize(Roles = "Member")]
-        public async Task<ActionResult<DTOBadgeForRead>> GetMyBadge()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return Unauthorized("User not authenticated.");
-            int userId = int.Parse(userIdClaim.Value);
-            var member = await _context.Users
-                .Include(m => m.UserBadges) 
-                .FirstOrDefaultAsync(m => m.UserId == userId);
-
-            if (member == null) return BadRequest("Member not found");
-
-            var badges = await _context.UserBadges
-                
-                .Where(ub => ub.UserId == userId)
-                .Select(ub => ub.Badge) 
-                .ToListAsync();
-
-            var badgeResponse = badges.Select(b => new DTOBadgeForRead
-            {
-                BadgeId = b.BadgeId,
-                Name = b.Name,
-                MemberNameOfBadge = member.DisplayName ?? "Unknown Member",
-                RequiredScore = b.RequiredScore,
-                Description = b.Description,
-                IconUrl = b.IconUrl
-            }).ToList();
-            return Ok(badgeResponse);
+            _logger = logger;
         }
         [HttpGet("GetAllBadge")]
         [Authorize(Roles = "Member, Coach, Admin")]
@@ -151,14 +123,6 @@ namespace WebSmokingSupport.Controllers
                 int result = await _badgeRepository.CreateAsync(badge);
                 if (result > 0)
                 {
-                    var allUserIds = await _context.Users.Select(u => u.UserId).ToListAsync();
-                    foreach (var userId in allUserIds)
-                    {
-                        var ranking = await _context.Rankings.FirstOrDefaultAsync(r => r.UserId == userId);
-                        if (ranking != null)
-                            await _rankingService.CheckAndAwardBadges(userId, ranking?.Score ?? 0);
-                    }
-
                     return CreatedAtAction(nameof(GetBadgeById), new { id = badge.BadgeId }, new DTOBadgeForRead
                     {
                         BadgeId = badge.BadgeId,
@@ -168,7 +132,6 @@ namespace WebSmokingSupport.Controllers
                         IconUrl = badge.IconUrl
                     });
                 }
-
                 return StatusCode(500, "Không thể tạo huy hiệu mới.");
             }
             catch (Exception ex)
@@ -254,6 +217,70 @@ namespace WebSmokingSupport.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Lỗi nội bộ máy chủ khi xóa huy hiệu: {ex.Message}");
+            }
+        }
+        [HttpGet("get-my-badges")]
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> GetMyBadges()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+                var member = await _context.MemberProfiles
+                    .Include(mp => mp.User)
+                    .FirstOrDefaultAsync(mp => mp.UserId == userId);
+
+                if (member == null)
+                {
+                    return NotFound("Member not found.");
+                }
+
+                var goalPlans = await _context.GoalPlans
+                    .Where(gp => gp.isCurrentGoal == true && gp.MemberId == member.MemberId)
+                    .ToListAsync();
+
+                var memberGoalIds = goalPlans.Select(gp => gp.PlanId).ToList();
+
+                var logs = await _context.ProgressLogs
+                    .Include(pl => pl.GoalPlan)
+                    .Where(pl => pl.GoalPlan != null && memberGoalIds.Contains(pl.GoalPlan.PlanId))
+                    .ToListAsync();
+
+                int reducedDays = logs.Count(log =>
+                {
+                    int baseCigs = member.CigarettesSmoked ?? 0;
+                    return log.CigarettesSmoked.HasValue && log.CigarettesSmoked.Value < baseCigs;
+                });
+
+                int score = reducedDays * 10;
+
+                var badges = await _context.Badges
+                    .Where(b => score >= b.RequiredScore)
+                    .Select(b => new DTOBadge
+                    {
+                        BadgeId = b.BadgeId,
+                        Name = b.Name ?? "",
+                        IconUrl = b.IconUrl
+                    })
+                    .ToListAsync();
+
+                var result = new DTOUserWithBadges
+                {
+                    UserId = userId,
+                    Username = member.User?.Username ?? "",
+                    FullName = member.User?.DisplayName ?? "",
+                    AvatarUrl = member.User?.AvatarUrl ?? "",
+                    Score = score,
+                    Badges = badges
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving my badges.");
+                return StatusCode(500, "Internal server error");
             }
         }
     }

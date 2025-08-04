@@ -257,7 +257,7 @@ namespace WebSmokingSupport.Controllers
                     .Where(c => c.SenderId == userId || c.ReceiverId == userId));
 
                 _context.Feedbacks.RemoveRange(_context.Feedbacks.Where(f => f.UserId == userId));
-                _context.Rankings.RemoveRange(_context.Rankings.Where(r => r.UserId == userId));
+                //_context.Rankings.RemoveRange(_context.Rankings.Where(r => r.UserId == userId));
                 _context.SystemReports.RemoveRange(_context.SystemReports.Where(s => s.ReporterId == userId));
                 _context.PasswordResetTokens.RemoveRange(_context.PasswordResetTokens.Where(p => p.UserId == userId));
                 _context.UserBadges.RemoveRange(_context.UserBadges.Where(b => b.UserId == userId));
