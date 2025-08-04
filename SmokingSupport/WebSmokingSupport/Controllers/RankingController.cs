@@ -58,7 +58,8 @@ namespace WebSmokingSupport.Controllers
                     rankingList.Add(new DTORankingByDays
                     {
                         UserId = member.UserId,
-                        Username = member.User?.Username ?? "(Unknown)",
+                        NameDisPlay = member.User.DisplayName ?? "Unknown",
+                        AvatarUrl = member.User.AvatarUrl ?? "Unkown",
                         ReducedDays = reducedDays
                     });
                 }
