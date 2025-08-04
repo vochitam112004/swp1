@@ -38,7 +38,6 @@ const ProgressTab = ({ currentGoal, plan }) => {
         const res = await api.get('/ProgressLog/GetMyAllProgressLog');
         setProgressLogs(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        setProgressLogs([]);
         console.error('Failed to fetch progress logs:', err);
       }
     };
@@ -47,7 +46,7 @@ const ProgressTab = ({ currentGoal, plan }) => {
   }, []);
 
   // Hiển thị tất cả log, không filter theo thời gian
-  const filteredData = [...(progressLogs || [])].sort((a, b) => new Date(a.logDate) - new Date(b.logDate));
+  const filteredData = [...progressLogs].sort((a, b) => new Date(a.logDate) - new Date(b.logDate));
 
   const getMoodChartData = () => {
     const moodMapping = {

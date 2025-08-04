@@ -206,15 +206,18 @@ const Dashboard = () => {
   };
 
   const fetchProgressLogsByPlanId = async (planId) => {
-    try {
-      const res = await api.get(`/ProgressLog/GetMyAllProgressLog`);
-      // Lọc lại theo goalPlanId
-      setHistoryProgressLogs(res.data.filter(log => log.goalPlanId === planId));
-    } catch (error) {
-      toast.error("Không lấy được tiến trình kế hoạch này!");
-      setHistoryProgressLogs([]);
+  try {
+    const res = await api.get(`/GoalPlan/GetHistoryGoalPlan/${planId}`);
+    // res.data.progressLogs là mảng log, res.data.goalPlan là kế hoạch
+    setHistoryProgressLogs(res.data.progressLogs || []);
+    if (!res.data.progressLogs || res.data.progressLogs.length === 0) {
+      toast.info("Không có tiến trình nào cho kế hoạch này!");
     }
-  };
+  } catch (error) {
+    toast.error("Không lấy được tiến trình kế hoạch này!");
+    setHistoryProgressLogs([]);
+  }
+};
 
   // Loading states
   if (authLoading || loading) {
@@ -719,6 +722,8 @@ const Dashboard = () => {
                             <th>Ngày ghi nhận</th>
                             <th>Số điếu thuốc</th>
                             <th>Tâm trạng</th>
+                            <th>Yếu tố kích hoạt</th>
+                            <th>Triệu chứng</th>
                             <th>Ghi chú</th>
                           </tr>
                         </thead>
@@ -727,8 +732,10 @@ const Dashboard = () => {
                             <tr key={idx}>
                               <td>{new Date(log.logDate).toLocaleDateString()}</td>
                               <td>{log.cigarettesSmoked}</td>
-                              <td>{log.mood}</td>
-                              <td>{log.notes}</td>
+                              <td>{log.mood || ""}</td>
+                              <td>{log.triggers || ""}</td>
+                              <td>{log.symptoms || ""}</td>
+                              <td>{log.notes || ""}</td>
                             </tr>
                           ))}
                         </tbody>
