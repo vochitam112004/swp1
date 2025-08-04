@@ -269,9 +269,17 @@ namespace WebSmokingSupport.Controllers
                                 (a.CoachId.HasValue && coachIds.Contains(a.CoachId.Value))));
 
                 // ProgressLogs & GoalPlans
-                _context.ProgressLogs.RemoveRange(_context.ProgressLogs
-                    .Where(p => (p.GoalPlanId.HasValue && goalPlanIds.Contains(p.GoalPlanId.Value)) ||
-                                (p.MemberId.HasValue && memberIds.Contains(p.MemberId.Value))));
+                _context.ProgressLogs.RemoveRange(
+                    _context.ProgressLogs
+                        .Where(p => goalPlanIds.Contains(p.GoalPlanId)
+                                 || memberIds.Contains(p.GoalPlan.MemberId))
+                );
+
+                _context.GoalPlans.RemoveRange(
+                    _context.GoalPlans
+                        .Where(g => memberIds.Contains(g.MemberId))
+                );
+
 
                 _context.GoalPlans.RemoveRange(_context.GoalPlans
                     .Where(g => memberIds.Contains(g.MemberId)));
