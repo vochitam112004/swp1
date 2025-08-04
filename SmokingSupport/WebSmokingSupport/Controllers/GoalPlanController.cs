@@ -8,6 +8,7 @@ using WebSmokingSupport.DTOs;
 using System.Security.Claims;
 using System.Diagnostics.Contracts;
 using Microsoft.EntityFrameworkCore;
+using WebSmokingSpport.DTOs;
 namespace WebSmokingSupport.Controllers
 {
     [Route("api/[controller]")]
@@ -199,6 +200,71 @@ namespace WebSmokingSupport.Controllers
                 await transaction.RollbackAsync();
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+        [HttpGet("GetHistoryGoalPlan/{planId}")]
+        [Authorize(Roles = "Member, Coach, Admin")]
+        public async Task<ActionResult<DTOGoalPlanForRead>> GetHistoryGoalPlan(int planId)
+        {
+            if (planId <= 0)
+            {
+                return BadRequest("Invalid plan ID.");
+            }
+            var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaims, out int userId))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+            var memberProfileExisted = await _context.MemberProfiles
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if (memberProfileExisted == null)
+            {
+                return NotFound("Member profile not found. Please create a profile before accessing goal plans.");
+            }
+            var goalPlan = await _context.GoalPlans
+                .Include(gp => gp.Member)
+                .ThenInclude(m => m.User)
+                .FirstOrDefaultAsync(gp => gp.PlanId == planId && gp.MemberId == memberProfileExisted.MemberId && !gp.isCurrentGoal);
+            if (goalPlan == null)
+            {
+                return NotFound("Historical goal plan not found for the specified plan ID.");
+            }
+            var memberName = goalPlan.Member?.User?.DisplayName ?? "Unknown";
+            var progressLog = await _context.ProgressLogs
+                .Where(pl => pl.GoalPlanId == goalPlan.PlanId)
+                .OrderByDescending(pl => pl.LogDate)
+                .Select(pl => new DTOProgressLogForRead
+                {
+                    LogId = pl.LogId,
+                    MemberId = goalPlan.MemberId,
+                    ProgressLogMemberName = memberName,
+                    Notes = pl.Notes,
+                    Mood = pl.Mood,
+                    Triggers = pl.Triggers,
+                    Symptoms = pl.Symptoms,
+                    GoalPlanId = pl.GoalPlanId,
+                    LogDate = pl.LogDate,
+                    CigarettesSmoked = pl.CigarettesSmoked,
+                    CreatedAt = pl.CreatedAt,
+                    UpdatedAt = pl.UpdatedAt
+                })
+                .ToListAsync();
+            if (progressLog == null || progressLog.Count == 0)
+            {
+                return NotFound("No progress logs found for the specified goal plan.");
+            }
+            var goalPlanResponse = new DTOGoalPlanForRead
+            {
+                PlanId = goalPlan.PlanId,
+                UserId = goalPlan.Member?.UserId ?? 0,
+                MemberDisplayName = goalPlan.Member?.User?.DisplayName ?? "Unknown",
+                StartDate = goalPlan.StartDate,
+                isCurrentGoal = goalPlan.isCurrentGoal,
+                EndDate = goalPlan.EndDate,
+                CreatedAt = goalPlan.CreatedAt,
+                UpdatedAt = goalPlan.UpdatedAt,
+                TotalDays = goalPlan.TotalDays,
+            };
+            return Ok(new { GoalPlan = goalPlanResponse, ProgressLogs = progressLog });
         }
 
         [HttpPut("UpdateMyGoalPlan")]
