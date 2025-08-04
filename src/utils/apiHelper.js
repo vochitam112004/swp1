@@ -102,7 +102,7 @@ export const ApiHelper = {
       const normalizedData = {
         startDate: DateUtils.toISODateString(planData.startDate),
         endDate: DateUtils.toISODateString(planData.targetQuitDate),
-        isCurrentGoal: planData.isCurrentGoal || true,
+        isCurrentGoal: planData.isCurrentGoal !== undefined ? planData.isCurrentGoal : true,
         updatedAt: new Date().toISOString(),
       };
 
@@ -160,6 +160,17 @@ export const ApiHelper = {
     } catch (error) {
       console.error("❌ Error fetching current goal:", error);
       return null;
+    }
+  },
+
+  fetchPlanHistory: async () => {
+    try {
+      const response = await api.get("/GoalPlan/GetAllGoalPlan"); // Đúng endpoint
+      const plans = Array.isArray(response.data) ? response.data : [];
+      return plans.map(plan => DateUtils.normalizeFields(plan));
+    } catch (error) {
+      console.error("❌ Error fetching plan history:", error);
+      return [];
     }
   },
 

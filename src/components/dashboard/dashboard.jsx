@@ -85,6 +85,8 @@ const Dashboard = () => {
     fetchAllData,
     fetchCoachList,
     fetchAppointments,
+    deleteGoalPlan,
+    fetchPlanHistory,
   } = useDashboardData();
 
   // Local state
@@ -634,32 +636,51 @@ const Dashboard = () => {
           <PlanTabNew />
         );
 
-      case "planhistory":
+      case "planhistory": {
+        const completedPlans = planHistory.filter(plan =>
+          plan.isCurrentGoal === false && plan.userId === user?.id
+        );
         return (
           <div>
             <h3>Lịch sử kế hoạch</h3>
-            {planHistory.length > 0 ? (
+            {completedPlans.length > 0 ? (
               <div className="table-responsive">
                 <table className="table table-striped">
                   <thead>
                     <tr>
+                      <th>Người tạo</th>
                       <th>Ngày bắt đầu</th>
                       <th>Ngày kết thúc</th>
-                      <th>Mục tiêu</th>
                       <th>Trạng thái</th>
+                      <th>Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {planHistory.map((historyPlan, idx) => (
+                    {completedPlans.map((historyPlan, idx) => (
                       <tr key={idx}>
+                        <td>{historyPlan.memberDisplayName}</td>
                         <td>{new Date(historyPlan.startDate).toLocaleDateString()}</td>
-                        <td>{new Date(historyPlan.targetQuitDate).toLocaleDateString()}</td>
-                        <td>{historyPlan.goalDescription}</td>
+                        <td>{new Date(historyPlan.endDate).toLocaleDateString()}</td>
                         <td>
-                          <span className={`badge ${historyPlan.isCompleted ? "bg-success" : "bg-warning"
-                            }`}>
-                            {historyPlan.isCompleted ? "Hoàn thành" : "Đang thực hiện"}
-                          </span>
+                          <span className="badge bg-success">Hoàn thành hoặc Tạm ngưng</span>
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={async () => {
+                              if (window.confirm("Bạn có chắc muốn xóa kế hoạch này?")) {
+                                try {
+                                  await deleteGoalPlan(historyPlan.planId);
+                                  toast.success("Đã xóa kế hoạch!");
+                                  fetchPlanHistory(); // cập nhật lại bảng sau khi xóa
+                                } catch (error) {
+                                  toast.error("Xóa kế hoạch thất bại!");
+                                }
+                              }
+                            }}
+                          >
+                            Xóa
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -674,6 +695,7 @@ const Dashboard = () => {
             )}
           </div>
         );
+      }
 
       case TABS.JOURNAL:
         return (

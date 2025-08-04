@@ -130,7 +130,7 @@ export const useDashboardData = () => {
       if (errors.length > 0) {
         console.warn("⚠️ Some data could not be loaded:", errors);
         // Only show error if critical data failed
-        const criticalErrors = errors.filter(error => 
+        const criticalErrors = errors.filter(error =>
           !error.includes("progress logs") && !error.includes("appointment")
         );
         if (criticalErrors.length > 0) {
@@ -158,6 +158,31 @@ export const useDashboardData = () => {
     }
   };
 
+  // Fetch plan history
+  const fetchPlanHistory = async () => {
+    try {
+      const history = await ApiHelper.fetchPlanHistory();
+      setPlanHistory(history);
+    } catch (error) {
+      console.error("Lỗi lấy lịch sử kế hoạch:", error);
+      setPlanHistory([]);
+    }
+  };
+
+  // Gọi hàm này trong useEffect khi user đã đăng nhập:
+  useEffect(() => {
+    if (!authLoading && user) {
+      fetchPlanHistory();
+    }
+  }, [user, authLoading]);
+
+  // Gọi hàm này trong useEffect khi user đã đăng nhập:
+  useEffect(() => {
+    if (!authLoading && user) {
+      fetchPlanHistory();
+    }
+  }, [user, authLoading]);
+
   // Fetch appointments
   const fetchAppointments = async () => {
     try {
@@ -170,7 +195,7 @@ export const useDashboardData = () => {
       // Don't show toast error for optional data
     }
   };
-  
+
   useEffect(() => {
     fetchAppointments();
   }, [])

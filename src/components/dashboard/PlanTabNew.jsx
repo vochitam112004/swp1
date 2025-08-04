@@ -17,6 +17,7 @@ export default function PlanTabNew() {
 
   const [editFormData, setEditFormData] = useState({
     targetQuitDate: "",
+    isCurrentGoal: true,
   });
 
   const fetchSchedule = async () => {
@@ -31,11 +32,14 @@ export default function PlanTabNew() {
       const goalPlan = await ApiHelper.fetchGoalPlan();
       if (goalPlan) {
         setPlan(goalPlan);
-        setEditFormData({ targetQuitDate: DateUtils.toISODateString(goalPlan.endDate) });
-        await fetchSchedule(); // <<< Thêm dòng này
+        setEditFormData({
+          targetQuitDate: DateUtils.toISODateString(goalPlan.endDate),
+          isCurrentGoal: goalPlan.isCurrentGoal !== undefined ? goalPlan.isCurrentGoal : true,
+        });
+        await fetchSchedule();
       } else {
         setPlan(null);
-        setGeneratedWeeks([]); // clear lịch cũ
+        setGeneratedWeeks([]);
       }
     } catch (error) {
       console.error("Error fetching plan:", error);
@@ -93,10 +97,11 @@ export default function PlanTabNew() {
       await ApiHelper.updateGoalPlan({
         ...plan,
         targetQuitDate: editFormData.targetQuitDate,
+        isCurrentGoal: editFormData.isCurrentGoal,
       });
       toast.success("Cập nhật kế hoạch thành công");
       setShowEditForm(false);
-      await fetchCurrentPlan(); // Gọi lại để lấy kế hoạch + lịch mới
+      await fetchCurrentPlan();
     } catch (error) {
       console.error("Update plan error:", error);
       toast.error("Cập nhật kế hoạch thất bại");
@@ -162,10 +167,25 @@ export default function PlanTabNew() {
                 onChange={(e) => setEditFormData(prev => ({ ...prev, targetQuitDate: e.target.value }))}
                 className="form-control"
               />
+              <div className="form-check mt-2">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="completePlanCheckbox"
+                  checked={!editFormData.isCurrentGoal}
+                  onChange={e => setEditFormData(prev => ({
+                    ...prev,
+                    isCurrentGoal: !e.target.checked // Nếu tích thì chuyển thành false
+                  }))}
+                />
+                <label className="form-check-label" htmlFor="completePlanCheckbox">
+                  Đánh dấu là đã hoàn thành kế hoạch này
+                </label>
+              </div>
               <button className="btn btn-primary mt-2" onClick={updateExistingPlan}>
                 Cập nhật kế hoạch
               </button>
-              <button className="btn btn-secondary mt-2" onClick={() => setShowEditForm(false)}>
+              <button style={{marginLeft: "4px"}} className="btn btn-secondary mt-2" onClick={() => setShowEditForm(false)}>
                 Hủy
               </button>
             </div>
