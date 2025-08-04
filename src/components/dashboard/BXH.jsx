@@ -21,7 +21,10 @@ export default function BXH() {
     setTimeFilter(event.target.value);
   };
 
-  const getBadgeForScore = (score, allBadges) => {
+  const getBadgeForScore = (days, allBadges) => {
+    // Chuyển đổi số ngày thành điểm số (ngày × 10)
+    const score = days * 10;
+    // Tìm huy hiệu cao nhất mà user đủ điều kiện (sắp xếp từ cao xuống thấp)
     return allBadges.find(badge => score >= badge.requiredScore) || null;
   };
 
@@ -59,16 +62,6 @@ export default function BXH() {
   }, [timeFilter]);
 
   const top3 = ranking.slice(0, 3);
-
-  const calculateSavings = (days) => {
-    const pricePerPack = 50000;
-    const packsPerDay = 1;
-    return days * packsPerDay * pricePerPack;
-  };
-
-  const formatMoney = (amount) => {
-    return new Intl.NumberFormat('vi-VN').format(amount);
-  };
 
   const renderBadge = (badge) => {
     if (!badge) {
@@ -125,9 +118,6 @@ export default function BXH() {
               {renderBadge(top3[1]?.badge)}
               <Typography className="rank-days">{top3[1]?.score || 0}</Typography>
               <Typography className="rank-label">ngày không hút thuốc</Typography>
-              <Typography className="rank-savings">
-                {formatMoney(calculateSavings(top3[1]?.score || 0))} đã tiết kiệm
-              </Typography>
             </div>
 
             <div className="rank-card rank-1">
@@ -142,9 +132,6 @@ export default function BXH() {
               {renderBadge(top3[0]?.badge)}
               <Typography className="rank-days">{top3[0]?.score || 0}</Typography>
               <Typography className="rank-label">ngày không hút thuốc</Typography>
-              <Typography className="rank-savings">
-                {formatMoney(calculateSavings(top3[0]?.score || 0))} đã tiết kiệm
-              </Typography>
             </div>
 
             {top3.length >= 3 && (
@@ -160,9 +147,6 @@ export default function BXH() {
                 {renderBadge(top3[2]?.badge)}
                 <Typography className="rank-days">{top3[2]?.score || 0}</Typography>
                 <Typography className="rank-label">ngày không hút thuốc</Typography>
-                <Typography className="rank-savings">
-                  {formatMoney(calculateSavings(top3[2]?.score || 0))} đã tiết kiệm
-                </Typography>
               </div>
             )}
           </div>
@@ -203,9 +187,6 @@ export default function BXH() {
               <div className="ranking-right">
                 <div className="ranking-stats">
                   <Typography className="ranking-days">{user.score} ngày</Typography>
-                  <Typography className="ranking-savings">
-                    {formatMoney(calculateSavings(user.score))} đã tiết kiệm
-                  </Typography>
                 </div>
               </div>
             </div>
