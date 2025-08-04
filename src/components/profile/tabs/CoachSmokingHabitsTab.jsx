@@ -284,7 +284,7 @@ export default function CoachSmokingHabitsTab() {
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#1976d2' }}>
-        🎯 Quản lý Yếu tố Kích thích (TriggerFactor)
+        🎯 Quản lý yếu tố kích thích
       </Typography>
 
       {/* User Role Information */}
