@@ -286,5 +286,7 @@ export const useDashboardData = () => {
     fetchAllData,
     fetchCoachList,
     fetchAppointments,
+    fetchPlanHistory,
+    deleteGoalPlan: ApiHelper.deleteGoalPlan,
   };
 };

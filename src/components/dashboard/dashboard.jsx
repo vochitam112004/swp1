@@ -98,6 +98,8 @@ const Dashboard = () => {
   // State cho mood tracking và trigger tracking
   const [todayMood, setTodayMood] = useState("");
   const [todayCigarettes, setTodayCigarettes] = useState("");
+  const [selectedHistoryPlan, setSelectedHistoryPlan] = useState(null);
+  const [historyProgressLogs, setHistoryProgressLogs] = useState([]);
   const [selectedTriggers, setSelectedTriggers] = useState([]);
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [todayNote, setTodayNote] = useState("");
@@ -200,6 +202,17 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Error saving progress:", error);
       toast.error("Có lỗi xảy ra khi lưu tiến trình!");
+    }
+  };
+
+  const fetchProgressLogsByPlanId = async (planId) => {
+    try {
+      const res = await api.get(`/ProgressLog/GetMyAllProgressLog`);
+      // Lọc lại theo goalPlanId
+      setHistoryProgressLogs(res.data.filter(log => log.goalPlanId === planId));
+    } catch (error) {
+      toast.error("Không lấy được tiến trình kế hoạch này!");
+      setHistoryProgressLogs([]);
     }
   };
 
@@ -666,15 +679,25 @@ const Dashboard = () => {
                         </td>
                         <td>
                           <button
+                            className="btn btn-info btn-sm me-2"
+                            onClick={async () => {
+                              setSelectedHistoryPlan(historyPlan);
+                              await fetchProgressLogsByPlanId(historyPlan.planId);
+                            }}
+                          >
+                            Xem tiến trình
+                          </button>
+                          <button
                             className="btn btn-danger btn-sm"
                             onClick={async () => {
                               if (window.confirm("Bạn có chắc muốn xóa kế hoạch này?")) {
                                 try {
                                   await deleteGoalPlan(historyPlan.planId);
                                   toast.success("Đã xóa kế hoạch!");
-                                  fetchPlanHistory(); // cập nhật lại bảng sau khi xóa
+                                  fetchPlanHistory();
+                                  setSelectedHistoryPlan(null);
                                 } catch (error) {
-                                  toast.error("Xóa kế hoạch thất bại!");
+                                  toast.error(error.message || "Xóa kế hoạch thất bại! Có thể kế hoạch đã có nhật ký tiến trình.");
                                 }
                               }
                             }}
@@ -686,6 +709,38 @@ const Dashboard = () => {
                     ))}
                   </tbody>
                 </table>
+                {selectedHistoryPlan && (
+                  <div className="mt-4">
+                    <h4>Tiến trình của kế hoạch: {selectedHistoryPlan.memberDisplayName}</h4>
+                    {historyProgressLogs.length > 0 ? (
+                      <table className="table table-bordered">
+                        <thead>
+                          <tr>
+                            <th>Ngày ghi nhận</th>
+                            <th>Số điếu thuốc</th>
+                            <th>Tâm trạng</th>
+                            <th>Ghi chú</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {historyProgressLogs.map((log, idx) => (
+                            <tr key={idx}>
+                              <td>{new Date(log.logDate).toLocaleDateString()}</td>
+                              <td>{log.cigarettesSmoked}</td>
+                              <td>{log.mood}</td>
+                              <td>{log.notes}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-muted">Chưa có tiến trình cho kế hoạch này.</div>
+                    )}
+                    <button className="btn btn-secondary mt-2" onClick={() => setSelectedHistoryPlan(null)}>
+                      Đóng
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-5">

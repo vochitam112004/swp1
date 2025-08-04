@@ -52,8 +52,7 @@ export const ApiHelper = {
 
   deleteGoalPlan: async (planId) => {
     try {
-      const response = await api.delete(`/GoalPlan/${planId}`);
-      return response.data;
+      await api.delete(`/GoalPlan/${planId}`);
     } catch (error) {
       console.error("❌ Error deleting goal plan:", error);
       throw new Error("Không thể xóa kế hoạch");
