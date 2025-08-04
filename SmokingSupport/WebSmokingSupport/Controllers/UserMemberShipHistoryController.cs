@@ -103,5 +103,45 @@ namespace WebSmokingSupport.Controllers
             }).ToList();
             return Ok(userMembershipHistoryResponses);
         }
+
+        [HttpGet("current")]
+        [Authorize(Roles = "Member")]
+        public async Task<ActionResult<DTOUserMemberShipHistoryForRead>> GetCurrentMembership()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Unauthorized("User ID claim not found.");
+            }
+
+            int userId = int.Parse(userIdClaim.Value);
+
+            // Tìm gói membership mới nhất còn hiệu lực
+            var currentMembership = await _context.UserMembershipHistories
+                .Include(umh => umh.Plan)
+                .Include(umh => umh.User)
+                .Where(umh => umh.UserId == userId && umh.EndDate >= DateTime.UtcNow)
+                .OrderByDescending(umh => umh.StartDate)
+                .FirstOrDefaultAsync();
+
+            if (currentMembership == null)
+            {
+                return NotFound("No active membership found.");
+            }
+
+            // Trả về DTO gọn nhẹ
+            return Ok(new DTOUserMemberShipHistoryForRead
+            {
+                HistoryId = currentMembership.HistoryId,
+                UserId = currentMembership.UserId,
+                PlanId = currentMembership.PlanId ?? 0,
+                StartDate = currentMembership.StartDate,
+                EndDate = currentMembership.EndDate,
+                UserName = currentMembership.User?.DisplayName ?? "Unknown User",
+                PlanName = currentMembership.Plan?.Name ?? "Plan deleted",
+                Price = currentMembership.Plan?.Price ?? 0m
+            });
+        }
+
     }
 }
