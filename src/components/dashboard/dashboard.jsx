@@ -304,7 +304,7 @@ const Dashboard = () => {
               <div className="icon-wrapper bg-danger mx-auto mb-2">
                 <i className="fas fa-smoking-ban text-white"></i>
               </div>
-              <div className="fw-bold">Cải thiện sức khỏe dần</div>
+              <div className="fw-bold">Cải thiện sức khỏe</div>
               <h4 className="text-dark mb-0 fw-bold">{progress.health || 78}</h4>
               <small className="text-muted">/100</small>
               <div className="mt-2">
@@ -319,9 +319,13 @@ const Dashboard = () => {
               <div className="icon-wrapper bg-warning mx-auto mb-2">
                 <i className="fas fa-chart-line text-white"></i>
               </div>
-              <div className="fw-bold">Kể từ ngày đăng ký</div>
-              <h4 className="text-dark mb-0 fw-bold">{progress.riskReduction || 273}</h4>
-              <small className="text-muted">ngày</small>
+              <div className="fw-bold">Kể từ ngày đăng ký gói</div>
+              <h4 className="text-dark mb-0 fw-bold">
+                {plan?.createdAt
+                  ? Math.floor((new Date() - new Date(plan.createdAt)) / (1000 * 60 * 60 * 24))
+                  : 0}
+                </h4>
+                <small className="text-muted">ngày</small>
               <div className="mt-2">
                 <small className="text-warning">Thời gian thành công</small>
               </div>
