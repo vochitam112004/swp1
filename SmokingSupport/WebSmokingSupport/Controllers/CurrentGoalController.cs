@@ -19,7 +19,7 @@ namespace WebSmokingSupport.Controllers
             _logger = logger;
             _context = context;
         }
-        [HttpGet("calculate-money-saved")]
+        [HttpGet()]
         [Authorize(Roles = "Member")]
         public async Task<IActionResult> CalculateMoneySaved()
         {
@@ -59,17 +59,11 @@ namespace WebSmokingSupport.Controllers
                     if (log.CigarettesSmoked.HasValue)
                     {
                         int reduced = (memberProfile.CigarettesSmoked ?? 0) - log.CigarettesSmoked.Value;
-
-                        // Tính tiền tiết kiệm (có thể âm nếu hút nhiều hơn)
                         totalSaved += reduced * pricePerCigarette;
-
-                        // Ghi nhận ngày giảm
                         if (reduced > 0)
                         {
                             reducedDays++;
                         }
-
-                        // Luôn thêm vào danh sách
                         dailyReductions.Add(new DTODailyReduction
                         {
                             Date = log.LogDate,
