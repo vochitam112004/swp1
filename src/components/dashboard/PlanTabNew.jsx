@@ -23,11 +23,7 @@ export default function PlanTabNew() {
       setLoading(true);
       const goalPlan = await ApiHelper.fetchGoalPlan();
       if (goalPlan) {
-        const normalized = {
-          ...goalPlan,
-          totalDays: DateUtils.daysDifference(goalPlan.endDate, goalPlan.startDate),
-        };
-        setPlan(normalized);
+        setPlan(goalPlan);
         setEditFormData({ targetQuitDate: DateUtils.toISODateString(goalPlan.endDate) });
       } else {
         setPlan(null);
@@ -59,6 +55,24 @@ export default function PlanTabNew() {
       toast.error("Tạo kế hoạch thất bại");
     }
   };
+
+  const deletePlan = async () => {
+    if (!plan?.planId) {
+      toast.warn("Không xác định được kế hoạch để xóa");
+      return;
+    }
+
+    if (!window.confirm("Bạn có chắc muốn xóa kế hoạch này?")) return;
+
+    try {
+      await ApiHelper.deleteGoalPlan(plan.planId);
+      toast.success("Xóa kế hoạch thành công");
+      setPlan(null);
+    } catch (error) {
+      toast.error("Xóa kế hoạch thất bại");
+    }
+  };
+
 
   const updateExistingPlan = async () => {
     if (!editFormData.targetQuitDate) {
@@ -156,6 +170,9 @@ export default function PlanTabNew() {
               <p><strong>Thời gian:</strong> {plan.totalDays || DateUtils.daysDifference(plan.endDate, plan.startDate)} ngày</p>
               <button className="btn btn-warning" onClick={() => setShowEditForm(true)}>
                 Chỉnh sửa
+              </button>
+              <button className="btn btn-danger ms-2" onClick={deletePlan}>
+                Xóa kế hoạch
               </button>
             </div>
           )}

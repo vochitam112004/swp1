@@ -6,7 +6,7 @@ export const ApiHelper = {
     try {
       const response = await api.get("/ProgressLog/GetProgress-logs");
       const logs = response.data || [];
-      
+
       return logs
         .map(log => DateUtils.normalizeFields(log))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -44,13 +44,24 @@ export const ApiHelper = {
     }
   },
 
+  deleteGoalPlan: async (planId) => {
+    try {
+      const response = await api.delete(`/GoalPlan/${planId}`);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error deleting goal plan:", error);
+      throw new Error("Không thể xóa kế hoạch");
+    }
+  },
+
+
   createProgressLog: async (logData) => {
     try {
       const normalizedData = {
         ...logData,
         logDate: DateUtils.toISODateString(logData.logDate || new Date())
       };
-      
+
       const response = await api.post("/ProgressLog/CreateProgress-log", normalizedData);
       return DateUtils.normalizeFields(response.data);
     } catch (error) {
@@ -66,7 +77,7 @@ export const ApiHelper = {
         startDate: DateUtils.toISODateString(planData.startDate),
         endDate: DateUtils.toISODateString(planData.targetQuitDate)
       };
-      
+
       const response = await api.post('/GoalPlan/CreateGoalPlan', normalizedData);
       return DateUtils.normalizeFields(response.data);
     } catch (error) {
@@ -99,7 +110,7 @@ export const ApiHelper = {
         weekStartDate: DateUtils.toISODateString(weeklyData.weekStartDate),
         weekEndDate: DateUtils.toISODateString(weeklyData.weekEndDate)
       };
-      
+
       const response = await api.post('/GoalPlanWeeklyReduction', normalizedData);
       return response.data;
     } catch (error) {
