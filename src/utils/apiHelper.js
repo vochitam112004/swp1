@@ -1,5 +1,5 @@
-import api from '../api/axios';
-import { DateUtils } from './dateUtils';
+import api from "../api/axios";
+import { DateUtils } from "./dateUtils";
 
 export const ApiHelper = {
   fetchProgressLogs: async () => {
@@ -8,11 +8,11 @@ export const ApiHelper = {
       const logs = response.data || [];
 
       return logs
-        .map(log => DateUtils.normalizeFields(log))
+        .map((log) => DateUtils.normalizeFields(log))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
     } catch (error) {
-      console.error('❌ Error fetching progress logs:', error);
-      throw new Error('Không thể lấy dữ liệu tiến trình');
+      console.error("❌ Error fetching progress logs:", error);
+      throw new Error("Không thể lấy dữ liệu tiến trình");
     }
   },
 
@@ -25,7 +25,7 @@ export const ApiHelper = {
       }
       return null;
     } catch (error) {
-      console.error('❌ Error fetching goal plan:', error);
+      console.error("❌ Error fetching goal plan:", error);
       return null;
     }
   },
@@ -33,13 +33,13 @@ export const ApiHelper = {
   fetchWeeklyPlans: async (planId) => {
     try {
       const response = await api.get(`/GoalPlanWeeklyReduction/plan/${planId}`);
-      return (response.data || []).map(plan => ({
+      return (response.data || []).map((plan) => ({
         ...plan,
         weekStartDate: DateUtils.toISODateString(plan.weekStartDate),
-        weekEndDate: DateUtils.toISODateString(plan.weekEndDate)
+        weekEndDate: DateUtils.toISODateString(plan.weekEndDate),
       }));
     } catch (error) {
-      console.error('❌ Error fetching weekly plans:', error);
+      console.error("❌ Error fetching weekly plans:", error);
       return [];
     }
   },
@@ -54,19 +54,21 @@ export const ApiHelper = {
     }
   },
 
-
   createProgressLog: async (logData) => {
     try {
       const normalizedData = {
         ...logData,
-        logDate: DateUtils.toISODateString(logData.logDate || new Date())
+        logDate: DateUtils.toISODateString(logData.logDate || new Date()),
       };
 
-      const response = await api.post("/ProgressLog/CreateProgress-log", normalizedData);
+      const response = await api.post(
+        "/ProgressLog/CreateProgress-log",
+        normalizedData
+      );
       return DateUtils.normalizeFields(response.data);
     } catch (error) {
-      console.error('❌ Error creating progress log:', error);
-      throw new Error('Không thể tạo nhật ký tiến trình');
+      console.error("❌ Error creating progress log:", error);
+      throw new Error("Không thể tạo nhật ký tiến trình");
     }
   },
 
@@ -75,14 +77,17 @@ export const ApiHelper = {
       const normalizedData = {
         ...planData,
         startDate: DateUtils.toISODateString(planData.startDate),
-        endDate: DateUtils.toISODateString(planData.targetQuitDate)
+        endDate: DateUtils.toISODateString(planData.targetQuitDate),
       };
 
-      const response = await api.post('/GoalPlan/CreateGoalPlan', normalizedData);
+      const response = await api.post(
+        "/GoalPlan/CreateGoalPlan",
+        normalizedData
+      );
       return DateUtils.normalizeFields(response.data);
     } catch (error) {
-      console.error('❌ Error creating goal plan:', error);
-      throw new Error('Không thể tạo kế hoạch mục tiêu');
+      console.error("❌ Error creating goal plan:", error);
+      throw new Error("Không thể tạo kế hoạch mục tiêu");
     }
   },
 
@@ -92,14 +97,17 @@ export const ApiHelper = {
         startDate: DateUtils.toISODateString(planData.startDate),
         endDate: DateUtils.toISODateString(planData.targetQuitDate),
         isCurrentGoal: planData.isCurrentGoal || true,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
-      const response = await api.put('/GoalPlan/UpdateMyGoalPlan', normalizedData);
+      const response = await api.put(
+        "/GoalPlan/UpdateMyGoalPlan",
+        normalizedData
+      );
       return DateUtils.normalizeFields(response.data);
     } catch (error) {
-      console.error('❌ Error updating goal plan:', error);
-      throw new Error('Không thể cập nhật kế hoạch mục tiêu');
+      console.error("❌ Error updating goal plan:", error);
+      throw new Error("Không thể cập nhật kế hoạch mục tiêu");
     }
   },
 
@@ -108,34 +116,57 @@ export const ApiHelper = {
       const normalizedData = {
         ...weeklyData,
         weekStartDate: DateUtils.toISODateString(weeklyData.weekStartDate),
-        weekEndDate: DateUtils.toISODateString(weeklyData.weekEndDate)
+        weekEndDate: DateUtils.toISODateString(weeklyData.weekEndDate),
       };
 
-      const response = await api.post('/GoalPlanWeeklyReduction', normalizedData);
+      const response = await api.post(
+        "/GoalPlanWeeklyReduction",
+        normalizedData
+      );
       return response.data;
     } catch (error) {
-      console.error('❌ Error creating weekly plan:', error);
-      throw new Error('Không thể tạo kế hoạch tuần');
+      console.error("❌ Error creating weekly plan:", error);
+      throw new Error("Không thể tạo kế hoạch tuần");
+    }
+  },
+
+  fetchGeneratedWeeklySchedule: async () => {
+    try {
+      const response = await api.get(
+        "/GoalPlanWeeklyReduction/generate-weekly-schedule"
+      );
+      return (response.data || []).map((week) => ({
+        ...week,
+        startDate: DateUtils.toISODateString(week.startDate),
+        endDate: DateUtils.toISODateString(week.endDate),
+      }));
+    } catch (error) {
+      console.error("❌ Error fetching generated weekly schedule:", error);
+      return [];
     }
   },
 
   fetchAllDashboardData: async () => {
     const results = await Promise.allSettled([
       ApiHelper.fetchProgressLogs(),
-      ApiHelper.fetchGoalPlan()
+      ApiHelper.fetchGoalPlan(),
     ]);
 
     const [progressLogsResult, goalPlanResult] = results;
 
     return {
-      progressLogs: progressLogsResult.status === 'fulfilled' ? progressLogsResult.value : [],
+      progressLogs:
+        progressLogsResult.status === "fulfilled"
+          ? progressLogsResult.value
+          : [],
       currentGoal: null,
-      goalPlan: goalPlanResult.status === 'fulfilled' ? goalPlanResult.value : null,
+      goalPlan:
+        goalPlanResult.status === "fulfilled" ? goalPlanResult.value : null,
       errors: results
-        .filter(result => result.status === 'rejected')
-        .map(result => result.reason?.message || 'Unknown error')
+        .filter((result) => result.status === "rejected")
+        .map((result) => result.reason?.message || "Unknown error"),
     };
-  }
+  },
 };
 
 export default ApiHelper;

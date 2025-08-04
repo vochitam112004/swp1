@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 export default function PlanTabNew() {
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [generatedWeeks, setGeneratedWeeks] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
 
@@ -18,6 +19,12 @@ export default function PlanTabNew() {
     targetQuitDate: "",
   });
 
+  const fetchSchedule = async () => {
+    const data = await ApiHelper.fetchGeneratedWeeklySchedule();
+    console.log("📅 Weekly schedule:", data); // Debug log
+    setGeneratedWeeks(data);
+  };
+
   const fetchCurrentPlan = async () => {
     try {
       setLoading(true);
@@ -25,8 +32,10 @@ export default function PlanTabNew() {
       if (goalPlan) {
         setPlan(goalPlan);
         setEditFormData({ targetQuitDate: DateUtils.toISODateString(goalPlan.endDate) });
+        await fetchSchedule(); // <<< Thêm dòng này
       } else {
         setPlan(null);
+        setGeneratedWeeks([]); // clear lịch cũ
       }
     } catch (error) {
       console.error("Error fetching plan:", error);
@@ -43,13 +52,13 @@ export default function PlanTabNew() {
     }
 
     try {
-      const response = await ApiHelper.createGoalPlan({
+      await ApiHelper.createGoalPlan({
         ...formData,
         targetQuitDate: formData.endDate
       });
       toast.success("Tạo kế hoạch thành công");
       setShowCreateForm(false);
-      fetchCurrentPlan();
+      await fetchCurrentPlan(); // Gọi lại để lấy kế hoạch + lịch mới
     } catch (error) {
       console.error("Create plan error:", error);
       toast.error("Tạo kế hoạch thất bại");
@@ -68,11 +77,11 @@ export default function PlanTabNew() {
       await ApiHelper.deleteGoalPlan(plan.planId);
       toast.success("Xóa kế hoạch thành công");
       setPlan(null);
+      setGeneratedWeeks([]); // clear lịch
     } catch (error) {
       toast.error("Xóa kế hoạch thất bại");
     }
   };
-
 
   const updateExistingPlan = async () => {
     if (!editFormData.targetQuitDate) {
@@ -81,13 +90,13 @@ export default function PlanTabNew() {
     }
 
     try {
-      const response = await ApiHelper.updateGoalPlan({
+      await ApiHelper.updateGoalPlan({
         ...plan,
         targetQuitDate: editFormData.targetQuitDate,
       });
       toast.success("Cập nhật kế hoạch thành công");
       setShowEditForm(false);
-      fetchCurrentPlan();
+      await fetchCurrentPlan(); // Gọi lại để lấy kế hoạch + lịch mới
     } catch (error) {
       console.error("Update plan error:", error);
       toast.error("Cập nhật kế hoạch thất bại");
@@ -174,6 +183,32 @@ export default function PlanTabNew() {
               <button className="btn btn-danger ms-2" onClick={deletePlan}>
                 Xóa kế hoạch
               </button>
+            </div>
+          )}
+
+          {plan && generatedWeeks.length > 0 && (
+            <div className="weekly-schedule mt-4">
+              <h4>Lịch giảm hàng tuần</h4>
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Tuần</th>
+                    <th>Ngày bắt đầu của tuần</th>
+                    <th>Ngày kết thúc của tuần</th>
+                    <th>Số điếu giảm</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generatedWeeks.map((week, index) => (
+                    <tr key={index}>
+                      <td>Tuần {week.weekNumber}</td>
+                      <td>{DateUtils.toVietnameseString(week.startDate)}</td>
+                      <td>{DateUtils.toVietnameseString(week.endDate)}</td>
+                      <td>{week.cigarettesReduced}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </>
