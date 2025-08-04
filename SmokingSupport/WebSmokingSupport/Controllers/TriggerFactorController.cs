@@ -144,69 +144,64 @@ namespace WebSmokingSupport.Controllers
 
             return Ok("Trigger removed successfully.");
         }
+        //[HttpPost("assign/{memberId}")]
+        //[Authorize(Roles = "Admin,Coach")]
+        //public async Task<ActionResult> AssignTriggersToMember(int memberId, [FromBody] List<int> triggerIds)
+        //{
+        //    var member = await _context.MemberProfiles.FirstOrDefaultAsync(m => m.MemberId == memberId);
+        //    if (member == null)
+        //        return NotFound("Member not found.");
 
-        [HttpPost("assign/{memberId}")]
-        [Authorize(Roles = "Admin,Coach")]
-        public async Task<ActionResult> AssignTriggersToMember(int memberId, [FromBody] List<int> triggerIds)
-        {
-            var member = await _context.MemberProfiles.FirstOrDefaultAsync(m => m.MemberId == memberId);
-            if (member == null)
-                return NotFound("Member not found.");
+        //    if (triggerIds == null || !triggerIds.Any())
+        //        return BadRequest("Trigger list is empty.");
 
-            if (triggerIds == null || !triggerIds.Any())
-                return BadRequest("Trigger list is empty.");
+        //    var validTriggerIds = await _context.TriggerFactors
+        //        .Where(t => triggerIds.Contains(t.TriggerId))
+        //        .Select(t => t.TriggerId)
+        //        .ToListAsync();
 
-            var validTriggerIds = await _context.TriggerFactors
-                .Where(t => triggerIds.Contains(t.TriggerId))
-                .Select(t => t.TriggerId)
-                .ToListAsync();
+        //    if (validTriggerIds.Count != triggerIds.Count)
+        //        return BadRequest("Some trigger IDs are invalid.");
 
-            if (validTriggerIds.Count != triggerIds.Count)
-                return BadRequest("Some trigger IDs are invalid.");
+        //    var existingTriggerIds = await _context.MemberTriggers
+        //        .Where(mt => mt.MemberId == memberId)
+        //        .Select(mt => mt.TriggerId)
+        //        .ToListAsync();
 
-            // Lấy các trigger đã gán sẵn cho member
-            var existingTriggerIds = await _context.MemberTriggers
-                .Where(mt => mt.MemberId == memberId)
-                .Select(mt => mt.TriggerId)
-                .ToListAsync();
+           
+        //    var newTriggerIds = validTriggerIds
+        //        .Where(id => !existingTriggerIds.Contains(id))
+        //        .ToList();
 
-            // Lọc ra các trigger mới chưa được gán
-            var newTriggerIds = validTriggerIds
-                .Where(id => !existingTriggerIds.Contains(id))
-                .ToList();
+        
+        //    foreach (var triggerId in newTriggerIds)
+        //    {
+        //        _context.MemberTriggers.Add(new MemberTrigger
+        //        {
+        //            MemberId = memberId,
+        //            TriggerId = triggerId
+        //        });
+        //    }
 
-            // Gán các trigger mới
-            foreach (var triggerId in newTriggerIds)
-            {
-                _context.MemberTriggers.Add(new MemberTrigger
-                {
-                    MemberId = memberId,
-                    TriggerId = triggerId
-                });
-            }
+        //    await _context.SaveChangesAsync();
+        //    var allTriggerIds = existingTriggerIds
+        //        .Select(id => id.Value) 
+        //        .Union(newTriggerIds)
+        //        .ToList();
+        //    var assignedTriggers = await _context.TriggerFactors
+        //        .Where(t => allTriggerIds.Contains(t.TriggerId))
+        //        .ToListAsync();
 
-            await _context.SaveChangesAsync();
-            var allTriggerIds = existingTriggerIds
-                .Select(id => id.Value) // ép từ int? về int
-                .Union(newTriggerIds)
-                .ToList();
+        //    var response = assignedTriggers.Select(t => new DTOTriggerFactorForRead
+        //    {
+        //        TriggerId = t.TriggerId,
+        //        Name = t.Name,
+        //        CreatedAt = t.CreatedAt,
+        //        UpdatedAt = t.UpdatedAt
+        //    }).ToList();
 
-
-            var assignedTriggers = await _context.TriggerFactors
-                .Where(t => allTriggerIds.Contains(t.TriggerId))
-                .ToListAsync();
-
-            var response = assignedTriggers.Select(t => new DTOTriggerFactorForRead
-            {
-                TriggerId = t.TriggerId,
-                Name = t.Name,
-                CreatedAt = t.CreatedAt,
-                UpdatedAt = t.UpdatedAt
-            }).ToList();
-
-            return Ok(response);
-        }
-
+        //    return Ok(response);
+        //}
         [HttpDelete("Delete-TriggerFactor/{id}")]
         [Authorize(Roles = "Admin,Coach,Member")]
         public async Task<IActionResult> DeleteTriggerFactor(int id)
@@ -219,5 +214,69 @@ namespace WebSmokingSupport.Controllers
             var result = await _triggerFactorRepository.RemoveAsync(existingTriggerFactor);
             return NoContent();
         }
+        [HttpGet("GetMemberTriggerFactors/{memberId}")]
+        [Authorize(Roles = "Coach,Admin")]
+        public async Task<IActionResult> GetMemberTriggerFactors(int memberId)
+        {
+            var member = await _context.MemberProfiles
+                .FirstOrDefaultAsync(m => m.MemberId == memberId);
+            if (member == null)
+                return NotFound("Member not found.");
+
+            var triggers = await _context.MemberTriggers
+                .Where(mt => mt.MemberId == memberId)
+                .Include(mt => mt.Trigger)
+                .Select(mt => new DTOTriggerFactorForRead
+                {
+                    TriggerId = mt.Trigger.TriggerId,
+                    Name = mt.Trigger.Name,
+                    CreatedAt = mt.Trigger.CreatedAt,
+                    UpdatedAt = mt.Trigger.UpdatedAt
+                })
+                .ToListAsync();
+
+            return Ok(triggers);
+        }
+        [HttpPost("assign/{memberId}")]
+        [Authorize(Roles = "Coach,Admin")]
+        public async Task<IActionResult> AssignTriggerFactorsToMember(int memberId, [FromBody] List<int> triggerIds)
+        {
+            var member = await _context.MemberProfiles
+                .FirstOrDefaultAsync(m => m.MemberId == memberId);
+            if (member == null)
+                return NotFound("Member not found.");
+
+            if (triggerIds == null || !triggerIds.Any())
+                return BadRequest("No trigger IDs provided.");
+
+            // Xác nhận các triggerId có tồn tại
+            var validTriggerIds = await _context.TriggerFactors
+                .Where(t => triggerIds.Contains(t.TriggerId))
+                .Select(t => t.TriggerId)
+                .ToListAsync();
+
+            if (validTriggerIds.Count != triggerIds.Count)
+                return BadRequest("One or more trigger IDs are invalid.");
+
+            // Xóa các trigger hiện tại của member
+            var existingTriggers = await _context.MemberTriggers
+                .Where(mt => mt.MemberId == memberId)
+                .ToListAsync();
+
+            _context.MemberTriggers.RemoveRange(existingTriggers);
+            foreach (var triggerId in validTriggerIds)
+            {
+                _context.MemberTriggers.Add(new MemberTrigger
+                {
+                    MemberId = memberId,
+                    TriggerId = triggerId
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Trigger factors updated successfully.");
+        }
+
     }
 }

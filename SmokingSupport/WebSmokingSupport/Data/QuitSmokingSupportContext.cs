@@ -17,6 +17,7 @@ public partial class QuitSmokingSupportContext : DbContext
     {
     }
     public DbSet<UserAchievement> UserAchievements { get; set; }
+    public DbSet<UserDiaryLog> UserDiaryLogs { get; set; }
     public virtual DbSet<Appointment> Appointments { get; set; }
 
     public virtual DbSet<Badge> Badges { get; set; }
