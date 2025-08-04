@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using WebSmokingSpport.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop.Infrastructure;
+using WebSmokingSupport.DTOs;
 namespace WebSmokingSupport.Controllers
 {
     [Route("api/[controller]")]
@@ -40,20 +41,22 @@ namespace WebSmokingSupport.Controllers
             {
                 return NotFound("Member profile not found for the authenticated user.");
             }
+            var currentGoalPlan = await _context.GoalPlans
+                .FirstOrDefaultAsync(gp => gp.MemberId == memberProfile.MemberId && gp.isCurrentGoal == true);
 
-            var goalPlanIds = await _context.GoalPlans
-                .Where(gp => gp.MemberId == memberProfile.MemberId)
-                .Select(gp => gp.PlanId)
-                .ToListAsync();
-
-            if (goalPlanIds == null || !goalPlanIds.Any())
+            if (currentGoalPlan == null)
             {
-                return NotFound("No goal plans found for the authenticated user.");
+                return Ok(new DTOMoneySavedResult
+                {
+                    TotalMoneySaved = 0,
+                    DaysReducedSmoking = 0,
+                    DailyReductions = new List<DTODailyReduction>()
+                });
             }
 
             var progressLogs = await _context.ProgressLogs
-                .Where(pl => pl.GoalPlanId != null && goalPlanIds.Contains(pl.GoalPlanId))
-                .OrderByDescending(pl => pl.LogDate)
+                .Where(pl => pl.GoalPlanId == currentGoalPlan.PlanId)
+                .OrderBy(pl => pl.LogDate)
                 .Select(pl => new DTOProgressLogForRead
                 {
                     LogId = pl.LogId,

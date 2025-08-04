@@ -65,7 +65,7 @@ namespace WebSmokingSupport.Controllers
         }
         [HttpPost("Create-TriggerFactor")]
         [Authorize(Roles = "Admin,Coach,Member")]
-        public async Task<IActionResult> CreateTriggerFactor([FromBody] TriggerFactor triggerFactor)
+        public async Task<IActionResult> CreateTriggerFactor([FromBody] DTOTriggerFactorForCreate triggerFactor)
         {
             if (triggerFactor == null)
             {
@@ -78,7 +78,7 @@ namespace WebSmokingSupport.Controllers
                 UpdatedAt = DateTime.UtcNow
             };
             var result = await _triggerFactorRepository.CreateAsync(newTriggerFactor);
-            var triigerResponse = new DTOTriggerFactorForRead
+            var triigerResponse = new DTOTriggerFactorForCreate
             {
 
                 Name = newTriggerFactor.Name,
@@ -93,12 +93,8 @@ namespace WebSmokingSupport.Controllers
         }
         [HttpPut("Update-TriggerFactor/{id}")]
         [Authorize(Roles = "Admin,Coach,Member")]
-        public async Task<IActionResult> UpdateTriggerFactor(int id, [FromBody] TriggerFactor triggerFactor)
+        public async Task<IActionResult> UpdateTriggerFactor(int id, [FromBody] DTOTriggerFactorForUpdate triggerFactor)
         {
-            if (triggerFactor == null || id != triggerFactor.TriggerId)
-            {
-                return BadRequest("Invalid trigger factor data.");
-            }
             var existingTriggerFactor = await _triggerFactorRepository.GetByIdAsync(id);
             if (existingTriggerFactor == null)
             {
@@ -135,21 +131,29 @@ namespace WebSmokingSupport.Controllers
             await _context.SaveChangesAsync();
             return Ok("Trigger removed.");
         }
-        [HttpPost("assign")]
-        public async Task<ActionResult> AssignTriggersToMember([FromBody] List<int> triggerIds)
+        [HttpPost("assign/{memberId}")]
+        [Authorize(Roles = "Admin,Coach")]
+        public async Task<ActionResult> AssignTriggersToMember(int memberId, [FromBody] List<int> triggerIds)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            var member = await _context.MemberProfiles.FirstOrDefaultAsync(m => m.UserId == int.Parse(userId));
+            var member = await _context.MemberProfiles.FirstOrDefaultAsync(m => m.MemberId == memberId);
             if (member == null)
                 return NotFound("Member not found.");
+
+            if (triggerIds == null || !triggerIds.Any())
+                return BadRequest("Trigger list is empty.");
+
+            var validTriggerIds = await _context.TriggerFactors
+                .Where(t => triggerIds.Contains(t.TriggerId))
+                .Select(t => t.TriggerId)
+                .ToListAsync();
+
+            if (validTriggerIds.Count != triggerIds.Count)
+                return BadRequest("Some trigger IDs are invalid.");
 
             // Xoá tất cả trigger cũ (nếu muốn reset)
             var existing = _context.MemberTriggers.Where(mt => mt.MemberId == member.MemberId);
             _context.MemberTriggers.RemoveRange(existing);
-
-            // Gán mới
-            foreach (var triggerId in triggerIds)
+            foreach (var triggerId in validTriggerIds)
             {
                 _context.MemberTriggers.Add(new MemberTrigger
                 {
@@ -157,9 +161,19 @@ namespace WebSmokingSupport.Controllers
                     TriggerId = triggerId
                 });
             }
-
             await _context.SaveChangesAsync();
-            return Ok("Trigger factors assigned successfully.");
+
+            var assignedTriggers = await _context.TriggerFactors
+                .Where(t => validTriggerIds.Contains(t.TriggerId))
+                .ToListAsync();
+            var response = assignedTriggers.Select(t => new DTOTriggerFactorForRead
+            {
+                TriggerId = t.TriggerId,
+                Name = t.Name,
+                CreatedAt = t.CreatedAt,
+                UpdatedAt = t.UpdatedAt
+            }).ToList();
+            return Ok(response);
         }
         [HttpDelete("Delete-TriggerFactor/{id}")]
         [Authorize(Roles = "Admin,Coach,Member")]
