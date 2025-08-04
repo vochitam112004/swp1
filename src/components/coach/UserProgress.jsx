@@ -20,43 +20,40 @@ export default function UserProgress() {
 
         const profiles = await Promise.all(
           userList.map(async (user) => {
+            let profileData = {};
+            // Fetch profile
             try {
-              const [profileRes, goalRes] = await Promise.all([
-                api.get(`/MemberProfile/GetMemberProfileByUserId/${user.userId}`),
-                api.get(`/CurrentGoal?userId=${user.userId}`),
-              ]);
-
-              return {
-                ...user,
-                ...profileRes.data,
-                totalMoneySaved: goalRes.data.totalMoneySaved ?? 0,
-              };
+              const profileRes = await api.get(`/MemberProfile/GetMemberProfileByUserId/${user.userId}`);
+              profileData = profileRes.data;
             } catch (e) {
-              console.warn(`Could not fetch data for userId ${user.userId}.`, e);
-
-              let profile = {};
-              try {
-                const profileRes = await api.get(`/MemberProfile/GetMemberProfileByUserId/${user.userId}`);
-                profile = profileRes.data;
-              } catch {
-                // leave profile fields as null if fail
-                profile = {
+              // Nếu lỗi 404 (không có profile), trả về profile mặc định
+              if (e.response && e.response.status === 404) {
+                profileData = {
                   health: null,
                   quitAttempts: null,
                   cigarettesSmoked: null,
                   experienceLevel: null,
+                  displayName: user.displayName || user.fullName || "Chưa cập nhật",
+                };
+              } else {
+                // Lỗi khác, log ra
+                console.warn(`Could not fetch profile for userId ${user.userId}.`, e);
+                profileData = {
+                  health: null,
+                  quitAttempts: null,
+                  cigarettesSmoked: null,
+                  experienceLevel: null,
+                  displayName: user.displayName || user.fullName || "Chưa cập nhật",
                 };
               }
-
-              return {
-                ...user,
-                ...profile,
-                totalMoneySaved: 0,
-              };
             }
+            // Không fetch goal nữa
+            return {
+              ...user,
+              ...profileData,
+            };
           })
         );
-
         setUsers(profiles);
       } catch (error) {
         console.error("Error fetching the user list:", error);
@@ -67,11 +64,6 @@ export default function UserProgress() {
 
     fetchUsers();
   }, []);
-
-  const formatMoney = (amount) => {
-    if (typeof amount !== 'number' || isNaN(amount)) return "0 ₫";
-    return amount.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
-  };
 
   const filteredUsers = users.filter((user) =>
     user.displayName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -118,7 +110,7 @@ export default function UserProgress() {
               <TableCell align="center">Lần thử cai</TableCell>
               <TableCell align="center">Số năm hút thuốc</TableCell>
               <TableCell align="center">Số điếu / ngày</TableCell>
-              <TableCell align="center">Tiền tiết kiệm</TableCell>
+              {/* <TableCell align="center">Tiền tiết kiệm</TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -138,7 +130,7 @@ export default function UserProgress() {
                   <TableCell align="center">
                     {user.cigarettesSmoked != null ? `${user.cigarettesSmoked} điếu` : "—"}
                   </TableCell>
-                  <TableCell
+                  {/* <TableCell
                     align="center"
                     sx={{
                       fontWeight: 'medium',
@@ -146,12 +138,12 @@ export default function UserProgress() {
                     }}
                   >
                     {formatMoney(user.totalMoneySaved)}
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={5}>
                   <Box display="flex" justifyContent="center" alignItems="center" p={4}>
                     <Typography variant="body1" color="text.secondary">
                       Không tìm thấy người dùng nào khớp với tìm kiếm của bạn.
