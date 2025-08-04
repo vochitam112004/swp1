@@ -29,12 +29,12 @@ import ProgressTab from "./ProgressTab";
 
 // Import hooks and utils
 import { useDashboardData } from "./hooks/useDashboardData";
-import { 
-  safeParse, 
-  getAchievedBadges, 
+import {
+  safeParse,
+  getAchievedBadges,
   sendBrowserNotification,
   calculateProgress,
-  calculateGoalProgress 
+  calculateGoalProgress
 } from "./utils/dashboardUtils";
 import { TABS, COMMUNITY_AVG } from "./constants/dashboardConstants";
 
@@ -105,6 +105,25 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
+  useEffect(() => {
+    if (selectedLogDate) {
+      const log = progressLogs.find(l => (l.logDate || l.date) === selectedLogDate);
+      if (log) {
+        setTodayCigarettes(log.cigarettesSmoked?.toString() || "");
+        setTodayMood(log.mood || "");
+        setSelectedTriggers(log.triggers || "");
+        setSelectedSymptoms(log.symptoms || "");
+        setTodayNote(log.notes || "");
+      } else {
+        setTodayCigarettes("");
+        setTodayMood("");
+        setSelectedTriggers("");
+        setSelectedSymptoms("");
+        setTodayNote("");
+      }
+    }
+  }, [selectedLogDate, progressLogs]);
+
   // Danh sách mood options
   const moodOptions = [
     { id: "rat_vui", label: "Rất vui", emoji: "😊", color: "#4CAF50" },
@@ -146,13 +165,8 @@ const Dashboard = () => {
   // Handle submit progress
   const handleSubmitDailyProgress = async (e) => {
     e.preventDefault();
-    // Lấy ngày được chọn từ dropdown, nếu không có thì lấy hôm nay
     const logDate = selectedLogDate || new Date().toISOString().slice(0, 10);
-    const existed = progressLogs.find((log) => (log.logDate || log.date) === logDate);
-    if (existed) {
-      toast.error("Bạn đã ghi nhật ký cho ngày này!");
-      return;
-    }
+
     if (isNaN(todayCigarettes) || todayCigarettes === "" || todayCigarettes < 0) {
       toast.error("Số điếu thuốc không hợp lệ!");
       return;
@@ -167,12 +181,12 @@ const Dashboard = () => {
         notes: todayNote,
         cigarettesSmoked: parseInt(todayCigarettes),
         mood: todayMood,
-        triggers: Array.isArray(selectedTriggers) ? selectedTriggers.join(",") : "",
-        symptoms: Array.isArray(selectedSymptoms) ? selectedSymptoms.join(",") : "",
+        triggers: selectedTriggers,
+        symptoms: selectedSymptoms,
         updatedAt: new Date().toISOString(),
       };
       await api.put("/ProgressLog/UpdateProgressLogByDate", progressData);
-      setProgressLogs([...progressLogs, progressData]);
+      await fetchAllData();
       setTodayCigarettes("");
       setTodayMood("");
       setSelectedTriggers([]);
@@ -184,38 +198,6 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Error saving progress:", error);
       toast.error("Có lỗi xảy ra khi lưu tiến trình!");
-    }
-  };
-
-  // Handle plan operations
-  const handleUpdatePlan = async (newPlan) => {
-    setLoading(true);
-    if (!plan) {
-      toast.error("Không tìm thấy kế hoạch hiện tại!");
-      return;
-    }
-    try {
-      await api.put(`/GoalPlan/${plan.planId}`, newPlan);
-      const res = await api.get("/GoalPlan/current-goal");
-      setPlan(res.data);
-      toast.success("Đã cập nhật kế hoạch!");
-    } catch (err) {
-
-      console.error("❌ Lỗi khi fetch MemberProfile:", err);
-
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreatePlan = async (newPlan) => {
-    try {
-      await api.post("/GoalPlan", newPlan);
-      const res = await api.get("/GoalPlan/current-goal");
-      setPlan(res.data);
-      toast.success("Đã tạo kế hoạch mới!");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Tạo kế hoạch thất bại!");
     }
   };
 
@@ -283,7 +265,7 @@ const Dashboard = () => {
               <div className="fw-bold">Tổng số tiền tiết kiệm</div>
               <h4 className="text-dark mb-0 fw-bold">{(currentGoal?.totalMoneySaved || 0).toLocaleString()}</h4>
               <small className="text-muted">đ</small>
-              <div className="mt-2">    
+              <div className="mt-2">
                 <small className="text-primary">Tiền tiết kiệm</small>
               </div>
             </div>
@@ -315,8 +297,8 @@ const Dashboard = () => {
                 {plan?.createdAt
                   ? Math.floor((new Date() - new Date(plan.createdAt)) / (1000 * 60 * 60 * 24))
                   : 0}
-                </h4>
-                <small className="text-muted">ngày</small>
+              </h4>
+              <small className="text-muted">ngày</small>
               <div className="mt-2">
                 <small className="text-warning">Thời gian thành công</small>
               </div>
@@ -331,7 +313,7 @@ const Dashboard = () => {
           <h5 className="card-title mb-3">Hành động nhanh</h5>
           <div className="row g-3">
             <div className="col-6 col-md-2">
-              <button 
+              <button
                 className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center"
                 onClick={() => setActiveTab("daily-log")}
               >
@@ -345,7 +327,7 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="col-6 col-md-2">
-              <button 
+              <button
                 className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center"
                 onClick={() => setActiveTab("plan")}
               >
@@ -359,7 +341,7 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="col-6 col-md-2">
-              <button 
+              <button
                 className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center"
                 onClick={() => navigate('/coaches')}
               >
@@ -373,7 +355,7 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="col-6 col-md-2">
-              <button 
+              <button
                 className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center"
                 onClick={() => setActiveTab("appointment")}
               >
@@ -387,7 +369,7 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="col-6 col-md-2">
-              <button 
+              <button
                 className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center"
                 onClick={() => setActiveTab("notifications")}
               >
@@ -401,7 +383,7 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="col-6 col-md-2">
-              <button 
+              <button
                 className="quick-action-btn btn w-100 d-flex flex-column align-items-center justify-content-center"
                 onClick={() => setActiveTab("achievements")}
               >
@@ -464,7 +446,7 @@ const Dashboard = () => {
               <i className="fas fa-check-circle text-success" style={{ fontSize: "4rem" }}></i>
               <h4 className="mt-3 text-success">Đã ghi nhận ngày này!</h4>
               <p className="text-muted">Cảm ơn bạn đã chia sẻ tiến trình</p>
-              <button 
+              <button
                 className="btn btn-outline-primary mt-3"
                 onClick={() => setActiveTab("overview")}
               >
@@ -488,7 +470,7 @@ const Dashboard = () => {
                 >
                   <option value="">-- Chọn ngày --</option>
                   {planDates.map(date => (
-                    <option key={date} value={date} disabled={loggedDates.includes(date)}>
+                    <option key={date} value={date}>
                       {new Date(date).toLocaleDateString('vi-VN')}
                     </option>
                   ))}
@@ -505,8 +487,8 @@ const Dashboard = () => {
               </div>
               <div className="card-body">
                 <div className="progress-input-group input-group">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-outline-danger"
                     onClick={() => setTodayCigarettes(Math.max(0, parseInt(todayCigarettes || 0) - 1).toString())}
                   >
@@ -521,8 +503,8 @@ const Dashboard = () => {
                     placeholder="0"
                   />
                   <span className="input-group-text">điếu thuốc</span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-outline-success"
                     onClick={() => setTodayCigarettes((parseInt(todayCigarettes || 0) + 1).toString())}
                   >
@@ -549,9 +531,8 @@ const Dashboard = () => {
                     <div key={mood.id} className="col-4 col-md-2">
                       <button
                         type="button"
-                        className={`mood-btn btn w-100 d-flex flex-column align-items-center ${
-                          todayMood === mood.id ? 'btn-primary active' : 'btn-outline-secondary'
-                        }`}
+                        className={`mood-btn btn w-100 d-flex flex-column align-items-center ${todayMood === mood.id ? 'btn-primary active' : 'btn-outline-secondary'
+                          }`}
                         onClick={() => setTodayMood(mood.id)}
                         style={todayMood === mood.id ? { backgroundColor: mood.color, borderColor: mood.color } : {}}
                       >
@@ -565,38 +546,38 @@ const Dashboard = () => {
             </div>
 
             {/* Yếu tố kích hoạt thêm thuốc */}
-<div className="section-card mb-4">
-  <div className="card-body">
-    <h5 className="card-title">
-      <i className="fas fa-exclamation-triangle me-2"></i>Yếu tố kích hoạt thêm thuốc
-    </h5>
-    <p className="text-muted small mb-3">Nhập các yếu tố đã khiến bạn muốn hút thuốc hôm nay (cách nhau bằng dấu phẩy)</p>
-    <input
-      type="text"
-      className="form-control"
-      placeholder="Ví dụ: Căng thẳng công việc, Uống cà phê, ..."
-      value={selectedTriggers}
-      onChange={e => setSelectedTriggers(e.target.value)}
-    />
-  </div>
-</div>
+            <div className="section-card mb-4">
+              <div className="card-body">
+                <h5 className="card-title">
+                  <i className="fas fa-exclamation-triangle me-2"></i>Yếu tố kích hoạt thèm thuốc
+                </h5>
+                <p className="text-muted small mb-3">Nhập các yếu tố đã khiến bạn muốn hút thuốc hôm nay</p>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Ví dụ: Căng thẳng công việc, Uống cà phê, ..."
+                  value={selectedTriggers}
+                  onChange={e => setSelectedTriggers(e.target.value)}
+                />
+              </div>
+            </div>
 
             {/* Triệu chứng cai thuốc */}
-<div className="section-card mb-4">
-  <div className="card-body">
-    <h5 className="card-title">
-      <i className="fas fa-heartbeat me-2"></i>Triệu chứng cai thuốc
-    </h5>
-    <p className="text-muted small mb-3">Nhập các triệu chứng bạn đã trải qua hôm nay (cách nhau bằng dấu phẩy)</p>
-    <input
-      type="text"
-      className="form-control"
-      placeholder="Ví dụ: Căng thẳng, Ho khan, ..."
-      value={selectedSymptoms}
-      onChange={e => setSelectedSymptoms(e.target.value)}
-    />
-  </div>
-</div>
+            <div className="section-card mb-4">
+              <div className="card-body">
+                <h5 className="card-title">
+                  <i className="fas fa-heartbeat me-2"></i>Triệu chứng cai thuốc
+                </h5>
+                <p className="text-muted small mb-3">Nhập các triệu chứng bạn đã trải qua hôm nay</p>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Ví dụ: Căng thẳng, Ho khan, ..."
+                  value={selectedSymptoms}
+                  onChange={e => setSelectedSymptoms(e.target.value)}
+                />
+              </div>
+            </div>
 
             {/* Ghi chú thêm */}
             <div className="section-card mb-4">
@@ -604,9 +585,9 @@ const Dashboard = () => {
                 <h5 className="card-title">
                   <i className="fas fa-edit me-2"></i>Ghi chú thêm
                 </h5>
-                <textarea 
-                  className="form-control" 
-                  rows="3" 
+                <textarea
+                  className="form-control"
+                  rows="3"
                   placeholder="Chia sẻ cảm nghĩ, thách thức hoặc thành tựu của bạn hôm nay..."
                   value={todayNote}
                   onChange={(e) => setTodayNote(e.target.value)}
@@ -635,24 +616,24 @@ const Dashboard = () => {
     switch (activeTab) {
       case TABS.OVERVIEW:
         return renderOverviewTab();
-      
+
       case "daily-log":
         return renderDailyLogTab();
-      
+
       case "progress":
         return (
           <ProgressTab
-            progressLogs={progressLogs}
+            progressLogs={progressLogs || []}
             currentGoal={currentGoal}
             plan={plan}
           />
         );
-      
+
       case TABS.PLAN:
         return (
           <PlanTabNew />
         );
-      
+
       case "planhistory":
         return (
           <div>
@@ -675,9 +656,8 @@ const Dashboard = () => {
                         <td>{new Date(historyPlan.targetQuitDate).toLocaleDateString()}</td>
                         <td>{historyPlan.goalDescription}</td>
                         <td>
-                          <span className={`badge ${
-                            historyPlan.isCompleted ? "bg-success" : "bg-warning"
-                          }`}>
+                          <span className={`badge ${historyPlan.isCompleted ? "bg-success" : "bg-warning"
+                            }`}>
                             {historyPlan.isCompleted ? "Hoàn thành" : "Đang thực hiện"}
                           </span>
                         </td>
@@ -694,7 +674,7 @@ const Dashboard = () => {
             )}
           </div>
         );
-      
+
       case TABS.JOURNAL:
         return (
           <JournalManager
@@ -703,7 +683,7 @@ const Dashboard = () => {
             progressLogs={progressLogs}
           />
         );
-      
+
       case "achievements":
         return (
           <BadgeComponents
@@ -712,7 +692,7 @@ const Dashboard = () => {
             setAchievedBadges={setAchievedBadges}
           />
         );
-      
+
       case "report":
         return (
           <div>
@@ -735,9 +715,9 @@ const Dashboard = () => {
                     <div className="mb-2">
                       <small>Ngày không hút</small>
                       <div className="progress">
-                        <div 
-                          className="progress-bar" 
-                          style={{width: `${Math.min((progress.daysNoSmoke / COMMUNITY_AVG.daysNoSmoke) * 100, 100)}%`}}
+                        <div
+                          className="progress-bar"
+                          style={{ width: `${Math.min((progress.daysNoSmoke / COMMUNITY_AVG.daysNoSmoke) * 100, 100)}%` }}
                         />
                       </div>
                       <small>{progress.daysNoSmoke}/{COMMUNITY_AVG.daysNoSmoke}</small>
@@ -748,13 +728,13 @@ const Dashboard = () => {
             </div>
           </div>
         );
-      
+
       case TABS.APPOINTMENT:
         return (
           <AppointmentManager
           />
         );
-      
+
       case TABS.NOTIFICATIONS:
         return (
           <NotificationManager
@@ -762,7 +742,7 @@ const Dashboard = () => {
             plan={plan}
           />
         );
-      
+
       default:
         return renderOverviewTab();
     }
@@ -779,7 +759,7 @@ const Dashboard = () => {
             Theo dõi tiến trình cai thuốc của bạn
           </p>
         </div>
-        
+
         <div className="bg-white shadow rounded-4 overflow-hidden">
           {/* Navigation Tabs */}
           <ul className="nav nav-tabs px-3 pt-3">
@@ -816,8 +796,8 @@ const Dashboard = () => {
               </button>
             </li>
             <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === "planhistory" ? "active" : ""}`} 
+              <button
+                className={`nav-link ${activeTab === "planhistory" ? "active" : ""}`}
                 onClick={() => setActiveTab("planhistory")}
               >
                 <i className="fas fa-history me-2"></i>Lịch sử kế hoạch
@@ -864,7 +844,7 @@ const Dashboard = () => {
               </button>
             </li>
           </ul>
-          
+
           {/* Tab Content */}
           <div className="p-4">
             {renderTabContent()}
