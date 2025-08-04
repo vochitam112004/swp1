@@ -8,11 +8,11 @@ const HeroSection = () => {
 
   const handleStartClick = (e) => {
     e.preventDefault();
-    // Nếu đã đăng nhập thì chuyển sang dashboard tab "plan"
+    // Nếu đã đăng nhập thì chuyển sang dashboard
     const token = localStorage.getItem("authToken");
     if (token) {
-      // Chuyển hướng kèm query ?tab=plan hoặc state
-      navigate("/user?tab=plan");
+      // Chuyển hướng đến dashboard
+      navigate("/dashboard");
     } else {
       // Nếu chưa đăng nhập thì chuyển sang đăng ký
       navigate("/register");

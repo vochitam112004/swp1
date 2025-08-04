@@ -8,11 +8,10 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
   const [formData, setFormData] = useState({
     // Basic smoking info
     smokingStatus: "Đang hút",
-    dailyCigarettes: 10,
+    cigarettesSmoked: 10,
     yearsOfSmoking: 5,
-    packPrice: 25000,
-    cigarettesPerPack: 20,
-    preferredBrand: "",
+    pricePerPack: 25000,
+    cigarettesPerPack: 20, // Default value, hidden from user
     smokingPattern: "",
     
     // Quit history
@@ -21,10 +20,7 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
     experienceLevel: 0,
     
     // Health info
-    healthConditions: "",
-    allergies: "",
-    medications: "",
-    previousHealthIssues: "",
+    health: "",
     
     // Triggers and motivation
     smokingTriggers: "",
@@ -43,9 +39,9 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
     try {
       const submitData = {
         ...formData,
-        dailyCigarettes: parseInt(formData.dailyCigarettes) || 0,
+        cigarettesSmoked: parseInt(formData.cigarettesSmoked) || 0,
         yearsOfSmoking: parseInt(formData.yearsOfSmoking) || 0,
-        packPrice: parseInt(formData.packPrice) || 25000,
+        pricePerPack: parseInt(formData.pricePerPack) || 25000,
         cigarettesPerPack: parseInt(formData.cigarettesPerPack) || 20,
         quitAttempts: parseInt(formData.quitAttempts) || 0,
         experienceLevel: parseInt(formData.experienceLevel) || 0,
@@ -71,7 +67,7 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
   };
 
   const nextStep = () => {
-    if (step < 4) {
+    if (step < 3) {
       setStep(step + 1);
     }
   };
@@ -87,12 +83,21 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
       case 1:
         return (
           <div className="step-content">
-            <h4 className="mb-4">
-              <i className="fas fa-smoking me-2 text-danger" />
-              Thói quen hút thuốc hiện tại
-            </h4>
+            <div className="step-header mb-4">
+              <div className="step-icon">
+                <i className="fas fa-smoking"></i>
+              </div>
+              <div className="step-info">
+                <h4 className="step-title">
+                  Thói quen hút thuốc hiện tại
+                </h4>
+                <p className="step-description">
+                  Hãy chia sẻ về thói quen hút thuốc của bạn để chúng tôi có thể tư vấn tốt nhất
+                </p>
+              </div>
+            </div>
             
-            <div className="row">
+            <div className="row g-4">
               <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label">
@@ -102,8 +107,8 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
                   <input
                     type="number"
                     className="form-control"
-                    name="dailyCigarettes"
-                    value={formData.dailyCigarettes}
+                    name="cigarettesSmoked"
+                    value={formData.cigarettesSmoked}
                     onChange={handleChange}
                     min="0"
                     max="100"
@@ -137,54 +142,22 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
               <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label">
-                    <i className="fas fa-box me-1" />
-                    Số điếu thuốc trong 1 gói
-                  </label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="cigarettesPerPack"
-                    value={formData.cigarettesPerPack}
-                    onChange={handleChange}
-                    min="1"
-                    max="50"
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label">
                     <i className="fas fa-money-bill me-1" />
                     Giá tiền 1 gói thuốc (VND) *
                   </label>
                   <input
                     type="number"
                     className="form-control"
-                    name="packPrice"
-                    value={formData.packPrice}
+                    name="pricePerPack"
+                    value={formData.pricePerPack}
                     onChange={handleChange}
                     min="1000"
                     step="1000"
                     required
                   />
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label">
-                    <i className="fas fa-tag me-1" />
-                    Thương hiệu thuốc ưa thích
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="preferredBrand"
-                    value={formData.preferredBrand}
-                    onChange={handleChange}
-                    placeholder="Ví dụ: Marlboro, Lucky Strike..."
-                  />
+                  <small className="form-text text-muted">
+                    Giả định 1 gói có 20 điếu thuốc
+                  </small>
                 </div>
               </div>
 
@@ -217,12 +190,21 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
       case 2:
         return (
           <div className="step-content">
-            <h4 className="mb-4">
-              <i className="fas fa-history me-2 text-warning" />
-              Lịch sử cai thuốc
-            </h4>
+            <div className="step-header mb-4">
+              <div className="step-icon">
+                <i className="fas fa-history"></i>
+              </div>
+              <div className="step-info">
+                <h4 className="step-title">
+                  Lịch sử cai thuốc & Sức khỏe
+                </h4>
+                <p className="step-description">
+                  Chia sẻ kinh nghiệm cai thuốc trước đây và tình trạng sức khỏe hiện tại
+                </p>
+              </div>
+            </div>
             
-            <div className="row">
+            <div className="row g-4">
               <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label">
@@ -271,7 +253,7 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
                     name="previousAttempts"
                     value={formData.previousAttempts}
                     onChange={handleChange}
-                    rows="4"
+                    rows="3"
                     placeholder="Mô tả các lần cai thuốc trước đây, nguyên nhân thất bại, bài học kinh nghiệm..."
                   />
                 </div>
@@ -293,19 +275,7 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
                   />
                 </div>
               </div>
-            </div>
-          </div>
-        );
 
-      case 3:
-        return (
-          <div className="step-content">
-            <h4 className="mb-4">
-              <i className="fas fa-heartbeat me-2 text-success" />
-              Thông tin sức khỏe
-            </h4>
-            
-            <div className="row">
               <div className="col-12">
                 <div className="mb-3">
                   <label className="form-label">
@@ -314,62 +284,11 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
                   </label>
                   <textarea
                     className="form-control"
-                    name="healthConditions"
-                    value={formData.healthConditions}
+                    name="health"
+                    value={formData.health}
                     onChange={handleChange}
                     rows="3"
                     placeholder="Mô tả tình trạng sức khỏe hiện tại của bạn..."
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label">
-                    <i className="fas fa-allergies me-1" />
-                    Dị ứng
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="allergies"
-                    value={formData.allergies}
-                    onChange={handleChange}
-                    placeholder="Dị ứng thuốc, thực phẩm..."
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label">
-                    <i className="fas fa-pills me-1" />
-                    Thuốc đang sử dụng
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="medications"
-                    value={formData.medications}
-                    onChange={handleChange}
-                    placeholder="Thuốc đang điều trị..."
-                  />
-                </div>
-              </div>
-
-              <div className="col-12">
-                <div className="mb-3">
-                  <label className="form-label">
-                    <i className="fas fa-clipboard-list me-1" />
-                    Vấn đề sức khỏe do hút thuốc
-                  </label>
-                  <textarea
-                    className="form-control"
-                    name="previousHealthIssues"
-                    value={formData.previousHealthIssues}
-                    onChange={handleChange}
-                    rows="3"
-                    placeholder="Các vấn đề sức khỏe đã gặp do hút thuốc (ho, khó thở, đau ngực...)..."
                   />
                 </div>
               </div>
@@ -377,15 +296,24 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div className="step-content">
-            <h4 className="mb-4">
-              <i className="fas fa-bullseye me-2 text-info" />
-              Động lực và mục tiêu
-            </h4>
+            <div className="step-header mb-4">
+              <div className="step-icon">
+                <i className="fas fa-bullseye"></i>
+              </div>
+              <div className="step-info">
+                <h4 className="step-title">
+                  Động lực và mục tiêu
+                </h4>
+                <p className="step-description">
+                  Xác định động lực cá nhân để có hành trình cai thuốc thành công
+                </p>
+              </div>
+            </div>
             
-            <div className="row">
+            <div className="row g-4">
               <div className="col-12">
                 <div className="mb-3">
                   <label className="form-label">
@@ -403,30 +331,10 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
                   />
                 </div>
               </div>
-
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label">
-                    <i className="fas fa-info-circle me-1" />
-                    Tình trạng hiện tại
-                  </label>
-                  <select
-                    className="form-select"
-                    name="smokingStatus"
-                    value={formData.smokingStatus}
-                    onChange={handleChange}
-                  >
-                    <option value="Đang hút">Đang hút</option>
-                    <option value="Đang cai">Đang cai</option>
-                    <option value="Đã cai">Đã cai</option>
-                    <option value="Thỉnh thoảng">Thỉnh thoảng</option>
-                  </select>
-                </div>
-              </div>
             </div>
 
             {/* Summary */}
-            <div className="mt-4 p-4 bg-light rounded">
+            <div className="mt-4 bg-light">
               <h5 className="mb-3">
                 <i className="fas fa-clipboard-check me-2" />
                 Tóm tắt thông tin
@@ -434,17 +342,19 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
               <div className="row">
                 <div className="col-md-6">
                   <ul className="list-unstyled">
-                    <li><strong>Số điếu/ngày:</strong> {formData.dailyCigarettes}</li>
+                    <li><strong>Số điếu/ngày:</strong> {formData.cigarettesSmoked}</li>
                     <li><strong>Số năm hút:</strong> {formData.yearsOfSmoking}</li>
-                    <li><strong>Giá 1 gói:</strong> {parseInt(formData.packPrice).toLocaleString('vi-VN')} VND</li>
+                    <li><strong>Giá 1 gói:</strong> {parseInt(formData.pricePerPack).toLocaleString('vi-VN')} VND</li>
                     <li><strong>Số lần cai:</strong> {formData.quitAttempts}</li>
                   </ul>
                 </div>
                 <div className="col-md-6">
-                  <p><strong>Ước tính chi phí hàng tháng:</strong></p>
-                  <p className="text-danger h5">
-                    {Math.round((formData.dailyCigarettes / formData.cigarettesPerPack) * formData.packPrice * 30).toLocaleString('vi-VN')} VND
-                  </p>
+                  <div className="cost-estimate">
+                    <h6>Ước tính chi phí hàng tháng</h6>
+                    <p className="h5">
+                      {Math.round((formData.cigarettesSmoked / formData.cigarettesPerPack) * formData.pricePerPack * 30).toLocaleString('vi-VN')} VND
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -469,7 +379,7 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
                     Thiết lập hồ sơ cai thuốc
                   </h3>
                   <span className="badge bg-white text-primary">
-                    Bước {step}/4
+                    Bước {step}/3
                   </span>
                 </div>
                 
@@ -478,7 +388,7 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
                   <div className="progress" style={{ height: '6px' }}>
                     <div 
                       className="progress-bar bg-warning" 
-                      style={{ width: `${(step / 4) * 100}%` }}
+                      style={{ width: `${(step / 3) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -500,7 +410,7 @@ const SmokingHabitsSetup = ({ onComplete, memberProfile }) => {
                   </button>
 
                   <div>
-                    {step < 4 ? (
+                    {step < 3 ? (
                       <button 
                         className="btn btn-primary"
                         onClick={nextStep}

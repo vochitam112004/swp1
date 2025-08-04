@@ -1,182 +1,797 @@
 /* Smoking Habits Setup Component Styles */
 .smoking-habits-setup {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   min-height: 100vh;
   padding: 2rem 0;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .smoking-habits-setup .card {
   border: none;
-  border-radius: 15px;
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .smoking-habits-setup .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border: none;
-  padding: 2rem;
+  padding: 2.5rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.smoking-habits-setup .card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+  opacity: 0.3;
+}
+
+.smoking-habits-setup .card-header h3 {
+  color: white;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.smoking-habits-setup .badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
 }
 
 .smoking-habits-setup .step-content {
-  min-height: 400px;
+  min-height: 500px;
+  padding: 2rem 0;
+}
+
+.smoking-habits-setup .step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.smoking-habits-setup .step-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b);
+  border-radius: 16px 16px 0 0;
+}
+
+.smoking-habits-setup .step-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.25);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.smoking-habits-setup .step-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.smoking-habits-setup .step-icon:hover::before {
+  left: 100%;
+}
+
+.smoking-habits-setup .step-info {
+  flex: 1;
+}
+
+.smoking-habits-setup .step-title {
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.2;
+}
+
+.smoking-habits-setup .step-description {
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .smoking-habits-setup .step-content h4 {
-  border-bottom: 2px solid #e9ecef;
-  padding-bottom: 1rem;
-  margin-bottom: 2rem;
+  border-bottom: 3px solid #e2e8f0;
+  padding-bottom: 1.5rem;
+  margin-bottom: 2.5rem;
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.smoking-habits-setup .step-content h4 i {
+  font-size: 1.2rem;
+}
+
+.smoking-habits-setup .form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.smoking-habits-setup .form-label i {
+  color: #3b82f6;
+  font-size: 0.9rem;
+}
+
+.smoking-habits-setup .form-control,
+.smoking-habits-setup .form-select {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+  background: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .smoking-habits-setup .form-control:focus,
 .smoking-habits-setup .form-select:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.smoking-habits-setup .form-control:hover,
+.smoking-habits-setup .form-select:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.smoking-habits-setup .form-control::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.smoking-habits-setup .form-floating {
+  position: relative;
+}
+
+.smoking-habits-setup .form-floating > .form-control {
+  padding-top: 1.625rem;
+  padding-bottom: 0.625rem;
+}
+
+.smoking-habits-setup .form-floating > label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  padding: 1rem;
+  pointer-events: none;
+  border: 1px solid transparent;
+  transform-origin: 0 0;
+  transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.smoking-habits-setup .form-floating > .form-control:focus ~ label,
+.smoking-habits-setup .form-floating > .form-control:not(:placeholder-shown) ~ label {
+  opacity: 0.65;
+  transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.smoking-habits-setup .input-group {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.smoking-habits-setup .input-group .form-control {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
+.smoking-habits-setup .input-group .input-group-text {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.smoking-habits-setup .form-text {
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
 }
 
 .smoking-habits-setup .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 25px;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.smoking-habits-setup .btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .smoking-habits-setup .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
+}
+
+.smoking-habits-setup .btn-primary:hover::before {
+  left: 100%;
 }
 
 .smoking-habits-setup .btn-success {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 25px;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.smoking-habits-setup .btn-success::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .smoking-habits-setup .btn-success:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+}
+
+.smoking-habits-setup .btn-success:hover::before {
+  left: 100%;
+}
+
+.smoking-habits-setup .btn-outline-secondary {
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  background: white;
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 0.875rem 2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smoking-habits-setup .btn-outline-secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  color: #475569;
+}
+
+.smoking-habits-setup .progress {
+  height: 8px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
 }
 
 .smoking-habits-setup .progress-bar {
-  background: linear-gradient(90deg, #ffeaa7 0%, #fab1a0 100%);
-  transition: width 0.5s ease;
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.smoking-habits-setup .progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+  background-size: 1rem 1rem;
+  animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+  0% {
+    background-position: 1rem 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
 }
 
 .smoking-habits-setup .bg-light {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-  border-radius: 10px;
-  border: 1px solid #dee2e6;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.smoking-habits-setup .bg-light::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b);
+  border-radius: 16px 16px 0 0;
+}
+
+.smoking-habits-setup .bg-light h5 {
+  color: #1e293b;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.smoking-habits-setup .bg-light h5 i {
+  color: #3b82f6;
+  font-size: 1.2rem;
+}
+
+.smoking-habits-setup .bg-light ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.smoking-habits-setup .bg-light li {
+  padding: 1rem;
+  color: #374151;
+  font-weight: 500;
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smoking-habits-setup .bg-light li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
+}
+
+.smoking-habits-setup .bg-light li::before {
+  content: '✓';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.smoking-habits-setup .bg-light li strong {
+  color: #1e293b;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.smoking-habits-setup .cost-estimate {
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  border: 2px solid #fbbf24;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.smoking-habits-setup .cost-estimate::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  border-radius: 12px 12px 0 0;
+}
+
+.smoking-habits-setup .cost-estimate h6 {
+  color: #92400e;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.smoking-habits-setup .cost-estimate .h5 {
+  color: #b45309;
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Profile Enhanced Styles */
 .profile-container .smoking-info-section {
-  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-  border-radius: 12px;
-  border: 1px solid #e1f5fe;
-  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  border-radius: 16px;
+  border: 2px solid #dbeafe;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-container .smoking-info-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  border-radius: 16px 16px 0 0;
 }
 
 .profile-container .smoking-info-section:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(25, 118, 210, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+  border-color: #93c5fd;
 }
 
 .profile-container .health-info-section {
-  background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
-  border-radius: 8px;
-  border-left: 4px solid #4caf50;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-radius: 16px;
+  border: 2px solid #bbf7d0;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-container .health-info-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 16px 16px 0 0;
+}
+
+.profile-container .health-info-section:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.15);
 }
 
 .profile-container .cost-calculation {
-  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-  border-radius: 8px;
-  border-left: 4px solid #ffc107;
-  animation: pulse-cost 2s infinite;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-radius: 16px;
+  border: 2px solid #fed7aa;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  animation: pulse-cost 3s ease-in-out infinite;
+}
+
+.profile-container .cost-calculation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  border-radius: 16px 16px 0 0;
 }
 
 @keyframes pulse-cost {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+  }
+  50% { 
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2);
+  }
 }
 
 .profile-container .info-icon {
-  font-size: 1.2rem;
-  margin-right: 0.5rem;
-  color: #1976d2;
+  font-size: 1.3rem;
+  margin-right: 0.75rem;
+  color: #3b82f6;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
 }
 
 .profile-container .health-icon {
-  color: #4caf50;
+  color: #10b981;
+  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2));
 }
 
 .profile-container .money-icon {
-  color: #ff9800;
+  color: #f59e0b;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.2));
 }
 
 /* Form Enhancements */
 .profile-container .edit-form .smoking-section {
-  background: rgba(25, 118, 210, 0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(25, 118, 210, 0.2);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border-radius: 16px;
+  border: 2px solid rgba(59, 130, 246, 0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-container .edit-form .smoking-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  border-radius: 16px 16px 0 0;
 }
 
 .profile-container .edit-form .health-section {
-  background: rgba(76, 175, 80, 0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(76, 175, 80, 0.2);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.03) 0%, rgba(16, 185, 129, 0.08) 100%);
+  border-radius: 16px;
+  border: 2px solid rgba(16, 185, 129, 0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-container .edit-form .health-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 16px 16px 0 0;
 }
 
 .profile-container .MuiTextField-root {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-container .MuiTextField-root .MuiOutlinedInput-root {
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-container .MuiTextField-root .MuiOutlinedInput-root:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .profile-container .section-title {
-  font-weight: 600;
-  color: #1976d2;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e3f2fd;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid #e2e8f0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .profile-container .health-title {
-  color: #4caf50;
-  border-bottom-color: #e8f5e8;
+  color: #10b981;
+  border-bottom-color: #bbf7d0;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .smoking-habits-setup {
-    padding: 1rem 0;
+    padding: 1rem;
+  }
+  
+  .smoking-habits-setup .card-header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .smoking-habits-setup .card-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .smoking-habits-setup .step-content {
+    min-height: auto;
+    padding: 1.5rem 0;
+  }
+  
+  .smoking-habits-setup .step-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+  
+  .smoking-habits-setup .step-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+    align-self: center;
+  }
+  
+  .smoking-habits-setup .step-title {
+    font-size: 1.3rem;
+  }
+  
+  .smoking-habits-setup .step-description {
+    font-size: 0.9rem;
+  }
+  
+  .smoking-habits-setup .bg-light {
+    padding: 1.5rem;
+  }
+  
+  .profile-container .smoking-info-section {
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+  
+  .profile-container .health-info-section,
+  .profile-container .cost-calculation {
+    padding: 1rem;
+  }
+  
+  .profile-container .edit-form .smoking-section,
+  .profile-container .edit-form .health-section {
+    padding: 1.5rem;
+  }
+  
+  .smoking-habits-setup .form-control,
+  .smoking-habits-setup .form-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+@media (max-width: 480px) {
+  .smoking-habits-setup .btn-primary,
+  .smoking-habits-setup .btn-success,
+  .smoking-habits-setup .btn-outline-secondary {
+    width: 100%;
+    margin-bottom: 0.75rem;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+  
+  .smoking-habits-setup .card-footer .d-flex {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .smoking-habits-setup .card-footer .d-flex > div {
+    width: 100%;
+  }
+  
+  .smoking-habits-setup .step-header {
+    padding: 1rem;
   }
   
   .smoking-habits-setup .card-header {
     padding: 1rem;
   }
   
-  .smoking-habits-setup .step-content {
-    min-height: auto;
+  .smoking-habits-setup .card-header h3 {
+    font-size: 1.1rem;
   }
   
-  .profile-container .smoking-info-section {
-    margin-top: 1rem;
+  .smoking-habits-setup .badge {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.8rem;
   }
 }
 
 /* Animation for form sections */
 .profile-container .edit-form .smoking-section,
 .profile-container .edit-form .health-section {
-  animation: fadeInUp 0.5s ease;
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smoking-habits-setup .step-content {
+  animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -184,84 +799,320 @@
   }
 }
 
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* Enhanced ProfileManager Styles */
 .profile-manager .card {
   border: none;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .profile-manager .card:hover {
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.12);
+  transform: translateY(-5px);
 }
 
 .profile-manager .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
-  border-radius: 15px 15px 0 0 !important;
-  padding: 1.5rem;
+  border-radius: 20px 20px 0 0 !important;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-manager .card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+  opacity: 0.3;
+}
+
+.profile-manager .card-header h4 {
+  position: relative;
+  z-index: 1;
+  font-weight: 700;
+  margin: 0;
 }
 
 .profile-manager .section-divider {
-  border-top: 2px solid #e9ecef;
-  margin: 2rem 0 1rem 0;
+  border-top: 3px solid #e2e8f0;
+  margin: 2.5rem 0 1.5rem 0;
   position: relative;
 }
 
 .profile-manager .section-title {
   background: white;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
   position: absolute;
-  top: -12px;
+  top: -15px;
   left: 1rem;
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 700;
+  font-size: 1.2rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .profile-manager .smoking-section .section-title {
-  color: #dc3545;
+  color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #fecaca;
 }
 
 .profile-manager .health-section .section-title {
-  color: #28a745;
+  color: #10b981;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #bbf7d0;
 }
 
 .profile-manager .badge {
   font-size: 0.9rem;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.2rem;
   border-radius: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-manager .badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.profile-manager .form-control,
+.profile-manager .form-select {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .profile-manager .form-control:focus,
 .profile-manager .form-select:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.profile-manager .form-control-plaintext {
+  font-weight: 600;
+  color: #374151;
+  padding: 0.875rem 0;
 }
 
 .profile-manager .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border: none;
-  border-radius: 25px;
-  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  padding: 0.875rem 1.5rem;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-manager .btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .profile-manager .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
+}
+
+.profile-manager .btn-primary:hover::before {
+  left: 100%;
 }
 
 .profile-manager .btn-success {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
-  border-radius: 25px;
+  border-radius: 12px;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-manager .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
 }
 
 .profile-manager .btn-secondary {
-  border-radius: 25px;
+  border-radius: 12px;
   font-weight: 600;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-manager .btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  color: #475569;
+}
+
+/* Focus states for accessibility */
+.smoking-habits-setup .form-control:focus,
+.smoking-habits-setup .form-select:focus,
+.profile-manager .form-control:focus,
+.profile-manager .form-select:focus {
+  outline: 2px solid transparent;
+}
+
+.smoking-habits-setup .btn:focus,
+.profile-manager .btn:focus {
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* Loading states */
+.smoking-habits-setup .btn.loading,
+.profile-manager .btn.loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+
+.smoking-habits-setup .btn.loading::after,
+.profile-manager .btn.loading::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin-left: -10px;
+  margin-top: -10px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Form validation states */
+.smoking-habits-setup .form-control.is-valid,
+.smoking-habits-setup .form-select.is-valid {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.smoking-habits-setup .form-control.is-invalid,
+.smoking-habits-setup .form-select.is-invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.smoking-habits-setup .valid-feedback {
+  color: #10b981;
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.smoking-habits-setup .invalid-feedback {
+  color: #ef4444;
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Success state for completed setup */
+.smoking-habits-setup.completed .card {
+  border: 3px solid #10b981;
+  box-shadow: 0 25px 80px rgba(16, 185, 129, 0.15);
+}
+
+.smoking-habits-setup.completed .card-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Dark mode support (if needed) */
+@media (prefers-color-scheme: dark) {
+  .smoking-habits-setup {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  }
+  
+  .smoking-habits-setup .card {
+    background: rgba(30, 41, 59, 0.95);
+    color: white;
+  }
+  
+  .smoking-habits-setup .form-control,
+  .smoking-habits-setup .form-select {
+    background: #334155;
+    border-color: #475569;
+    color: white;
+  }
+  
+  .smoking-habits-setup .form-control::placeholder {
+    color: #94a3b8;
+  }
+  
+  .smoking-habits-setup .bg-light {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+    border-color: #64748b;
+  }
+  
+  .smoking-habits-setup .bg-light li {
+    background: #475569;
+    border-color: #64748b;
+    color: #e2e8f0;
+  }
+}
+
+/* Print styles */
+@media print {
+  .smoking-habits-setup {
+    background: white !important;
+  }
+  
+  .smoking-habits-setup .card-header {
+    background: #3b82f6 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .smoking-habits-setup .btn {
+    display: none;
+  }
+  
+  .smoking-habits-setup .step-content {
+    page-break-inside: avoid;
+  }
 }

@@ -25,24 +25,18 @@ export default function CoachMemberProfileEditor({ memberProfile, setMemberProfi
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    // Smoking habits
-    smokingStatus: '',
+    // Smoking habits - simplified to match API
+    cigarettesSmoked: 0,
     quitAttempts: 0,
     experienceLevel: 0,
-    previousAttempts: '',
-    dailyCigarettes: 0,
-    yearsOfSmoking: 0,
-    packPrice: 25000,
+    pricePerPack: 25000,
     cigarettesPerPack: 20,
-    smokingTriggers: '',
-    preferredBrand: '',
-    smokingPattern: '',
     
-    // Health information
-    healthConditions: '',
-    allergies: '',
-    medications: '',
-    previousHealthIssues: '',
+    // Health information - simplified according to API
+    health: '',
+    
+    // Personal motivation
+    personalMotivation: '',
   });
 
   const [badges, setBadges] = useState([]);
@@ -52,21 +46,13 @@ export default function CoachMemberProfileEditor({ memberProfile, setMemberProfi
   useEffect(() => {
     if (memberProfile) {
       setFormData({
-        smokingStatus: memberProfile.smokingStatus || '',
+        cigarettesSmoked: memberProfile.cigarettesSmoked || 0,
         quitAttempts: memberProfile.quitAttempts || 0,
         experienceLevel: memberProfile.experienceLevel || 0,
-        previousAttempts: memberProfile.previousAttempts || '',
-        dailyCigarettes: memberProfile.dailyCigarettes || 0,
-        yearsOfSmoking: memberProfile.yearsOfSmoking || 0,
-        packPrice: memberProfile.packPrice || 25000,
+        pricePerPack: memberProfile.pricePerPack || 25000,
         cigarettesPerPack: memberProfile.cigarettesPerPack || 20,
-        smokingTriggers: memberProfile.smokingTriggers || '',
-        preferredBrand: memberProfile.preferredBrand || '',
-        smokingPattern: memberProfile.smokingPattern || '',
-        healthConditions: memberProfile.healthConditions || '',
-        allergies: memberProfile.allergies || '',
-        medications: memberProfile.medications || '',
-        previousHealthIssues: memberProfile.previousHealthIssues || '',
+        health: memberProfile.health || '',
+        personalMotivation: memberProfile.personalMotivation || '',
       });
     }
   }, [memberProfile]);
@@ -112,27 +98,19 @@ export default function CoachMemberProfileEditor({ memberProfile, setMemberProfi
     
     try {
       const updateData = {
-        memberId: memberProfile.memberId,
-        smokingStatus: formData.smokingStatus,
+        cigarettesSmoked: parseInt(formData.cigarettesSmoked) || 0,
         quitAttempts: parseInt(formData.quitAttempts) || 0,
         experienceLevel: parseInt(formData.experienceLevel) || 0,
-        previousAttempts: formData.previousAttempts,
-        dailyCigarettes: parseInt(formData.dailyCigarettes) || 0,
-        yearsOfSmoking: parseInt(formData.yearsOfSmoking) || 0,
-        packPrice: parseInt(formData.packPrice) || 25000,
+        personalMotivation: formData.personalMotivation || '',
+        health: formData.health || '',
+        pricePerPack: parseInt(formData.pricePerPack) || 25000,
         cigarettesPerPack: parseInt(formData.cigarettesPerPack) || 20,
-        smokingTriggers: formData.smokingTriggers,
-        preferredBrand: formData.preferredBrand,
-        smokingPattern: formData.smokingPattern,
-        healthConditions: formData.healthConditions,
-        allergies: formData.allergies,
-        medications: formData.medications,
-        previousHealthIssues: formData.previousHealthIssues,
+        updatedAt: new Date().toISOString()
       };
 
-      await api.put(`/MemberProfile/${memberProfile.memberId}`, updateData);
+      const response = await api.put('/api/MemberProfile/UpdateMyMemberProfile', updateData);
       
-      setMemberProfile({ ...memberProfile, ...updateData });
+      setMemberProfile({ ...memberProfile, ...response.data });
       setIsEditing(false);
       toast.success("Đã cập nhật thông tin thành công!");
       
@@ -150,21 +128,13 @@ export default function CoachMemberProfileEditor({ memberProfile, setMemberProfi
 
   const handleCancel = () => {
     setFormData({
-      smokingStatus: memberProfile?.smokingStatus || '',
+      cigarettesSmoked: memberProfile?.cigarettesSmoked || 0,
       quitAttempts: memberProfile?.quitAttempts || 0,
       experienceLevel: memberProfile?.experienceLevel || 0,
-      previousAttempts: memberProfile?.previousAttempts || '',
-      dailyCigarettes: memberProfile?.dailyCigarettes || 0,
-      yearsOfSmoking: memberProfile?.yearsOfSmoking || 0,
-      packPrice: memberProfile?.packPrice || 25000,
+      pricePerPack: memberProfile?.pricePerPack || 25000,
       cigarettesPerPack: memberProfile?.cigarettesPerPack || 20,
-      smokingTriggers: memberProfile?.smokingTriggers || '',
-      preferredBrand: memberProfile?.preferredBrand || '',
-      smokingPattern: memberProfile?.smokingPattern || '',
-      healthConditions: memberProfile?.healthConditions || '',
-      allergies: memberProfile?.allergies || '',
-      medications: memberProfile?.medications || '',
-      previousHealthIssues: memberProfile?.previousHealthIssues || '',
+      health: memberProfile?.health || '',
+      personalMotivation: memberProfile?.personalMotivation || '',
     });
     setIsEditing(false);
   };
@@ -283,16 +253,6 @@ export default function CoachMemberProfileEditor({ memberProfile, setMemberProfi
                   name="cigarettesPerPack"
                   type="number"
                   value={formData.cigarettesPerPack}
-                  onChange={handleFormChange}
-                  disabled={!isEditing}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Nhãn hiệu thuốc lá ưa thích"
-                  name="preferredBrand"
-                  value={formData.preferredBrand}
                   onChange={handleFormChange}
                   disabled={!isEditing}
                   fullWidth

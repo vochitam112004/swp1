@@ -59,22 +59,19 @@ export default function UnifiedProfilePage() {
   const [accountForm, setAccountForm] = useState({});
   const [smokingForm, setSmokingForm] = useState({
     smokingStatus: '',
-    dailyCigarettes: 0,
+    cigarettesSmoked: 0,
     yearsOfSmoking: 0,
-    packPrice: 25000,
+    pricePerPack: 25000,
     cigarettesPerPack: 20,
-    preferredBrand: '',
     smokingPattern: '',
     smokingTriggers: '',
     quitAttempts: 0,
     experienceLevel: 0,
-    previousAttempts: ''
+    previousAttempts: '',
+    personalMotivation: ''
   });
   const [healthForm, setHealthForm] = useState({
-    healthConditions: '',
-    allergies: '',
-    medications: '',
-    previousHealthIssues: ''
+    health: ''
   });
 
   // Unified fetch function - eliminates duplication
@@ -150,30 +147,27 @@ export default function UnifiedProfilePage() {
 
   const fetchMemberProfile = async () => {
     try {
-      const memberRes = await api.get("/MemberProfile/My-Profile");
+      const memberRes = await api.get("/api/MemberProfile/GetMyMemberProfile");
       const memberData = memberRes.data;
       setMemberProfile(memberData);
       
       // Initialize forms with member data
       setSmokingForm({
         smokingStatus: memberData.smokingStatus || '',
-        dailyCigarettes: memberData.dailyCigarettes || 0,
+        cigarettesSmoked: memberData.cigarettesSmoked || 0,
         yearsOfSmoking: memberData.yearsOfSmoking || 0,
-        packPrice: memberData.packPrice || 25000,
+        pricePerPack: memberData.pricePerPack || 25000,
         cigarettesPerPack: memberData.cigarettesPerPack || 20,
-        preferredBrand: memberData.preferredBrand || '',
         smokingPattern: memberData.smokingPattern || '',
         smokingTriggers: memberData.smokingTriggers || '',
         quitAttempts: memberData.quitAttempts || 0,
         experienceLevel: memberData.experienceLevel || 0,
-        previousAttempts: memberData.previousAttempts || ''
+        previousAttempts: memberData.previousAttempts || '',
+        personalMotivation: memberData.personalMotivation || ''
       });
       
       setHealthForm({
-        healthConditions: memberData.healthConditions || '',
-        allergies: memberData.allergies || '',
-        medications: memberData.medications || '',
-        previousHealthIssues: memberData.previousHealthIssues || ''
+        health: memberData.health || ''
       });
     } catch (error) {
       if (error.response?.status === 404) {
@@ -268,24 +262,21 @@ export default function UnifiedProfilePage() {
       case 'smoking':
         setSmokingForm({
           smokingStatus: memberProfile?.smokingStatus || '',
-          dailyCigarettes: memberProfile?.dailyCigarettes || 0,
+          cigarettesSmoked: memberProfile?.cigarettesSmoked || 0,
           yearsOfSmoking: memberProfile?.yearsOfSmoking || 0,
-          packPrice: memberProfile?.packPrice || 25000,
+          pricePerPack: memberProfile?.pricePerPack || 25000,
           cigarettesPerPack: memberProfile?.cigarettesPerPack || 20,
-          preferredBrand: memberProfile?.preferredBrand || '',
           smokingPattern: memberProfile?.smokingPattern || '',
           smokingTriggers: memberProfile?.smokingTriggers || '',
           quitAttempts: memberProfile?.quitAttempts || 0,
           experienceLevel: memberProfile?.experienceLevel || 0,
-          previousAttempts: memberProfile?.previousAttempts || ''
+          previousAttempts: memberProfile?.previousAttempts || '',
+          personalMotivation: memberProfile?.personalMotivation || ''
         });
         break;
       case 'health':
         setHealthForm({
-          healthConditions: memberProfile?.healthConditions || '',
-          allergies: memberProfile?.allergies || '',
-          medications: memberProfile?.medications || '',
-          previousHealthIssues: memberProfile?.previousHealthIssues || ''
+          health: memberProfile?.health || ''
         });
         break;
     }
@@ -562,9 +553,9 @@ function SmokingSection({ memberProfile, form, setForm, isEditing, onEdit, onSav
         <Grid item xs={12} sm={6}>
           <TextField
             label="Số điếu thuốc/ngày"
-            name="dailyCigarettes"
+            name="cigarettesSmoked"
             type="number"
-            value={form.dailyCigarettes}
+            value={form.cigarettesSmoked}
             onChange={handleChange}
             disabled={!isEditing}
             fullWidth
@@ -586,9 +577,9 @@ function SmokingSection({ memberProfile, form, setForm, isEditing, onEdit, onSav
         <Grid item xs={12} sm={6}>
           <TextField
             label="Giá gói thuốc (VNĐ)"
-            name="packPrice"
+            name="pricePerPack"
             type="number"
-            value={form.packPrice}
+            value={form.pricePerPack}
             onChange={handleChange}
             disabled={!isEditing}
             fullWidth
@@ -605,16 +596,6 @@ function SmokingSection({ memberProfile, form, setForm, isEditing, onEdit, onSav
             disabled={!isEditing}
             fullWidth
             inputProps={{ min: 0 }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Thương hiệu ưa thích"
-            name="preferredBrand"
-            value={form.preferredBrand}
-            onChange={handleChange}
-            disabled={!isEditing}
-            fullWidth
           />
         </Grid>
         <Grid item xs={12}>
@@ -682,53 +663,14 @@ function HealthSection({ memberProfile, form, setForm, isEditing, onEdit, onSave
         <Grid item xs={12}>
           <TextField
             label="Tình trạng sức khỏe hiện tại"
-            name="healthConditions"
-            value={form.healthConditions}
+            name="health"
+            value={form.health}
             onChange={handleChange}
             disabled={!isEditing}
             fullWidth
             multiline
-            rows={3}
+            rows={4}
             placeholder="Mô tả tình trạng sức khỏe hiện tại của bạn..."
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            label="Dị ứng"
-            name="allergies"
-            value={form.allergies}
-            onChange={handleChange}
-            disabled={!isEditing}
-            fullWidth
-            multiline
-            rows={2}
-            placeholder="Liệt kê các loại dị ứng nếu có..."
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            label="Thuốc đang sử dụng"
-            name="medications"
-            value={form.medications}
-            onChange={handleChange}
-            disabled={!isEditing}
-            fullWidth
-            multiline
-            rows={2}
-            placeholder="Liệt kê các loại thuốc đang sử dụng..."
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            label="Vấn đề sức khỏe trước đây"
-            name="previousHealthIssues"
-            value={form.previousHealthIssues}
-            onChange={handleChange}
-            disabled={!isEditing}
-            fullWidth
-            multiline
-            rows={3}
-            placeholder="Mô tả các vấn đề sức khỏe đã từng gặp..."
           />
         </Grid>
       </Grid>
@@ -740,7 +682,7 @@ function HealthSection({ memberProfile, form, setForm, isEditing, onEdit, onSave
 function BadgesHistorySection({ badges, membershipHistory, memberProfile }) {
   // Calculate smoking costs
   const dailyCost = memberProfile ? 
-    (memberProfile.dailyCigarettes / memberProfile.cigarettesPerPack) * memberProfile.packPrice : 0;
+    (memberProfile.cigarettesSmoked / memberProfile.cigarettesPerPack) * memberProfile.pricePerPack : 0;
   const monthlyCost = dailyCost * 30;
   const yearlyCost = dailyCost * 365;
 

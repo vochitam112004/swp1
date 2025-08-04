@@ -50,7 +50,7 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    api.get('/TriggerFactor/Get-MyTriggerFactor')
+    api.get('/api/TriggerFactor/Get-MyTriggerFactor')
       .then((res) => {
         const names = res.data.map((trigger) => trigger.name);
         setTriggerFactors(names);
@@ -62,7 +62,7 @@ export default function Profile() {
 
 
   useEffect(() => {
-    api.get("/MemberProfile/GetMyMemberProfile")
+    api.get("/api/MemberProfile/GetMyMemberProfile")
       .then((res) => {
         const {
           cigarettesSmoked,

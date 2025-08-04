@@ -13,7 +13,6 @@ import { useAuth } from "../auth/AuthContext";
 import api, { baseApiUrl } from "../../api/axios";
 import AccountTab from "./tabs/AccountTab";
 import SmokingHabitsTab from "./tabs/SmokingHabitsTab";
-import HealthTab from "./tabs/HealthTab";
 import BadgesTab from "./tabs/BadgesTab";
 import "../../css/Profile.css";
 import "../../css/ProfileTabs.css";
@@ -195,9 +194,8 @@ export default function ProfileTabs() {
             scrollButtons="auto"
           >
             <Tab label="Thông tin tài khoản" {...a11yProps(0)} />
-            <Tab label="Thông tin hút thuốc" {...a11yProps(1)} />
-            <Tab label="Thông tin sức khỏe" {...a11yProps(2)} />
-            <Tab label="Huy hiệu & Thành viên" {...a11yProps(3)} />
+            <Tab label="Sức khỏe & Thói quen hút thuốc" {...a11yProps(1)} />
+            <Tab label="Huy hiệu & Thành viên" {...a11yProps(2)} />
           </Tabs>
         </Box>
 
@@ -217,13 +215,6 @@ export default function ProfileTabs() {
         </TabPanel>
 
         <TabPanel value={activeTab} index={2}>
-          <HealthTab 
-            memberProfile={memberProfile} 
-            setMemberProfile={setMemberProfile}
-          />
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={3}>
           <BadgesTab />
         </TabPanel>
       </Paper>

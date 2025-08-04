@@ -24,18 +24,14 @@ const ProfileManager = ({
     experienceLevel: experienceLevel,
     previousAttempts: previousAttempts,
     // Smoking habits details
-    dailyCigarettes: memberProfile?.dailyCigarettes || 0,
+    cigarettesSmoked: memberProfile?.cigarettesSmoked || 0,
     yearsOfSmoking: memberProfile?.yearsOfSmoking || 0,
-    packPrice: memberProfile?.packPrice || 25000,
+    pricePerPack: memberProfile?.pricePerPack || 25000,
     cigarettesPerPack: memberProfile?.cigarettesPerPack || 20,
-    // Health information
-    healthConditions: memberProfile?.healthConditions || '',
-    allergies: memberProfile?.allergies || '',
-    medications: memberProfile?.medications || '',
-    previousHealthIssues: memberProfile?.previousHealthIssues || '',
+    // Health information - simplified according to API
+    health: memberProfile?.health || '',
     // Additional smoking details
     smokingTriggers: memberProfile?.smokingTriggers || '',
-    preferredBrand: memberProfile?.preferredBrand || '',
     smokingPattern: memberProfile?.smokingPattern || '',
   });
 
@@ -59,34 +55,21 @@ const ProfileManager = ({
 
     try {
       const updateData = {
-        memberId: memberProfile.memberId,
-        smokingStatus: formData.smokingStatus,
+        cigarettesSmoked: parseInt(formData.cigarettesSmoked) || 0,
         quitAttempts: parseInt(formData.quitAttempts) || 0,
-        experience_level: parseInt(formData.experienceLevel) || 0,
-        previousAttempts: formData.previousAttempts,
-        // Smoking habits details
-        dailyCigarettes: parseInt(formData.dailyCigarettes) || 0,
-        yearsOfSmoking: parseInt(formData.yearsOfSmoking) || 0,
-        packPrice: parseInt(formData.packPrice) || 25000,
+        experienceLevel: parseInt(formData.experienceLevel) || 0,
+        personalMotivation: formData.personalMotivation || '',
+        health: formData.health || '',
+        pricePerPack: parseInt(formData.pricePerPack) || 25000,
         cigarettesPerPack: parseInt(formData.cigarettesPerPack) || 20,
-        // Health information
-        healthConditions: formData.healthConditions,
-        allergies: formData.allergies,
-        medications: formData.medications,
-        previousHealthIssues: formData.previousHealthIssues,
-        // Additional smoking details
-        smokingTriggers: formData.smokingTriggers,
-        preferredBrand: formData.preferredBrand,
-        smokingPattern: formData.smokingPattern,
+        updatedAt: new Date().toISOString()
       };
 
-      await api.put(`/MemberProfile/${memberProfile.memberId}`, updateData);
+      const response = await api.put('/api/MemberProfile/UpdateMyMemberProfile', updateData);
       
       // Cập nhật state
-      setSmokingStatus(formData.smokingStatus);
       setQuitAttempts(parseInt(formData.quitAttempts) || 0);
       setExperienceLevel(parseInt(formData.experienceLevel) || 0);
-      setPreviousAttempts(formData.previousAttempts);
       
       setIsEditing(false);
       toast.success("Đã cập nhật hồ sơ thành công!");
@@ -107,18 +90,14 @@ const ProfileManager = ({
       experienceLevel: experienceLevel,
       previousAttempts: previousAttempts,
       // Reset smoking habits details
-      dailyCigarettes: memberProfile?.dailyCigarettes || 0,
+      cigarettesSmoked: memberProfile?.cigarettesSmoked || 0,
       yearsOfSmoking: memberProfile?.yearsOfSmoking || 0,
-      packPrice: memberProfile?.packPrice || 25000,
+      pricePerPack: memberProfile?.pricePerPack || 25000,
       cigarettesPerPack: memberProfile?.cigarettesPerPack || 20,
-      // Reset health information
-      healthConditions: memberProfile?.healthConditions || '',
-      allergies: memberProfile?.allergies || '',
-      medications: memberProfile?.medications || '',
-      previousHealthIssues: memberProfile?.previousHealthIssues || '',
+      // Reset health information - simplified according to API
+      health: memberProfile?.health || '',
       // Reset additional smoking details
       smokingTriggers: memberProfile?.smokingTriggers || '',
-      preferredBrand: memberProfile?.preferredBrand || '',
       smokingPattern: memberProfile?.smokingPattern || '',
     });
     setIsEditing(false);
@@ -278,15 +257,15 @@ const ProfileManager = ({
                       <input
                         type="number"
                         className="form-control"
-                        name="dailyCigarettes"
-                        value={formData.dailyCigarettes}
+                        name="cigarettesSmoked"
+                        value={formData.cigarettesSmoked}
                         onChange={handleFormChange}
                         min="0"
                         max="100"
                       />
                     ) : (
                       <div className="form-control-plaintext">
-                        <strong>{memberProfile?.dailyCigarettes || 0} điếu/ngày</strong>
+                        <strong>{memberProfile?.cigarettesSmoked || 0} điếu/ngày</strong>
                       </div>
                     )}
                   </div>
@@ -350,38 +329,15 @@ const ProfileManager = ({
                       <input
                         type="number"
                         className="form-control"
-                        name="packPrice"
-                        value={formData.packPrice}
+                        name="pricePerPack"
+                        value={formData.pricePerPack}
                         onChange={handleFormChange}
                         min="1000"
                         step="1000"
                       />
                     ) : (
                       <div className="form-control-plaintext">
-                        <strong>{(memberProfile?.packPrice || 25000).toLocaleString('vi-VN')} VND</strong>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label className="form-label">
-                      <i className="fas fa-tag me-1" />
-                      Thương hiệu thuốc ưa thích
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="preferredBrand"
-                        value={formData.preferredBrand}
-                        onChange={handleFormChange}
-                        placeholder="Ví dụ: Marlboro, Lucky Strike..."
-                      />
-                    ) : (
-                      <div className="form-control-plaintext">
-                        {memberProfile?.preferredBrand || "Chưa cập nhật"}
+                        <strong>{(memberProfile?.pricePerPack || 25000).toLocaleString('vi-VN')} VND</strong>
                       </div>
                     )}
                   </div>
@@ -457,84 +413,15 @@ const ProfileManager = ({
                     {isEditing ? (
                       <textarea
                         className="form-control"
-                        name="healthConditions"
-                        value={formData.healthConditions}
+                        name="health"
+                        value={formData.health}
                         onChange={handleFormChange}
-                        rows="2"
+                        rows="3"
                         placeholder="Mô tả tình trạng sức khỏe hiện tại..."
                       />
                     ) : (
                       <div className="form-control-plaintext">
-                        {memberProfile?.healthConditions || "Chưa có thông tin"}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label className="form-label">
-                      <i className="fas fa-allergies me-1" />
-                      Dị ứng
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="allergies"
-                        value={formData.allergies}
-                        onChange={handleFormChange}
-                        placeholder="Dị ứng thuốc, thực phẩm..."
-                      />
-                    ) : (
-                      <div className="form-control-plaintext">
-                        {memberProfile?.allergies || "Không có"}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label className="form-label">
-                      <i className="fas fa-pills me-1" />
-                      Thuốc đang sử dụng
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="medications"
-                        value={formData.medications}
-                        onChange={handleFormChange}
-                        placeholder="Thuốc đang điều trị..."
-                      />
-                    ) : (
-                      <div className="form-control-plaintext">
-                        {memberProfile?.medications || "Không có"}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-12">
-                  <div className="mb-3">
-                    <label className="form-label">
-                      <i className="fas fa-clipboard-list me-1" />
-                      Vấn đề sức khỏe do hút thuốc
-                    </label>
-                    {isEditing ? (
-                      <textarea
-                        className="form-control"
-                        name="previousHealthIssues"
-                        value={formData.previousHealthIssues}
-                        onChange={handleFormChange}
-                        rows="2"
-                        placeholder="Các vấn đề sức khỏe đã gặp do hút thuốc..."
-                      />
-                    ) : (
-                      <div className="form-control-plaintext">
-                        {memberProfile?.previousHealthIssues || "Chưa có thông tin"}
+                        {memberProfile?.health || "Chưa có thông tin"}
                       </div>
                     )}
                   </div>

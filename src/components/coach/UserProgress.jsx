@@ -25,7 +25,7 @@ export default function UserProgress() {
         const profiles = await Promise.all(
           userList.map(async (user) => {
             try {
-              const profileRes = await api.get(`/MemberProfile/GetMemberProfileByUserId/${user.userId}`);
+              const profileRes = await api.get(`/api/MemberProfile/GetMemberProfileByUserId/${user.userId}`);
               return {
                 ...user,
                 ...profileRes.data, // Spread profile data directly

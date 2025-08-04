@@ -16,17 +16,15 @@ export const useDashboardData = () => {
   const [experienceLevel, setExperienceLevel] = useState(0);
   const [previousAttempts, setPreviousAttempts] = useState("");
   const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
-  // New smoking habits states
-  const [dailyCigarettes, setDailyCigarettes] = useState(0);
+  // New smoking habits states - updated according to API
+  const [cigarettesSmoked, setCigarettesSmoked] = useState(0);
   const [yearsOfSmoking, setYearsOfSmoking] = useState(0);
-  const [packPrice, setPackPrice] = useState(25000);
-  const [healthConditions, setHealthConditions] = useState("");
-  const [allergies, setAllergies] = useState("");
-  const [medications, setMedications] = useState("");
-  const [previousHealthIssues, setPreviousHealthIssues] = useState("");
+  const [pricePerPack, setPricePerPack] = useState(25000);
+  const [health, setHealth] = useState("");
   const [smokingTriggers, setSmokingTriggers] = useState("");
   const [preferredBrand, setPreferredBrand] = useState("");
   const [smokingPattern, setSmokingPattern] = useState("");
+  const [personalMotivation, setPersonalMotivation] = useState("");
   const [appointments, setAppointments] = useState([]);
   const [coachList, setCoachList] = useState([]);
   const [planHistory, setPlanHistory] = useState([]);
@@ -185,17 +183,15 @@ export const useDashboardData = () => {
     experienceLevel,
     previousAttempts,
     cigarettesPerPack,
-    // New smoking habits states
-    dailyCigarettes,
+    // New smoking habits states - updated according to API
+    cigarettesSmoked,
     yearsOfSmoking,
-    packPrice,
-    healthConditions,
-    allergies,
-    medications,
-    previousHealthIssues,
+    pricePerPack,
+    health,
     smokingTriggers,
     preferredBrand,
     smokingPattern,
+    personalMotivation,
     appointments,
     coachList,
     planHistory,
@@ -213,17 +209,15 @@ export const useDashboardData = () => {
     setExperienceLevel,
     setPreviousAttempts,
     setCigarettesPerPack,
-    // New setters
-    setDailyCigarettes,
+    // New setters - updated according to API
+    setCigarettesSmoked,
     setYearsOfSmoking,
-    setPackPrice,
-    setHealthConditions,
-    setAllergies,
-    setMedications,
-    setPreviousHealthIssues,
+    setPricePerPack,
+    setHealth,
     setSmokingTriggers,
     setPreferredBrand,
     setSmokingPattern,
+    setPersonalMotivation,
     setAppointments,
     setCoachList,
     setPlanHistory,
