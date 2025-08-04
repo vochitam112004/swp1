@@ -274,7 +274,7 @@ const Dashboard = () => {
               <div className="icon-wrapper bg-success mx-auto mb-2">
                 <i className="fas fa-calendar-check text-white"></i>
               </div>
-              <div className="fw-bold">Kỷ lục liên tiếp</div>
+              <div className="fw-bold">bạn đã thực hiện cai hút thuốc</div>
               <h4 className="text-dark mb-0 fw-bold">{currentGoal?.daysReducedSmoking || 0}</h4>
               <small className="text-muted">ngày</small>
               <div className="mt-2">
