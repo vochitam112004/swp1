@@ -733,3 +733,213 @@
     padding: 0.5rem 0.75rem;
   }
 }
+
+/* Styles for Weekly Chart */
+.target-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ffc107, #fd7e14);
+  border-radius: 1px;
+  box-shadow: 0 1px 3px rgba(255, 193, 7, 0.4);
+  z-index: 2;
+}
+
+.target-line::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: -1px;
+  width: 4px;
+  height: 4px;
+  background: #ffc107;
+  border-radius: 50%;
+}
+
+.target-line::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: -1px;
+  width: 4px;
+  height: 4px;
+  background: #ffc107;
+  border-radius: 50%;
+}
+
+.chart-day.today {
+  background: rgba(0, 123, 255, 0.05);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.today-indicator small {
+  color: #007bff !important;
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.legend-color.target-line {
+  width: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, #ffc107, #fd7e14);
+  border-radius: 1px;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Weekly Progress List Styles */
+.weekly-progress-list {
+  padding: 20px 0;
+}
+
+.weekly-progress-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.weekly-progress-item:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #28a745;
+}
+
+.weekly-progress-item.current-week {
+  background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+  border-color: #2196f3;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+}
+
+.week-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.week-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.week-number {
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.week-details {
+  flex: 1;
+}
+
+.week-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 4px;
+}
+
+.week-target {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.week-date {
+  font-size: 12px;
+  color: #868e96;
+  text-align: right;
+  min-width: 80px;
+}
+
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar-background {
+  flex: 1;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.progress-bar-fill.completed {
+  background: linear-gradient(90deg, #28a745, #20c997);
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.progress-bar-fill.current {
+  background: linear-gradient(90deg, #007bff, #6610f2);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.progress-bar-fill.pending {
+  background: linear-gradient(90deg, #6c757d, #adb5bd);
+}
+
+.progress-percentage {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .weekly-progress-item {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .week-circle {
+    width: 36px;
+    height: 36px;
+    margin-right: 12px;
+  }
+  
+  .week-number {
+    font-size: 14px;
+  }
+  
+  .week-title {
+    font-size: 14px;
+  }
+  
+  .week-target {
+    font-size: 12px;
+  }
+  
+  .week-date {
+    font-size: 11px;
+    min-width: 70px;
+  }
+  
+  .progress-percentage {
+    font-size: 12px;
+    min-width: 35px;
+  }
+}
