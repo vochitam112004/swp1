@@ -46,21 +46,25 @@ namespace WebSmokingSupport.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized("User not authenticated.");
+
             int userId = int.Parse(userIdClaim.Value);
+
             var member = await _context.MemberProfiles
-                .Include(m => m.User)
                 .FirstOrDefaultAsync(m => m.UserId == userId);
             if (member == null) return BadRequest("Member not found");
-            var triggerFactors = await _context.TriggerFactors
-                .Where(tf => tf.TriggerId == member.MemberId)
-                .Select(tf => new DTOTriggerFactorForRead
+
+            var triggerFactors = await _context.MemberTriggers
+                .Where(mt => mt.MemberId == member.MemberId)
+                .Include(mt => mt.Trigger)
+                .Select(mt => new DTOTriggerFactorForRead
                 {
-                    TriggerId = tf.TriggerId,
-                    Name = tf.Name,
-                    CreatedAt = tf.CreatedAt,
-                    UpdatedAt = tf.UpdatedAt
+                    TriggerId = mt.Trigger!.TriggerId,
+                    Name = mt.Trigger.Name,
+                    CreatedAt = mt.Trigger.CreatedAt,
+                    UpdatedAt = mt.Trigger.UpdatedAt
                 })
                 .ToListAsync();
+
             return Ok(triggerFactors);
         }
         [HttpPost("Create-TriggerFactor")]
@@ -116,21 +120,33 @@ namespace WebSmokingSupport.Controllers
         [Authorize(Roles = "Admin,Coach,Member")]
         public async Task<ActionResult> RemoveTrigger(int triggerId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var member = await _context.MemberProfiles.FirstOrDefaultAsync(m => m.UserId == int.Parse(userId));
+            // Lấy userId từ JWT token
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized("User not authenticated.");
+
+            int userId = int.Parse(userIdClaim);
+
+            // Tìm member tương ứng với user
+            var member = await _context.MemberProfiles
+                .FirstOrDefaultAsync(m => m.UserId == userId);
             if (member == null)
                 return NotFound("Member not found.");
 
-            var existing = await _context.MemberTriggers
+            // Tìm trigger được gán cho member đó
+            var existingTrigger = await _context.MemberTriggers
                 .FirstOrDefaultAsync(mt => mt.MemberId == member.MemberId && mt.TriggerId == triggerId);
 
-            if (existing == null)
-                return NotFound("Trigger not assigned.");
+            if (existingTrigger == null)
+                return NotFound("Trigger not assigned to this member.");
 
-            _context.MemberTriggers.Remove(existing);
+            // Xoá trigger
+            _context.MemberTriggers.Remove(existingTrigger);
             await _context.SaveChangesAsync();
-            return Ok("Trigger removed.");
+
+            return Ok("Trigger removed successfully.");
         }
+
         [HttpPost("assign/{memberId}")]
         [Authorize(Roles = "Admin,Coach")]
         public async Task<ActionResult> AssignTriggersToMember(int memberId, [FromBody] List<int> triggerIds)
