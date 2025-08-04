@@ -1,17 +1,18 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Linq;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using WebSmokingSpport.DTOs;
-using Microsoft.EntityFrameworkCore;
+using WebSmokingSupport.Data;
+using WebSmokingSupport.DTOs;
+using WebSmokingSupport.Entity;
 using WebSmokingSupport.Interfaces;
 using WebSmokingSupport.Repositories;
-using WebSmokingSupport.Entity;
-using WebSmokingSupport.DTOs;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 using WebSmokingSupport.Service;
-using WebSmokingSupport.Data;
 namespace WebSmokingSupport.Controllers
 {
     [Route("api/[controller]")]
@@ -219,22 +220,107 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(userResponse);
         }
+
         [HttpDelete("{userId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> DeleteUser(int userId)
+        public async Task<IActionResult> DeleteUser(int userId)
         {
-            var user = await _userRepository.GetByIdAsync(userId);
-            if(user == null)
+            try
             {
-                return NotFound("User not found.");
-            }
-            var messages = _context.ChatMessages
-            .Where(c => c.SenderId == userId || c.ReceiverId == userId);
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                    return NotFound(new { message = "User not found." });
 
-            _context.ChatMessages.RemoveRange(messages);
-            await _userRepository.RemoveAsync(user);  
-            return NoContent();
+                // ====== Lấy các ID liên quan ======
+                var memberIds = _context.MemberProfiles
+                    .Where(m => m.UserId == userId)
+                    .Select(m => m.MemberId)
+                    .ToList();
+
+                var coachIds = _context.CoachProfiles
+                    .Where(c => c.UserId == userId)
+                    .Select(c => c.CoachId)
+                    .ToList();
+
+                var goalPlanIds = _context.GoalPlans
+                    .Where(g => memberIds.Contains(g.MemberId))
+                    .Select(g => g.PlanId)
+                    .ToList();
+
+                var postIds = _context.CommunityPosts
+                    .Where(p => p.UserId == userId)
+                    .Select(p => p.PostId)
+                    .ToList();
+
+                // ====== Xóa dữ liệu phụ thuộc ======
+                _context.ChatMessages.RemoveRange(_context.ChatMessages
+                    .Where(c => c.SenderId == userId || c.ReceiverId == userId));
+
+                _context.Feedbacks.RemoveRange(_context.Feedbacks.Where(f => f.UserId == userId));
+                _context.Rankings.RemoveRange(_context.Rankings.Where(r => r.UserId == userId));
+                _context.SystemReports.RemoveRange(_context.SystemReports.Where(s => s.ReporterId == userId));
+                _context.PasswordResetTokens.RemoveRange(_context.PasswordResetTokens.Where(p => p.UserId == userId));
+                _context.UserBadges.RemoveRange(_context.UserBadges.Where(b => b.UserId == userId));
+                _context.UserMembershipHistories.RemoveRange(_context.UserMembershipHistories.Where(m => m.UserId == userId));
+
+                // Appointments
+                _context.Appointments.RemoveRange(_context.Appointments
+                    .Where(a => (a.MemberId.HasValue && memberIds.Contains(a.MemberId.Value)) ||
+                                (a.CoachId.HasValue && coachIds.Contains(a.CoachId.Value))));
+
+                // ProgressLogs & GoalPlans
+                _context.ProgressLogs.RemoveRange(
+                    _context.ProgressLogs
+                        .Where(p => goalPlanIds.Contains(p.GoalPlanId)
+                                 || memberIds.Contains(p.GoalPlan.MemberId))
+                );
+
+                _context.GoalPlans.RemoveRange(
+                    _context.GoalPlans
+                        .Where(g => memberIds.Contains(g.MemberId))
+                );
+
+
+                _context.GoalPlans.RemoveRange(_context.GoalPlans
+                    .Where(g => memberIds.Contains(g.MemberId)));
+
+                // Member Triggers & Notifications
+                _context.MemberTriggers.RemoveRange(_context.MemberTriggers
+                    .Where(t => t.MemberId.HasValue && memberIds.Contains(t.MemberId.Value)));
+                _context.Notifications.RemoveRange(_context.Notifications
+                    .Where(n => n.MemberId.HasValue && memberIds.Contains(n.MemberId.Value)));
+
+                // Community Interactions & Posts
+                _context.CommunityInteractions.RemoveRange(_context.CommunityInteractions
+                    .Where(ci => (ci.UserId == userId) ||
+                                 (ci.PostId.HasValue && postIds.Contains(ci.PostId.Value))));
+                _context.CommunityPosts.RemoveRange(_context.CommunityPosts
+                    .Where(p => p.UserId == userId));
+
+                // Profiles
+                _context.MemberProfiles.RemoveRange(_context.MemberProfiles.Where(m => m.UserId == userId));
+                _context.CoachProfiles.RemoveRange(_context.CoachProfiles.Where(c => c.UserId == userId));
+
+                // ====== Xóa chính User ======
+                await _userRepository.RemoveAsync(user);
+
+                // Lưu thay đổi
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Error deleting user.",
+                    detail = ex.Message,
+                    inner = ex.InnerException?.Message
+                });
+            }
         }
+
+
         [HttpGet("Count-User")]
         public async Task<ActionResult<int>> CountUser()
         {
