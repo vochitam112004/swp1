@@ -33,7 +33,11 @@ namespace WebSmokingSupport.Controllers
 
             if (goalPlan == null)
                 return NotFound("Không tìm thấy GoalPlan đang hoạt động.");
-
+            var oldReductions = await _context.GoalPlanWeeklyReductions
+                    .Where(r => r.GoalPlanId == goalPlan.PlanId)
+                    .ToListAsync();
+            _context.GoalPlanWeeklyReductions.RemoveRange(oldReductions);
+            await _context.SaveChangesAsync();
             var startDate = goalPlan.StartDate;
             var endDate = goalPlan.EndDate;
 

@@ -155,19 +155,19 @@ namespace WebSmokingSupport.Controllers
             {
                 return NotFound("Member profile not found for the authenticated user.");
             }
-            var goalPlanIds = await _context.GoalPlans
-                .Where(gp => gp.MemberId == memberProfile.MemberId)
-                .Select(gp => gp.PlanId)
-                .ToListAsync();
+            var currentGoalPlan = await _context.GoalPlans
+                .FirstOrDefaultAsync(gp => gp.MemberId == memberProfile.MemberId && gp.isCurrentGoal == true);
 
-            if (!goalPlanIds.Any())
+            if (currentGoalPlan == null)
             {
-                return NotFound("No goal plans found for the authenticated user.");
+                return NotFound("No current goal plan found for the authenticated user.");
             }
+
             var logDate = dto.LogDate.ToDateTime(new TimeOnly(0, 0));
             var progressLog = await _context.ProgressLogs
-                        .FirstOrDefaultAsync(pl =>
-                            pl.GoalPlanId != null && goalPlanIds.Contains(pl.GoalPlanId) && pl.LogDate.Date == logDate.Date);
+                .FirstOrDefaultAsync(pl =>
+                    pl.GoalPlanId == currentGoalPlan.PlanId &&
+                    pl.LogDate.Date == logDate.Date);
             if (progressLog == null)
             {
                 return NotFound($"No progress log found for the date {dto.LogDate} , tạo goalPlan để có ProgressLog đc tự độg tạo ra ở GoalPlan");
