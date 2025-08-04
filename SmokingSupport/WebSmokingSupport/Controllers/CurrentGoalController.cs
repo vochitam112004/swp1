@@ -48,8 +48,6 @@ namespace WebSmokingSupport.Controllers
                 {
                     pricePerCigarette = (double)(pricePerPack / memberProfile.CigarettesPerPack);
                 }
-
-
                 double totalSaved = 0;
                 int reducedDays = 0;
                 List<DTODailyReduction> dailyReductions = new();

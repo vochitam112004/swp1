@@ -278,7 +278,7 @@ namespace WebSmokingSupport.Controllers
                 return NotFound("Goal plan not found.");
             }
             goalPlan.isCurrentGoal = false;
-            _context.GoalPlans.Update(goalPlan);
+            _context.GoalPlans.Remove(goalPlan);
             await _context.SaveChangesAsync();
             return NoContent();
         }   
