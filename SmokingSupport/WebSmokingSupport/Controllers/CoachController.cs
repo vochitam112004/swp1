@@ -301,23 +301,18 @@ namespace WebSmokingSupport.Controllers
             int deletedPosts = coachProfile.Coach.CommunityPosts.Count;
             int deletedFeedbacks = coachProfile.Coach.Feedbacks.Count;
 
-            // Xóa Appointments
             _context.Appointments.RemoveRange(coachProfile.Appointments);
 
-            // Xóa ChatMessages (Sender & Receiver)
+
             _context.ChatMessages.RemoveRange(coachProfile.Coach.ChatMessageSenders);
             _context.ChatMessages.RemoveRange(coachProfile.Coach.ChatMessageReceivers);
 
-            // Xóa Posts
+       
             _context.CommunityPosts.RemoveRange(coachProfile.Coach.CommunityPosts);
 
-            // Xóa Feedbacks
             _context.Feedbacks.RemoveRange(coachProfile.Coach.Feedbacks);
 
-            // Xóa CoachProfile
             _context.CoachProfiles.Remove(coachProfile);
-
-            // Xóa User
             _context.Users.Remove(coachProfile.Coach);
 
             await _context.SaveChangesAsync();

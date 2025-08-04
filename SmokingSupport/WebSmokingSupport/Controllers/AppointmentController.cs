@@ -21,10 +21,6 @@ namespace WebSmokingSupport.Controllers
             _context = context;
             _appointmentRepository = appointmentRepository;
         }
-
-       
-
-        
         [HttpPost("Coach/CreateSlot")]
         [Authorize(Roles = "Coach")]
         public async Task<ActionResult<DTOAppointmentForRead>> CreateAvailability([FromBody] DTOAppointmentForCreate dto)
@@ -48,8 +44,6 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(MapToDTO(slot));
         }
-
-        
         [HttpGet("Coach/MySlots")]
         [Authorize(Roles = "Coach")]
         public async Task<ActionResult<IEnumerable<DTOAppointmentForCoachView>>> MySchedule()
@@ -74,8 +68,6 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(slots);
         }
-
-        
         [HttpPut("Coach/UpdateSlot/{appointmentId}")]
         [Authorize(Roles = "Coach")]
         public async Task<IActionResult> UpdateAvailability(int appointmentId, [FromBody] DTOAppointmentForUpdate dto)
@@ -96,8 +88,6 @@ namespace WebSmokingSupport.Controllers
             await _context.SaveChangesAsync();
             return Ok("Slot updated successfully.");
         }
-
-        
         [HttpDelete("Coach/DeleteSlot/{appointmentId}")]
         [Authorize(Roles = "Coach")]
         public async Task<IActionResult> DeleteAvailability(int appointmentId)
@@ -114,8 +104,6 @@ namespace WebSmokingSupport.Controllers
             await _context.SaveChangesAsync();
             return Ok("Slot deleted successfully.");
         }
-
-       
         [HttpGet("Member/CoachSlots/{coachId}")]
         [Authorize(Roles = "Member")]
         public async Task<ActionResult<IEnumerable<DTOAppointmentForMemberView>>> GetCoachAvailableSlots(int coachId)
@@ -135,8 +123,6 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(slots);
         }
-
-        
         [HttpPost("Member/Book/{appointmentId}")]
         [Authorize(Roles = "Member")]
         public async Task<IActionResult> BookFromAvailability(int appointmentId)
@@ -155,8 +141,6 @@ namespace WebSmokingSupport.Controllers
 
             return Ok("Appointment booked successfully.");
         }
-
-        
         [HttpDelete("Member/Cancel/{appointmentId}")]
         [Authorize(Roles = "Member")]
         public async Task<IActionResult> CancelAppointment(int appointmentId)
@@ -177,8 +161,6 @@ namespace WebSmokingSupport.Controllers
 
             return Ok("Appointment cancelled successfully.");
         }
-
-       
         [HttpGet("MyAppointments")]
         [Authorize(Roles = "Member, Coach")]
         public async Task<ActionResult<IEnumerable<DTOAppointmentForRead>>> GetMyAppointments()
@@ -225,8 +207,6 @@ namespace WebSmokingSupport.Controllers
 
             return Ok("Appointment updated successfully.");
         }
-
-        
         private DTOAppointmentForRead MapToDTO(Appointment a)
         {
             return new DTOAppointmentForRead
