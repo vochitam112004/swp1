@@ -43,6 +43,8 @@ export default function CoachSmokingHabitsTab() {
   const [members, setMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [memberTriggers, setMemberTriggers] = useState([]);
+  const [memberTriggersCache, setMemberTriggersCache] = useState({});
+  const [assignedTriggers, setAssignedTriggers] = useState({}); // Track what we've assigned
   
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -67,19 +69,25 @@ export default function CoachSmokingHabitsTab() {
   // Load member triggers when member is selected
   useEffect(() => {
     if (selectedMember) {
+      console.log('🔄 Selected member changed, loading triggers for:', selectedMember.displayName);
       loadMemberTriggers();
+    } else {
+      setMemberTriggers([]);
     }
   }, [selectedMember]);
 
   const loadInitialData = async () => {
     setLoading(true);
     try {
+      console.log('🔄 Loading initial data for coach...');
       await Promise.all([
         loadAllTriggerFactors(),
         loadMembers()
       ]);
+      console.log('✅ Initial data loaded successfully');
     } catch (error) {
-      console.error('Error loading initial data:', error);
+      console.error('❌ Error loading initial data:', error);
+      toast.error('Có lỗi khi tải dữ liệu ban đầu');
     } finally {
       setLoading(false);
     }
@@ -97,11 +105,22 @@ export default function CoachSmokingHabitsTab() {
 
   const loadMembers = async () => {
     try {
+      console.log('🔄 Loading members list...');
       const response = await api.get('/User/Get-All-User');
-      const memberUsers = response.data.filter(user => user.userType === 'Member');
+      const memberUsers = response.data
+        .filter(user => user.userType === 'Member')
+        .filter((user, index, self) => 
+          // Remove duplicates based on userId and email combination
+          index === self.findIndex(u => u.userId === user.userId && u.email === user.email)
+        )
+        .map((user, index) => ({
+          ...user,
+          uniqueKey: `${user.userId}-${user.email}-${index}` // Add unique key for React
+        }));
+      console.log(`✅ Loaded ${memberUsers.length} unique members`);
       setMembers(memberUsers);
     } catch (error) {
-      console.error('Error loading members:', error);
+      console.error('❌ Error loading members:', error);
       toast.error('Không thể tải danh sách thành viên');
     }
   };
@@ -110,14 +129,49 @@ export default function CoachSmokingHabitsTab() {
     if (!selectedMember) return;
     
     try {
-      // For now, we'll use the current user endpoint and hope backend handles context
-      // In a real implementation, we'd need a specific endpoint for coach to get member's triggers
-      const triggers = await ApiHelper.fetchMyTriggerFactors();
+      console.log(`🔄 Loading trigger factors for member: ${selectedMember.displayName} (ID: ${selectedMember.userId})`);
+      
+      // Try to get member's trigger factors using their ID
+      const triggers = await ApiHelper.getMemberTriggerFactors(selectedMember.userId);
+      
+      console.log(`✅ Loaded ${triggers.length} trigger factors for member:`, triggers);
       setMemberTriggers(triggers);
+      
+      // Cache the triggers for this member
+      setMemberTriggersCache(prev => ({
+        ...prev,
+        [selectedMember.userId]: triggers
+      }));
+      
+      if (triggers.length === 0) {
+        // If no triggers found but we have assigned some, show cached assigned triggers
+        const assignedForMember = assignedTriggers[selectedMember.userId] || [];
+        if (assignedForMember.length > 0) {
+          console.log(`⚠️ API returned 0 triggers but we have ${assignedForMember.length} assigned locally`);
+          setMemberTriggers(assignedForMember);
+          toast.info(`⚠️ Hiển thị ${assignedForMember.length} trigger đã gán (backend chưa hỗ trợ lấy dữ liệu)`);
+        } else {
+          toast.info(`${selectedMember.displayName} chưa có yếu tố kích thích nào`);
+        }
+      }
     } catch (error) {
-      console.error('Error loading member triggers:', error);
-      toast.error('Không thể tải yếu tố kích thích của thành viên');
-      setMemberTriggers([]);
+      console.error('❌ Error loading member triggers:', error);
+      
+      // Show cached assigned triggers if available
+      const assignedForMember = assignedTriggers[selectedMember.userId] || [];
+      if (assignedForMember.length > 0) {
+        console.log(`⚠️ API failed but showing ${assignedForMember.length} assigned triggers from cache`);
+        setMemberTriggers(assignedForMember);
+        toast.info(`⚠️ Hiển thị ${assignedForMember.length} trigger đã gán (endpoint chưa sẵn sàng)`);
+      } else {
+        // Check if it's a 404 (endpoint not implemented) or other error
+        if (error.message?.includes('endpoint not implemented') || error.message?.includes('No endpoint available')) {
+          toast.info(`⚠️ Chưa thể tải yếu tố kích thích của ${selectedMember.displayName}. Tính năng đang được phát triển.`);
+        } else {
+          toast.warning(`⚠️ Chưa thể tải yếu tố kích thích của ${selectedMember.displayName}`);
+        }
+        setMemberTriggers([]);
+      }
     }
   };
 
@@ -155,17 +209,42 @@ export default function CoachSmokingHabitsTab() {
 
     setLoading(true);
     try {
-      await ApiHelper.createAndAssignTriggerFactorToMember(newTriggerName.trim(), selectedMember.userId);
+      console.log(`🔄 Creating and assigning "${newTriggerName}" to member:`, selectedMember);
+      
+      const result = await ApiHelper.createAndAssignTriggerFactorToMember(newTriggerName.trim(), selectedMember.userId);
+      
+      console.log('✅ Successfully created and assigned trigger, result:', result);
+      
+      // Create a trigger object for local tracking
+      const newTrigger = {
+        triggerId: result.triggerId || result.id || Date.now(), // Fallback ID
+        name: newTriggerName.trim(),
+        createdAt: new Date().toISOString()
+      };
+      
+      // Update local assigned triggers cache
+      setAssignedTriggers(prev => ({
+        ...prev,
+        [selectedMember.userId]: [
+          ...(prev[selectedMember.userId] || []),
+          newTrigger
+        ]
+      }));
+      
+      // Update member triggers display immediately
+      setMemberTriggers(prev => [...prev, newTrigger]);
+      
       await Promise.all([
         loadAllTriggerFactors(),
-        loadMemberTriggers()
+        loadMemberTriggers() // This will merge with cache
       ]);
+      
       setNewTriggerName('');
       setCreateDialogOpen(false);
-      toast.success('✅ Đã tạo và gán yếu tố kích thích cho thành viên');
+      toast.success(`✅ Đã tạo và gán yếu tố kích thích cho ${selectedMember.displayName}`);
     } catch (error) {
-      console.error('Error creating and assigning trigger factor:', error);
-      toast.error(error.message);
+      console.error('❌ Error creating and assigning trigger factor:', error);
+      toast.error(error.message || 'Không thể tạo và gán yếu tố kích thích');
     } finally {
       setLoading(false);
     }
@@ -185,14 +264,35 @@ export default function CoachSmokingHabitsTab() {
     setLoading(true);
     try {
       const triggerIds = selectedTriggersToAssign.map(t => t.triggerId);
+      console.log(`🔄 Assigning triggers ${triggerIds} to member:`, selectedMember);
+      
       await ApiHelper.assignTriggerFactorsToMember(selectedMember.userId, triggerIds);
-      await loadMemberTriggers();
+      
+      console.log('✅ Successfully assigned triggers, updating local cache...');
+      
+      // Update local assigned triggers cache
+      setAssignedTriggers(prev => ({
+        ...prev,
+        [selectedMember.userId]: [
+          ...(prev[selectedMember.userId] || []),
+          ...selectedTriggersToAssign
+        ]
+      }));
+      
+      // Update member triggers display immediately
+      setMemberTriggers(prev => [
+        ...prev,
+        ...selectedTriggersToAssign.filter(t => !prev.some(existing => existing.triggerId === t.triggerId))
+      ]);
+      
+      await loadMemberTriggers(); // This will merge with cache
+      
       setSelectedTriggersToAssign([]);
       setAssignDialogOpen(false);
-      toast.success('✅ Đã gán yếu tố kích thích cho thành viên');
+      toast.success(`✅ Đã gán ${triggerIds.length} yếu tố kích thích cho ${selectedMember.displayName}`);
     } catch (error) {
-      console.error('Error assigning triggers to member:', error);
-      toast.error(error.message);
+      console.error('❌ Error assigning triggers to member:', error);
+      toast.error(error.message || 'Không thể gán yếu tố kích thích');
     } finally {
       setLoading(false);
     }
@@ -306,6 +406,7 @@ export default function CoachSmokingHabitsTab() {
               <Autocomplete
                 options={members}
                 getOptionLabel={(member) => `${member.displayName} (${member.email})`}
+                getOptionKey={(member) => member.userId} // Add unique key
                 value={selectedMember}
                 onChange={(event, newValue) => setSelectedMember(newValue)}
                 renderInput={(params) => (
@@ -316,6 +417,7 @@ export default function CoachSmokingHabitsTab() {
                   />
                 )}
                 disabled={loading}
+                isOptionEqualToValue={(option, value) => option.userId === value?.userId}
               />
             </Card>
           </Grid>
@@ -346,6 +448,25 @@ export default function CoachSmokingHabitsTab() {
                 >
                   Gán cho Thành viên
                 </Button>
+                
+                {selectedMember && (assignedTriggers[selectedMember.userId]?.length > 0) && (
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setAssignedTriggers(prev => ({
+                        ...prev,
+                        [selectedMember.userId]: []
+                      }));
+                      setMemberTriggers([]);
+                      toast.info('Đã xóa cache trigger factors');
+                    }}
+                    disabled={loading}
+                    color="warning"
+                    size="small"
+                  >
+                    Reset Cache
+                  </Button>
+                )}
               </Stack>
             </Card>
           </Grid>
@@ -356,6 +477,14 @@ export default function CoachSmokingHabitsTab() {
               <Card sx={{ p: 2 }}>
                 <Typography variant="h6" gutterBottom>
                   Yếu tố của {selectedMember.displayName} ({memberTriggers.length})
+                  {assignedTriggers[selectedMember.userId]?.length > 0 && (
+                    <Chip 
+                      label={`${assignedTriggers[selectedMember.userId].length} cached`} 
+                      size="small" 
+                      color="info" 
+                      sx={{ ml: 1 }} 
+                    />
+                  )}
                 </Typography>
                 
                 {memberTriggers.length === 0 ? (

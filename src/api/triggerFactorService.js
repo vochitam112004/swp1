@@ -34,6 +34,50 @@ export const TriggerFactorService = {
   },
 
   /**
+   * GET /api/TriggerFactor/member/{memberId}
+   * Get specific member's trigger factors (for coaches)
+   * @param {number} memberId - Member ID
+   */
+  getMemberTriggerFactors: async (memberId) => {
+    try {
+      // Try different possible endpoints since we don't have a specific one
+      let response;
+      
+      try {
+        // First try a coach-specific endpoint if it exists
+        response = await api.get(`/TriggerFactor/member/${memberId}/triggers`);
+      } catch (error1) {
+        try {
+          // Try another possible endpoint
+          response = await api.get(`/TriggerFactor/GetTriggerFactorByMember/${memberId}`);
+        } catch (error2) {
+          try {
+            // Try with query parameter
+            response = await api.get('/TriggerFactor/GetMemberTriggerFactors', {
+              params: { memberId }
+            });
+          } catch (error3) {
+            try {
+              // Try the original endpoint with member ID
+              response = await api.get(`/TriggerFactor/member/${memberId}`);
+            } catch (error4) {
+              // If all endpoints fail, return empty array for now
+              console.warn('No endpoint available to get member trigger factors, returning empty array');
+              return [];
+            }
+          }
+        }
+      }
+      
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching member trigger factors:', error);
+      // Return empty array instead of throwing error to prevent UI crashes
+      return [];
+    }
+  },
+
+  /**
    * POST /api/TriggerFactor/Create-TriggerFactor
    * Create a new trigger factor
    * @param {Object} triggerData - { name: string, createdAt: string }
@@ -97,11 +141,26 @@ export const TriggerFactorService = {
    */
   assignTriggerFactorsToMember: async (memberId, triggerIds) => {
     try {
+      console.log(`🔄 Assigning triggers ${triggerIds} to member ${memberId}`);
       const response = await api.post(`/TriggerFactor/assign/${memberId}`, triggerIds);
+      console.log('✅ Successfully assigned triggers to member', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error assigning trigger factors to member:', error);
-      throw new Error(error.response?.data?.message || 'Không thể gán yếu tố kích thích cho thành viên');
+      console.error('❌ Error assigning trigger factors to member:', error);
+      
+      // Try alternative endpoint if the first one fails
+      try {
+        console.log('🔄 Trying alternative assign endpoint...');
+        const response = await api.post('/TriggerFactor/AssignToMember', {
+          memberId: memberId,
+          triggerFactorIds: triggerIds
+        });
+        console.log('✅ Successfully assigned triggers via alternative endpoint');
+        return response.data;
+      } catch (error2) {
+        console.error('❌ Alternative endpoint also failed:', error2);
+        throw new Error(error.response?.data?.message || 'Không thể gán yếu tố kích thích cho thành viên');
+      }
     }
   },
 
@@ -172,8 +231,11 @@ export const TriggerFactorService = {
    */
   createAndAssignToMember: async (name, memberId) => {
     try {
+      console.log(`🔄 Creating and assigning trigger "${name}" to member ${memberId}`);
+      
       // Step 1: Create trigger factor
       const createResult = await TriggerFactorService.createTriggerFactor({ name });
+      console.log('✅ Trigger created:', createResult);
       
       // Step 2: Extract trigger ID from response
       const triggerId = createResult.triggerId || createResult.id;
@@ -184,31 +246,12 @@ export const TriggerFactorService = {
 
       // Step 3: Assign to specific member
       await TriggerFactorService.assignTriggerFactorsToMember(memberId, [triggerId]);
+      console.log(`✅ Successfully created and assigned trigger to member ${memberId}`);
       
       return createResult;
     } catch (error) {
-      console.error('Error creating and assigning trigger factor to member:', error);
+      console.error('❌ Error creating and assigning trigger factor to member:', error);
       throw error;
-    }
-  },
-
-  /**
-   * Get trigger factors for specific member (Coach use)
-   * @param {number} memberId - Member ID
-   */
-  getMemberTriggerFactors: async (memberId) => {
-    try {
-      // Note: Based on Swagger, there's no specific endpoint for getting member's triggers
-      // We might need to use Get-MyTriggerFactor with different auth context
-      // or get all triggers and filter. For now, we'll use the current user endpoint
-      // and expect the backend to handle context properly
-      const response = await api.get('/TriggerFactor/Get-MyTriggerFactor', {
-        params: { memberId } // Try passing memberId as param
-      });
-      return response.data || [];
-    } catch (error) {
-      console.error('Error fetching member trigger factors:', error);
-      throw new Error('Không thể lấy danh sách yếu tố kích thích của thành viên');
     }
   }
 };

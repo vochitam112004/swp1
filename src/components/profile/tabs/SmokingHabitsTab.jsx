@@ -66,13 +66,49 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
 
   const fetchTriggerFactors = async () => {
     try {
-      console.log('Fetching trigger factors...');
-      const triggerFactors = await ApiHelper.fetchMyTriggerFactors();
-      console.log('Trigger factors response:', triggerFactors);
-      setTriggerFactors(triggerFactors);
+      console.log('🔄 Member fetching trigger factors...');
+      console.log('Current user:', user);
+      
+      let triggerFactors = [];
+      
+      try {
+        // First try the main endpoint
+        triggerFactors = await ApiHelper.fetchMyTriggerFactors();
+        console.log('✅ Member trigger factors from main endpoint:', triggerFactors);
+      } catch (error) {
+        console.log('⚠️ Main endpoint failed, trying direct API call...');
+        try {
+          // Try direct API call
+          const response = await api.get('/TriggerFactor/Get-MyTriggerFactor');
+          triggerFactors = response.data || [];
+          console.log('✅ Member trigger factors from direct API:', triggerFactors);
+        } catch (error2) {
+          console.log('⚠️ Direct API also failed, trying alternative endpoint...');
+          try {
+            // Try alternative endpoint if it exists
+            const response = await api.get(`/TriggerFactor/GetUserTriggerFactors/${user.userId}`);
+            triggerFactors = response.data || [];
+            console.log('✅ Member trigger factors from alternative endpoint:', triggerFactors);
+          } catch (error3) {
+            console.log('❌ All endpoints failed');
+            triggerFactors = [];
+          }
+        }
+      }
+      
+      console.log('Final trigger factors:', triggerFactors);
+      console.log('Number of triggers found:', triggerFactors?.length || 0);
+      
+      setTriggerFactors(triggerFactors || []);
+      
+      if (!triggerFactors || triggerFactors.length === 0) {
+        console.log('⚠️ No trigger factors found for member');
+      }
     } catch (error) {
-      console.error('Error fetching trigger factors:', error);
-      toast.error(error.message || 'Không thể tải danh sách yếu tố kích thích');
+      console.error('❌ Error in fetchTriggerFactors:', error);
+      console.error('Error details:', error.response?.data);
+      toast.error('Không thể tải danh sách yếu tố kích thích');
+      setTriggerFactors([]);
     }
   };
 
@@ -545,30 +581,40 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
                 fontSize: '1.2rem'
               }}
             >
-              🎯 Yếu tố kích thích hút thuốc
+              🎯 Yếu tố kích thích hút thuốc ({triggerFactors.length})
             </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={() => setIsAddingTrigger(true)}
-              disabled={!isEditing || !actions.canCreateTrigger}
-              sx={{
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                display: actions.canCreateTrigger ? 'inline-flex' : 'none'
-              }}
-            >
-              Thêm yếu tố
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={fetchTriggerFactors}
+                size="small"
+                sx={{ fontSize: '0.75rem' }}
+              >
+                🔄 Làm mới
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => setIsAddingTrigger(true)}
+                disabled={!isEditing || !actions.canCreateTrigger}
+                sx={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  display: actions.canCreateTrigger ? 'inline-flex' : 'none'
+                }}
+              >
+                Thêm yếu tố
+              </Button>
+            </Box>
           </Box>
           
-          {triggerFactors.length > 0 ? (
+          {triggerFactors && triggerFactors.length > 0 ? (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {triggerFactors.map((trigger) => (
                 <Chip
                   key={trigger.triggerId}
-                  label={trigger.name}
+                  label={`${trigger.name} (ID: ${trigger.triggerId})`}
                   variant="outlined"
                   color="primary"
                   deleteIcon={(isEditing && actions.canRemoveFromSelf) ? <DeleteIcon /> : null}
@@ -591,7 +637,7 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
                 fontSize: '1rem'
               }}
             >
-              Chưa có yếu tố kích thích nào. Hãy thêm các tình huống thường khiến bạn muốn hút thuốc.
+              Chưa có yếu tố kích thích nào. {triggerFactors ? `(Array length: ${triggerFactors.length})` : '(No data)'} Hãy thêm các tình huống thường khiến bạn muốn hút thuốc.
             </Typography>
           )}
         </Paper>

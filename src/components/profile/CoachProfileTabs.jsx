@@ -88,12 +88,17 @@ export default function CoachProfileTabs() {
           res = await api.get("/MemberProfile/GetMyMemberProfile");
           setMemberProfile(res.data);
         } catch (error) {
-          // If user doesn't have member profile, create empty one for display
-          console.log("No member profile found, creating empty one");
-          setMemberProfile({});
+          // If user doesn't have member profile or doesn't have permission, create empty one for display
+          if (error.response?.status === 403 || error.response?.status === 404) {
+            console.log("No member profile found or access denied, creating empty one");
+            setMemberProfile({});
+          } else {
+            console.error("Error fetching member profile:", error);
+            setMemberProfile({});
+          }
         }
       } catch (error) {
-        console.error("Error fetching member profile:", error);
+        console.error("Error in member profile fetch process:", error);
         setMemberProfile({});
       } finally {
         setLoading(false);
