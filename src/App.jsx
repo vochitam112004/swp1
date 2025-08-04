@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Unauthorized from "./components/auth/Unauthorized";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { AuthProvider } from "./components/auth/AuthContext";
 import Navigation from "./components/layout/navigation";
 import HeroSection from "./components/layout/heroSection";
 import StatsSection from "./components/dashboard/statsSection";
@@ -191,12 +192,14 @@ function AppContent() {
 
 function App() {
   return (
-    <UserProvider>
-      <Router>
-        <ScrollToTop />
-        <AppContent />
-      </Router>
-    </UserProvider>
+    <AuthProvider>
+      <UserProvider>
+        <Router>
+          <ScrollToTop />
+          <AppContent />
+        </Router>
+      </UserProvider>
+    </AuthProvider>
   );
 }
 export default App;

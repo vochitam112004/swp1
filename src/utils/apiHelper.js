@@ -13,6 +13,11 @@ export const ApiHelper = {
         .sort((a, b) => new Date(a.date) - new Date(b.date));
     } catch (error) {
       console.error("❌ Error fetching progress logs:", error);
+      // Return empty array instead of throwing error to prevent blocking other functionality
+      if (error.response?.status === 404) {
+        console.warn("⚠️ Progress logs endpoint not found, returning empty array");
+        return [];
+      }
       throw new Error("Không thể lấy dữ liệu tiến trình");
     }
   },
@@ -180,7 +185,14 @@ export const ApiHelper = {
         goalPlanResult.status === "fulfilled" ? goalPlanResult.value : null,
       errors: results
         .filter((result) => result.status === "rejected")
-        .map((result) => result.reason?.message || "Unknown error"),
+        .map((result) => {
+          const error = result.reason;
+          // More descriptive error messages
+          if (error?.response?.status === 404) {
+            return `API endpoint not found: ${error.config?.url || 'unknown'}`;
+          }
+          return error?.message || "Unknown error";
+        }),
     };
   },
 

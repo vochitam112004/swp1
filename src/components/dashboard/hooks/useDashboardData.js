@@ -18,9 +18,15 @@ export const useDashboardData = () => {
   const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
   // New smoking habits states - updated according to API
   const [cigarettesSmoked, setCigarettesSmoked] = useState(0);
+  const [dailyCigarettes, setDailyCigarettes] = useState(0);
   const [yearsOfSmoking, setYearsOfSmoking] = useState(0);
   const [pricePerPack, setPricePerPack] = useState(25000);
+  const [packPrice, setPackPrice] = useState(25000);
   const [health, setHealth] = useState("");
+  const [healthConditions, setHealthConditions] = useState("");
+  const [allergies, setAllergies] = useState("");
+  const [medications, setMedications] = useState("");
+  const [previousHealthIssues, setPreviousHealthIssues] = useState("");
   const [smokingTriggers, setSmokingTriggers] = useState("");
   const [preferredBrand, setPreferredBrand] = useState("");
   const [smokingPattern, setSmokingPattern] = useState("");
@@ -52,19 +58,24 @@ export const useDashboardData = () => {
         if (res.data && res.data.length > 0) {
           setHasMembership(true);
         } else {
-          toast.warning("Bạn chưa mua gói. Vui lòng mua để sử dụng!");
-          navigate("/membership");
+          // Don't immediately redirect - let user see dashboard first
+          setHasMembership(false);
+          console.warn("User doesn't have membership");
+          // Optional: show a toast instead of immediate redirect
+          // toast.warning("Bạn chưa mua gói. Vui lòng mua để sử dụng!");
+          // navigate("/membership");
         }
       } catch (error) {
         console.error("Lỗi kiểm tra gói:", error);
-        navigate("/login");
+        // Don't redirect to login on membership check error
+        setHasMembership(false);
       } finally {
         setLoading(false);
       }
     };
 
     checkMembership();
-  }, [navigate]);
+  }, [navigate, user, authLoading]);
 
   // Fetch profile
   const fetchProfile = async () => {
@@ -115,11 +126,16 @@ export const useDashboardData = () => {
       setCurrentGoal(currentGoal);
       setPlan(goalPlan);
 
-      // Log any errors that occurred during fetching
+      // Log any errors that occurred during fetching but don't show user errors for optional data
       if (errors.length > 0) {
         console.warn("⚠️ Some data could not be loaded:", errors);
-        // Optionally show a warning toast
-        // toast.warn("Một số dữ liệu không thể tải được");
+        // Only show error if critical data failed
+        const criticalErrors = errors.filter(error => 
+          !error.includes("progress logs") && !error.includes("appointment")
+        );
+        if (criticalErrors.length > 0) {
+          toast.warn("Một số dữ liệu quan trọng không thể tải được");
+        }
       }
     } catch (err) {
       console.error("❌ Critical error fetching dashboard data:", err);
@@ -146,11 +162,12 @@ export const useDashboardData = () => {
   const fetchAppointments = async () => {
     try {
       const res = await api.get("/Appointment/GetAppointments");
-
       setAppointments(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Appointment Error:", error);
+      // Set empty array if API fails - this prevents the error from blocking other functionality
       setAppointments([]);
+      // Don't show toast error for optional data
     }
   };
   
@@ -185,9 +202,15 @@ export const useDashboardData = () => {
     cigarettesPerPack,
     // New smoking habits states - updated according to API
     cigarettesSmoked,
+    dailyCigarettes,
     yearsOfSmoking,
     pricePerPack,
+    packPrice,
     health,
+    healthConditions,
+    allergies,
+    medications,
+    previousHealthIssues,
     smokingTriggers,
     preferredBrand,
     smokingPattern,
@@ -211,9 +234,15 @@ export const useDashboardData = () => {
     setCigarettesPerPack,
     // New setters - updated according to API
     setCigarettesSmoked,
+    setDailyCigarettes,
     setYearsOfSmoking,
     setPricePerPack,
+    setPackPrice,
     setHealth,
+    setHealthConditions,
+    setAllergies,
+    setMedications,
+    setPreviousHealthIssues,
     setSmokingTriggers,
     setPreferredBrand,
     setSmokingPattern,
