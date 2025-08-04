@@ -21,29 +21,73 @@ namespace WebSmokingSupport.Controllers
             _context = context;
             _appointmentRepository = appointmentRepository;
         }
-        [HttpPost("Coach/CreateSlot")]
+
+
+        [HttpPost("Coach/CreateWeekSlots")]
         [Authorize(Roles = "Coach")]
-        public async Task<ActionResult<DTOAppointmentForRead>> CreateAvailability([FromBody] DTOAppointmentForCreate dto)
+        public async Task<ActionResult<IEnumerable<DTOCoachSlotCreated>>> CreateWeekSlots([FromBody] DTOCoachWeekSlotsCreate dto)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             var coachProfile = await _context.CoachProfiles.FirstOrDefaultAsync(c => c.UserId == userId);
-            if (coachProfile == null) return Unauthorized("Coach profile not found.");
+            if (coachProfile == null)
+                return Unauthorized("Coach profile not found.");
 
-            var slot = new Appointment
+            var createdSlots = new List<Appointment>();
+
+            foreach (var slotDto in dto.Availabilities)
             {
-                CoachId = coachProfile.CoachId,
-                MemberId = null,
-                AppointmentDate = dto.AppointmentDate,
-                StartTime = dto.StartTime,
-                EndTime = dto.EndTime,
-                Status = "Available",
-                CreatedAt = DateTime.UtcNow
-            };
+                
+                if (slotDto.AppointmentDate < DateOnly.FromDateTime(DateTime.UtcNow))
+                    return BadRequest($"Appointment date {slotDto.AppointmentDate} cannot be in the past.");
 
-            await _appointmentRepository.CreateAsync(slot);
+                
+                if (slotDto.EndTime <= slotDto.StartTime)
+                    return BadRequest($"End time must be later than start time for date {slotDto.AppointmentDate}.");
 
-            return Ok(MapToDTO(slot));
+                
+                bool isOverlap = await _context.Appointments.AnyAsync(a =>
+                    a.CoachId == coachProfile.CoachId &&
+                    a.AppointmentDate == slotDto.AppointmentDate &&
+                    ((slotDto.StartTime >= a.StartTime && slotDto.StartTime < a.EndTime) ||
+                     (slotDto.EndTime > a.StartTime && slotDto.EndTime <= a.EndTime))
+                );
+
+                if (isOverlap)
+                    return BadRequest($"Slot overlaps with an existing one on {slotDto.AppointmentDate}.");
+
+                // Tạo slot mới
+                var appointment = new Appointment
+                {
+                    CoachId = coachProfile.CoachId,
+                    AppointmentDate = slotDto.AppointmentDate,
+                    StartTime = slotDto.StartTime,
+                    EndTime = slotDto.EndTime,
+                    Status = "Available",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Appointments.Add(appointment);
+                createdSlots.Add(appointment);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Trả về list slot đã tạo
+            var response = createdSlots.Select(s => new DTOCoachSlotCreated
+            {
+                AppointmentId = s.AppointmentId,
+                CoachId = s.CoachId.Value,
+                AppointmentDate = s.AppointmentDate,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime ?? TimeOnly.MinValue,
+                Status = s.Status
+            }).ToList();
+
+            return Ok(response);
         }
+
+
+
         [HttpGet("Coach/MySlots")]
         [Authorize(Roles = "Coach")]
         public async Task<ActionResult<IEnumerable<DTOAppointmentForCoachView>>> MySchedule()
@@ -68,6 +112,7 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(slots);
         }
+
         [HttpPut("Coach/UpdateSlot/{appointmentId}")]
         [Authorize(Roles = "Coach")]
         public async Task<IActionResult> UpdateAvailability(int appointmentId, [FromBody] DTOAppointmentForUpdate dto)
@@ -207,6 +252,50 @@ namespace WebSmokingSupport.Controllers
 
             return Ok("Appointment updated successfully.");
         }
+
+        [HttpGet("MyMembers")]
+        [Authorize(Roles = "Coach")]
+        public async Task<ActionResult<IEnumerable<DTOMemberView>>> GetMyMembers()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var coachProfile = await _context.CoachProfiles.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (coachProfile == null)
+                return Unauthorized("Coach profile not found.");
+
+            var members = await _context.Appointments
+                .Include(a => a.Member).ThenInclude(m => m.User)
+                .Where(a => a.CoachId == coachProfile.CoachId && a.MemberId != null)
+                .GroupBy(a => a.Member)
+                .Select(g => new DTOMemberView
+                {
+                    MemberId = g.Key.MemberId,
+                    Name = g.Key.User.DisplayName,
+                    Email = g.Key.User.Email,
+                    PhoneNumber = g.Key.User.PhoneNumber,
+
+                    TotalAppointments = g.Count(),
+                    CompletedAppointments = g.Count(a => a.Status == "Completed"),
+                    CancelledAppointments = g.Count(a => a.Status == "Cancelled"),
+
+                    NextAppointmentDate = g.Where(a => a.Status == "Scheduled" && a.AppointmentDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+                                           .OrderBy(a => a.AppointmentDate)
+                                           .Select(a => a.AppointmentDate)
+                                           .FirstOrDefault(),
+                    NextAppointmentStartTime = g.Where(a => a.Status == "Scheduled" && a.AppointmentDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+                                                .OrderBy(a => a.AppointmentDate)
+                                                .Select(a => a.StartTime)
+                                                .FirstOrDefault(),
+                    NextAppointmentEndTime = g.Where(a => a.Status == "Scheduled" && a.AppointmentDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+                                              .OrderBy(a => a.AppointmentDate)
+                                              .Select(a => a.EndTime)
+                                              .FirstOrDefault()
+                })
+                .ToListAsync();
+
+            return Ok(members);
+        }
+
+
         private DTOAppointmentForRead MapToDTO(Appointment a)
         {
             return new DTOAppointmentForRead

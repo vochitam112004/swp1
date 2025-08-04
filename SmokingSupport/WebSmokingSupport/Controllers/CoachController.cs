@@ -139,7 +139,7 @@ namespace WebSmokingSupport.Controllers
         //    });
         //}
         [HttpGet]
-        [Authorize(Roles ="Admin,Coach")]
+        [Authorize(Roles ="Member,Admin,Coach")]
         public async Task<ActionResult<IEnumerable<DTOCoachResponse>>> GetAllCoaches()
         {
             var coaches = await _context.Users
