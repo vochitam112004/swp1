@@ -41,10 +41,13 @@ export default function BXH() {
 
         const rankingWithBadges = rankingData.map(user => ({
           ...user,
-          badge: getBadgeForScore(user.score, sortedBadges)
+          // Map API fields to component expected fields
+          userName: user.nameDisPlay,
+          score: user.reducedDays,
+          badge: getBadgeForScore(user.reducedDays, sortedBadges)
         }));
 
-        const sortedRanking = rankingWithBadges.sort((a, b) => b.score - a.score);
+        const sortedRanking = rankingWithBadges.sort((a, b) => b.reducedDays - a.reducedDays);
         setRanking(sortedRanking);
 
       } catch (error) {
@@ -112,7 +115,7 @@ export default function BXH() {
           <div className="top3-container">
             <div className="rank-card rank-2">
               <Avatar
-                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                src={top3[1]?.avatarUrl ? `${baseApiUrl}${top3[1].avatarUrl}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   top3[1]?.userName || "Ẩn danh"
                 )}&background=C0C0C0&color=fff`}
                 className="rank-avatar"
@@ -129,7 +132,7 @@ export default function BXH() {
 
             <div className="rank-card rank-1">
               <Avatar
-                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                src={top3[0]?.avatarUrl ? `${baseApiUrl}${top3[0].avatarUrl}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   top3[0]?.userName || "Ẩn danh"
                 )}&background=FFD700&color=fff`}
                 className="rank-avatar"
@@ -147,7 +150,7 @@ export default function BXH() {
             {top3.length >= 3 && (
               <div className="rank-card rank-3">
                 <Avatar
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  src={top3[2]?.avatarUrl ? `${baseApiUrl}${top3[2].avatarUrl}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                     top3[2]?.userName || "Ẩn danh"
                   )}&background=CD7F32&color=fff`}
                   className="rank-avatar"
@@ -173,11 +176,11 @@ export default function BXH() {
         
         <Paper className="ranking-list">
           {ranking.map((user, index) => (
-            <div key={user.rankingId || index} className={`ranking-item ${index < 3 ? `top-${index + 1}` : ''}`}>
+            <div key={user.userId || index} className={`ranking-item ${index < 3 ? `top-${index + 1}` : ''}`}>
               <div className="ranking-left">
                 <Typography className="ranking-position">#{index + 1}</Typography>
                 <Avatar
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  src={user.avatarUrl ? `${baseApiUrl}${user.avatarUrl}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                     user.userName || "Ẩn danh"
                   )}`}
                   className="ranking-avatar"
