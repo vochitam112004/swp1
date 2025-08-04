@@ -25,42 +25,50 @@ namespace WebSmokingSupport.Controllers
 
         [HttpPost]
         [Route("CreatePaymentForPlan/{planId}")]
-        [Authorize] // Đảm bảo người dùng đã xác thực
+        [Authorize]
         public async Task<IActionResult> CreatePaymentMomo(int planId)
         {
-            // Lấy UserId từ mã thông báo của người dùng đã xác thực
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier); // Hoặc bất kỳ loại yêu cầu nào bạn sử dụng cho ID người dùng
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
-            {
-                return Unauthorized("Không tìm thấy ID người dùng trong mã thông báo.");
-            }
+                return Unauthorized("Không tìm thấy ID người dùng trong token.");
 
-            // Lấy gói từ DB
             var plan = await _context.MembershipPlans.FindAsync(planId);
             if (plan == null)
-            {
                 return NotFound($"Không tìm thấy gói thành viên có ID {planId}.");
+
+            // 🔹 Nếu gói miễn phí
+            if (plan.Price == 0)
+            {
+                var now = DateTime.Now;
+                var history = new UserMembershipHistory
+                {
+                    UserId = userId,
+                    PlanId = planId,
+                    StartDate = now,
+                    EndDate = now.AddDays(plan.DurationDays)
+                };
+                _context.UserMembershipHistories.Add(history);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { Status = "Success", Message = "Gói miễn phí đã kích hoạt thành công." });
             }
 
+            // 🔹 Các gói có phí vẫn xử lý qua MoMo
             var model = new OrderInfoModel
             {
                 Amount = (long)plan.Price,
                 UserId = userId,
                 PlanId = planId,
-                // OrderInfo sẽ được định dạng là "userId-planId" để phân tích cú pháp gọi lại
                 OrderInfo = $"{userId}-{planId}"
             };
-
             var response = await _momoService.CreatePaymentMomo(model);
 
             if (response.ErrorCode != 0)
-            {
-                // Ghi nhật ký lỗi để gỡ lỗi
                 return StatusCode(500, new { Message = "Không thể tạo URL thanh toán MoMo.", MomoError = response.Message });
-            }
 
             return Ok(new { PayUrl = response.PayUrl, QrCodeUrl = response.QrCodeUrl });
         }
+
 
         [HttpGet]
         [Route("PaymentExecute")]

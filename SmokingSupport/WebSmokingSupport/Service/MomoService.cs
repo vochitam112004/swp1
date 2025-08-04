@@ -45,7 +45,7 @@ namespace WebSmokingSupport.Service
                 partnerCode = _options.Value.PartnerCode,
                 requestType = _options.Value.RequestType,
                 notifyUrl = _options.Value.NotifyUrl,
-                returnUrl = _options.Value.ReturnUrl,
+                returnUrl = _options.Value.ReturnUrl,//thay doi
                 orderId = model.OrderId,
                 amount = model.Amount.ToString(),
                 orderInfo = model.OrderInfo, // Sử dụng model.OrderInfo ở đây
