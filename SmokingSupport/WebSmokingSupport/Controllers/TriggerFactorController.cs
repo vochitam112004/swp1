@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using WebSmokingSupport.DTOs;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace WebSmokingSupport.Controllers
 {
@@ -22,7 +23,7 @@ namespace WebSmokingSupport.Controllers
             _triggerFactorRepository = triggerFactorRepository;
         }
         [HttpGet("GetAllTriggerFactor")]
-        [Authorize(Roles = "Admin,Memer,Coach")]
+        [Authorize(Roles = "Admin,Member ,Coach")]
         public async Task<ActionResult<DTOTriggerFactorForRead>> GetAllTriggerFactor()
         {
             var triggerFactors = await _triggerFactorRepository.GetAllAsync();
@@ -120,27 +121,24 @@ namespace WebSmokingSupport.Controllers
         [Authorize(Roles = "Admin,Coach,Member")]
         public async Task<ActionResult> RemoveTrigger(int triggerId)
         {
-            // Lấy userId từ JWT token
+
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized("User not authenticated.");
 
             int userId = int.Parse(userIdClaim);
 
-            // Tìm member tương ứng với user
             var member = await _context.MemberProfiles
                 .FirstOrDefaultAsync(m => m.UserId == userId);
             if (member == null)
                 return NotFound("Member not found.");
 
-            // Tìm trigger được gán cho member đó
             var existingTrigger = await _context.MemberTriggers
                 .FirstOrDefaultAsync(mt => mt.MemberId == member.MemberId && mt.TriggerId == triggerId);
 
             if (existingTrigger == null)
                 return NotFound("Trigger not assigned to this member.");
 
-            // Xoá trigger
             _context.MemberTriggers.Remove(existingTrigger);
             await _context.SaveChangesAsync();
 
@@ -166,22 +164,38 @@ namespace WebSmokingSupport.Controllers
             if (validTriggerIds.Count != triggerIds.Count)
                 return BadRequest("Some trigger IDs are invalid.");
 
-            // Xoá tất cả trigger cũ (nếu muốn reset)
-            var existing = _context.MemberTriggers.Where(mt => mt.MemberId == member.MemberId);
-            _context.MemberTriggers.RemoveRange(existing);
-            foreach (var triggerId in validTriggerIds)
+            // Lấy các trigger đã gán sẵn cho member
+            var existingTriggerIds = await _context.MemberTriggers
+                .Where(mt => mt.MemberId == memberId)
+                .Select(mt => mt.TriggerId)
+                .ToListAsync();
+
+            // Lọc ra các trigger mới chưa được gán
+            var newTriggerIds = validTriggerIds
+                .Where(id => !existingTriggerIds.Contains(id))
+                .ToList();
+
+            // Gán các trigger mới
+            foreach (var triggerId in newTriggerIds)
             {
                 _context.MemberTriggers.Add(new MemberTrigger
                 {
-                    MemberId = member.MemberId,
+                    MemberId = memberId,
                     TriggerId = triggerId
                 });
             }
+
             await _context.SaveChangesAsync();
+            var allTriggerIds = existingTriggerIds
+                .Select(id => id.Value) // ép từ int? về int
+                .Union(newTriggerIds)
+                .ToList();
+
 
             var assignedTriggers = await _context.TriggerFactors
-                .Where(t => validTriggerIds.Contains(t.TriggerId))
+                .Where(t => allTriggerIds.Contains(t.TriggerId))
                 .ToListAsync();
+
             var response = assignedTriggers.Select(t => new DTOTriggerFactorForRead
             {
                 TriggerId = t.TriggerId,
@@ -189,8 +203,10 @@ namespace WebSmokingSupport.Controllers
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt
             }).ToList();
+
             return Ok(response);
         }
+
         [HttpDelete("Delete-TriggerFactor/{id}")]
         [Authorize(Roles = "Admin,Coach,Member")]
         public async Task<IActionResult> DeleteTriggerFactor(int id)

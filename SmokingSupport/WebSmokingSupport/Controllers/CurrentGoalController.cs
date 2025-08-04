@@ -12,59 +12,64 @@ namespace WebSmokingSupport.Controllers
 
     public class CurrentGoalController : ControllerBase
     {
+        private readonly ILogger<CurrentGoalController> _logger;
         private readonly QuitSmokingSupportContext _context;
-        public CurrentGoalController(QuitSmokingSupportContext context)
+       public CurrentGoalController(ILogger<CurrentGoalController> logger, QuitSmokingSupportContext context)
         {
+            _logger = logger;
             _context = context;
         }
-        [HttpGet]
+        [HttpGet("calculate-money-saved")]
         [Authorize(Roles = "Member")]
-        public async Task<ActionResult<DTOMoneySavedResult>> CalculateMoneySaved()
+        public async Task<IActionResult> CalculateMoneySaved()
         {
-            var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaims, out int userId))
-                return Unauthorized("User not authenticated.");
-
-            var memberProfile = await _context.MemberProfiles
-                .FirstOrDefaultAsync(mp => mp.UserId == userId);
-
-            if (memberProfile == null)
-                return NotFound("Member profile not found.");
-
-            var currentGoalPlan = await _context.GoalPlans
-                    .FirstOrDefaultAsync(gp => gp.MemberId == memberProfile.MemberId && gp.isCurrentGoal == true);
-
-            if (currentGoalPlan == null)
+            try
             {
-                return Ok(new DTOMoneySavedResult
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var memberProfile = await _context.MemberProfiles
+                    .FirstOrDefaultAsync(mp => mp.UserId == userId);
+
+                if (memberProfile == null)
                 {
-                    TotalMoneySaved = 0,
-                    DaysReducedSmoking = 0,
-                    DailyReductions = new List<DTODailyReduction>()
-                });
-            }
+                    return NotFound("Member profile not found.");
+                }
 
-            var progressLogs = await _context.ProgressLogs
-                .Where(pl => pl.GoalPlanId == currentGoalPlan.PlanId)
-                .OrderBy(pl => pl.LogDate)
-                .ToListAsync();
+                var progressLogs = await _context.ProgressLogs
+                        .Include(pl => pl.GoalPlan)
+                        .Where(pl => pl.GoalPlan != null
+                            && pl.GoalPlan.MemberId == memberProfile.MemberId
+                        && pl.GoalPlan.isCurrentGoal == true) 
+                        .OrderBy(pl => pl.LogDate)
+                        .ToListAsync();
 
-            decimal pricePerCigarette = (decimal)memberProfile.PricePerPack / memberProfile.CigarettesPerPack;
-            decimal totalSaved = 0;
-            int reducedDays = 0;
-
-            var dailyReductions = new List<DTODailyReduction>();
-
-            foreach (var log in progressLogs)
-            {
-                if (log.CigarettesSmoked.HasValue)
+                double pricePerCigarette = 0;
+                var pricePerPack = memberProfile.PricePerPack;
+                if (memberProfile.CigarettesPerPack != 0)
                 {
-                    int reduced = (memberProfile.CigarettesSmoked ?? 0) - log.CigarettesSmoked.Value;
-                    if (reduced > 0)
+                    pricePerCigarette = (double)(pricePerPack / memberProfile.CigarettesPerPack);
+                }
+
+
+                double totalSaved = 0;
+                int reducedDays = 0;
+                List<DTODailyReduction> dailyReductions = new();
+
+                foreach (var log in progressLogs)
+                {
+                    if (log.CigarettesSmoked.HasValue)
                     {
-                        totalSaved += reduced * pricePerCigarette;
-                        reducedDays++;
+                        int reduced = (memberProfile.CigarettesSmoked ?? 0) - log.CigarettesSmoked.Value;
 
+                        // Tính tiền tiết kiệm (có thể âm nếu hút nhiều hơn)
+                        totalSaved += reduced * pricePerCigarette;
+
+                        // Ghi nhận ngày giảm
+                        if (reduced > 0)
+                        {
+                            reducedDays++;
+                        }
+
+                        // Luôn thêm vào danh sách
                         dailyReductions.Add(new DTODailyReduction
                         {
                             Date = log.LogDate,
@@ -72,16 +77,22 @@ namespace WebSmokingSupport.Controllers
                         });
                     }
                 }
+
+                var result = new DTOMoneySavedResult
+                {
+                    TotalMoneySaved = (decimal)Math.Round(totalSaved, 0),
+                    DaysReducedSmoking = reducedDays,
+                    DailyReductions = dailyReductions.OrderBy(d => d.Date).ToList()
+                };
+
+                return Ok(result);
             }
-
-            var result = new DTOMoneySavedResult
+            catch (Exception ex)
             {
-                TotalMoneySaved = Math.Round(totalSaved, 0),
-                DaysReducedSmoking = reducedDays,
-                DailyReductions = dailyReductions
-            };
-
-            return Ok(result);
+                _logger.LogError(ex, "An error occurred while calculating money saved.");
+                return StatusCode(500, "An error occurred while calculating money saved.");
+            }
         }
+
     }
 }
