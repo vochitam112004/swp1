@@ -15,6 +15,8 @@
 
         public string? Status { get; set; }
 
+        public bool IsOwner { get; set; } // true nếu user hiện tại là member hoặc coach của lịch này
+
         public string? Notes { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

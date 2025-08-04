@@ -1,6 +1,6 @@
 ﻿namespace WebSmokingSupport.DTOs
 {
-    public class DTOAppoitmentForUpdate
+    public class DTOAppointmentForUpdate
     {
         public DateOnly? AppointmentDate { get; set; }
         public TimeOnly? StartTime { get; set; }
