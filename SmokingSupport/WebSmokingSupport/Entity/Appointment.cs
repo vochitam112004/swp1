@@ -26,6 +26,5 @@ public partial class Appointment
     public DateTime? UpdatedAt { get; set; }
     public string? MeetingLink { get; set; }
     public virtual CoachProfile? Coach { get; set; }
-
     public virtual MemberProfile? Member { get; set; }
 }

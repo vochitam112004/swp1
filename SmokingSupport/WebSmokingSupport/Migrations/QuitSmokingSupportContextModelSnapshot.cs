@@ -361,7 +361,8 @@ namespace WebSmokingSupport.Migrations
                 {
                     b.Property<int>("WeeklyReductionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("weekly_reduction_id");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WeeklyReductionId"));
 
@@ -514,7 +515,7 @@ namespace WebSmokingSupport.Migrations
 
                     b.HasKey("PlanId");
 
-                    b.ToTable("MembershipPlans", (string)null);
+                    b.ToTable("MembershipPlans");
                 });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.Notification", b =>
@@ -612,7 +613,7 @@ namespace WebSmokingSupport.Migrations
 
                     b.Property<int?>("CigarettesSmoked")
                         .HasColumnType("int")
-                        .HasColumnName("cigarettes_per_pack");
+                        .HasColumnName("cigarettes_smoked");
 
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -620,17 +621,13 @@ namespace WebSmokingSupport.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int?>("GoalPlanId")
-                        .IsRequired()
+                    b.Property<int>("GoalPlanId")
                         .HasColumnType("int")
                         .HasColumnName("goal_plan_id");
 
                     b.Property<DateTime>("LogDate")
                         .HasColumnType("date")
                         .HasColumnName("log_date");
-
-                    b.Property<int?>("MemberId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Mood")
                         .HasColumnType("nvarchar(max)");
@@ -654,8 +651,6 @@ namespace WebSmokingSupport.Migrations
                         .HasName("PK__Progress__9E2397E0C035413C");
 
                     b.HasIndex("GoalPlanId");
-
-                    b.HasIndex("MemberId");
 
                     b.ToTable("ProgressLog", (string)null);
                 });
@@ -883,7 +878,7 @@ namespace WebSmokingSupport.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserMembershipHistories", (string)null);
+                    b.ToTable("UserMembershipHistories");
                 });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.Appointment", b =>
@@ -1056,16 +1051,10 @@ namespace WebSmokingSupport.Migrations
                     b.HasOne("WebSmokingSupport.Entity.GoalPlan", "GoalPlan")
                         .WithMany("ProgressLogs")
                         .HasForeignKey("GoalPlanId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WebSmokingSupport.Entity.MemberProfile", "Member")
-                        .WithMany("ProgressLogs")
-                        .HasForeignKey("MemberId");
-
                     b.Navigation("GoalPlan");
-
-                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.Ranking", b =>
@@ -1154,8 +1143,6 @@ namespace WebSmokingSupport.Migrations
                     b.Navigation("MemberTriggers");
 
                     b.Navigation("Notifications");
-
-                    b.Navigation("ProgressLogs");
                 });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.TriggerFactor", b =>

@@ -53,6 +53,7 @@ public partial class QuitSmokingSupportContext : DbContext
     public virtual DbSet<MembershipPlan> MembershipPlans { get; set; }
     public virtual DbSet<UserBadge> UserBadges { get; set; }
     public DbSet<UserMembershipHistory> UserMembershipHistories { get; set; } = null!;
+    public DbSet<GoalPlanWeeklyReduction> GoalPlanWeeklyReductions { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -289,7 +290,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.HasMany(gp => gp.ProgressLogs) 
                   .WithOne(pl => pl.GoalPlan)    
                   .HasForeignKey(pl => pl.GoalPlanId) 
-                  .OnDelete(DeleteBehavior.SetNull);
+                  .OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<GoalPlanWeeklyReduction>(entity =>
         {
@@ -351,6 +352,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.PricePerPack)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("price_per_pack");
+
         });
         modelBuilder.Entity<MemberTrigger>(entity =>
         {
@@ -450,16 +452,27 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.Notes)
                 .IsUnicode(true)
                 .HasColumnName("notes");
-            entity.Property(e => e.CigarettesSmoked)
-              .HasColumnName("cigarettes_per_pack");
             entity.HasOne(p => p.GoalPlan)
                 .WithMany(g => g.ProgressLogs)
                 .HasForeignKey(p => p.GoalPlanId)
-                .OnDelete(DeleteBehavior.SetNull);
-            entity.HasOne(p => p.Member)
-                .WithMany(m => m.ProgressLogs)
-                .HasForeignKey(p => p.MemberId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<GoalPlanWeeklyReduction>(entity =>
+        {
+            entity.HasKey(e => e.WeeklyReductionId);
+            entity.ToTable("GoalPlanWeeklyReduction");
+
+            entity.Property(e => e.WeeklyReductionId).HasColumnName("weekly_reduction_id");
+            entity.Property(e => e.GoalPlanId).HasColumnName("goal_plan_id");
+            entity.Property(e => e.WeekNumber).HasColumnName("week_number");
+            entity.Property(e => e.StartDate).HasColumnName("start_date");
+            entity.Property(e => e.EndDate).HasColumnName("end_date");
+            entity.Property(e => e.CigarettesReduced).HasColumnName("cigarettes_reduced");
+
+            entity.HasOne(e => e.GoalPlan)
+                  .WithMany(gp => gp.GoalPlanWeeklyReductions)
+                  .HasForeignKey(e => e.GoalPlanId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Ranking>(entity =>

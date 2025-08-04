@@ -23,28 +23,41 @@ namespace WebSmokingSupport.Controllers
         }
         [HttpGet("GetMyAllProgressLog")]
         [Authorize(Roles = "Member")]
-        public async Task<ActionResult<DTOProgressLogForRead>> GetAllProgressLog()
+        public async Task<ActionResult<IEnumerable<DTOProgressLogForRead>>> GetAllProgressLog()
         {
             var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaims == null)
             {
                 return Unauthorized("User not authenticated.");
             }
+
             int userId = int.Parse(userIdClaims);
             var memberProfile = await _context.MemberProfiles
-                .Include(mp => mp.User) 
+                .Include(mp => mp.User)
                 .FirstOrDefaultAsync(mp => mp.UserId == userId);
-            if(memberProfile == null)
+
+            if (memberProfile == null)
             {
                 return NotFound("Member profile not found for the authenticated user.");
             }
-            var ProgressLogExsited  = await _context.ProgressLogs
-                .Where(pl => pl.MemberId == memberProfile.MemberId)
+
+            var goalPlanIds = await _context.GoalPlans
+                .Where(gp => gp.MemberId == memberProfile.MemberId)
+                .Select(gp => gp.PlanId)
+                .ToListAsync();
+
+            if (goalPlanIds == null || !goalPlanIds.Any())
+            {
+                return NotFound("No goal plans found for the authenticated user.");
+            }
+
+            var progressLogs = await _context.ProgressLogs
+                .Where(pl => pl.GoalPlanId != null && goalPlanIds.Contains(pl.GoalPlanId))
                 .OrderByDescending(pl => pl.LogDate)
                 .Select(pl => new DTOProgressLogForRead
                 {
                     LogId = pl.LogId,
-                    MemberId = pl.MemberId,
+                    MemberId = memberProfile.MemberId,
                     ProgressLogMemberName = memberProfile.User.DisplayName,
                     Notes = pl.Notes,
                     Mood = pl.Mood,
@@ -55,12 +68,15 @@ namespace WebSmokingSupport.Controllers
                     CigarettesSmoked = pl.CigarettesSmoked,
                     CreatedAt = pl.CreatedAt,
                     UpdatedAt = pl.UpdatedAt
-                }).ToListAsync();
-            if (ProgressLogExsited == null || !ProgressLogExsited.Any())
+                })
+                .ToListAsync();
+
+            if (progressLogs == null || !progressLogs.Any())
             {
                 return NotFound("No progress logs found for the authenticated user.");
             }
-            return Ok(ProgressLogExsited);
+
+            return Ok(progressLogs);
         }
         [HttpGet("GetProgressLogByDate/{LongDate}")]
         [Authorize(Roles = "Member")]
@@ -72,21 +88,35 @@ namespace WebSmokingSupport.Controllers
                 return Unauthorized("User not authenticated.");
             }
             int userId = int.Parse(userIdClaims);
+
             var memberProfile = await _context.MemberProfiles
-                .Include(mp => mp.User) 
+                .Include(mp => mp.User)
                 .FirstOrDefaultAsync(mp => mp.UserId == userId);
+
             if (memberProfile == null)
             {
                 return NotFound("Member profile not found for the authenticated user.");
             }
-            var ProgressLogExsited = await _context.ProgressLogs
-                .Where(pl => pl.MemberId == memberProfile.MemberId &&
-                       DateOnly.FromDateTime(pl.LogDate) == LongDate)
+            // Lấy danh sách GoalPlanId thuộc về member này
+            var goalPlanIds = await _context.GoalPlans
+                .Where(gp => gp.MemberId == memberProfile.MemberId)
+                .Select(gp => gp.PlanId)
+                .ToListAsync();
+
+            if (!goalPlanIds.Any())
+            {
+                return NotFound("No goal plans found for the authenticated user.");
+            }
+
+            var targetDate = LongDate.ToDateTime(TimeOnly.MinValue);
+
+            var progressLog = await _context.ProgressLogs
+                .Where(pl => pl.LogDate.Date == targetDate.Date && pl.GoalPlanId != null && goalPlanIds.Contains(pl.GoalPlanId))
                 .OrderByDescending(pl => pl.LogDate)
                 .Select(pl => new DTOProgressLogForRead
                 {
                     LogId = pl.LogId,
-                    MemberId = pl.MemberId,
+                    MemberId = memberProfile.MemberId,
                     ProgressLogMemberName = memberProfile.User.DisplayName,
                     Notes = pl.Notes,
                     Mood = pl.Mood,
@@ -97,13 +127,17 @@ namespace WebSmokingSupport.Controllers
                     CigarettesSmoked = pl.CigarettesSmoked,
                     CreatedAt = pl.CreatedAt,
                     UpdatedAt = pl.UpdatedAt
-                }).FirstOrDefaultAsync();
-            if (ProgressLogExsited == null)
+                })
+                .FirstOrDefaultAsync();
+
+            if (progressLog == null)
             {
                 return NotFound($"No progress log found for the date {LongDate}.");
             }
-            return Ok(ProgressLogExsited);
+
+            return Ok(progressLog);
         }
+
         [HttpPut("UpdateProgressLogByDate")]
         [Authorize(Roles = "Member")]
         public async Task<ActionResult<DTOProgressLogForRead>> UpdateProgressLogByDate([FromBody] DTOProgressLogForUpdate dto)
@@ -121,10 +155,19 @@ namespace WebSmokingSupport.Controllers
             {
                 return NotFound("Member profile not found for the authenticated user.");
             }
+            var goalPlanIds = await _context.GoalPlans
+                .Where(gp => gp.MemberId == memberProfile.MemberId)
+                .Select(gp => gp.PlanId)
+                .ToListAsync();
+
+            if (!goalPlanIds.Any())
+            {
+                return NotFound("No goal plans found for the authenticated user.");
+            }
             var logDate = dto.LogDate.ToDateTime(new TimeOnly(0, 0));
             var progressLog = await _context.ProgressLogs
-                                .FirstOrDefaultAsync(pl => pl.MemberId == memberProfile.MemberId &&
-                                           pl.LogDate.Date == logDate.Date);
+                        .FirstOrDefaultAsync(pl =>
+                            pl.GoalPlanId != null && goalPlanIds.Contains(pl.GoalPlanId) && pl.LogDate.Date == logDate.Date);
             if (progressLog == null)
             {
                 return NotFound($"No progress log found for the date {dto.LogDate} , tạo goalPlan để có ProgressLog đc tự độg tạo ra ở GoalPlan");
@@ -140,7 +183,6 @@ namespace WebSmokingSupport.Controllers
             var updatedProgressLog = new DTOProgressLogForRead
             {
                 LogId = progressLog.LogId,
-                MemberId = progressLog.MemberId,
                 ProgressLogMemberName = memberProfile.User.DisplayName,
                 Notes = progressLog.Notes,
                 Mood = progressLog.Mood,

@@ -9,7 +9,6 @@ public partial class ProgressLog
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int LogId { get; set; }
-    public int? MemberId { get; set; } 
     [Required]
     public DateTime LogDate { get; set; } // ngày ghi nhận 
     public string? Notes { get; set; }  // nhận xét của người dùng về quá trình cai thuốc lá
@@ -17,9 +16,8 @@ public partial class ProgressLog
     public string? Mood { get; set; } // tâm trạng của người dùng trong ngày
     public string? Triggers { get; set; } // các yếu tố kích thích trong ngày
     public string? Symptoms { get; set; } // các triệu chứng trong ngày
-    public int? GoalPlanId { get; set; }
+    public int GoalPlanId { get; set; }
     public DateTime ? CreatedAt { get; set; }
     public DateTime ? UpdatedAt { get; set; }
-    public virtual MemberProfile? Member { get; set; } 
-    public virtual GoalPlan? GoalPlan { get; set; }
+    public virtual GoalPlan GoalPlan { get; set; }
 }

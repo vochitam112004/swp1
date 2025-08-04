@@ -28,5 +28,4 @@ public partial class MemberProfile
  
     public virtual ICollection<MemberTrigger> MemberTriggers { get; set; } = new List<MemberTrigger>();
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
-    public virtual ICollection<ProgressLog> ProgressLogs { get; set; } = new List<ProgressLog>();
 }
