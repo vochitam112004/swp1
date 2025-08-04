@@ -195,7 +195,7 @@ export default function ProfileTabs() {
           >
             <Tab label="Thông tin tài khoản" {...a11yProps(0)} />
             <Tab label="Sức khỏe & Thói quen hút thuốc" {...a11yProps(1)} />
-            <Tab label="Huy hiệu & Thành viên" {...a11yProps(2)} />
+            <Tab label="Huy hiệu" {...a11yProps(2)} />
           </Tabs>
         </Box>
 
