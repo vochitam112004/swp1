@@ -16,7 +16,7 @@ public partial class QuitSmokingSupportContext : DbContext
         : base(options)
     {
     }
-
+    public DbSet<UserAchievement> UserAchievements { get; set; }
     public virtual DbSet<Appointment> Appointments { get; set; }
 
     public virtual DbSet<Badge> Badges { get; set; }
@@ -54,6 +54,7 @@ public partial class QuitSmokingSupportContext : DbContext
     public virtual DbSet<UserBadge> UserBadges { get; set; }
     public DbSet<UserMembershipHistory> UserMembershipHistories { get; set; } = null!;
     public DbSet<GoalPlanWeeklyReduction> GoalPlanWeeklyReductions { get; set; }
+    public DbSet<AchievementTemplate> AchievementTemplates { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -299,7 +300,7 @@ public partial class QuitSmokingSupportContext : DbContext
 
             entity.Property(e => e.GoalPlanId).HasColumnName("goal_plan_id");
             entity.Property(e => e.WeekNumber).HasColumnName("week_number");
-            entity.Property(e => e.CigarettesReduced).HasColumnName("cigarettes_reduced");
+            entity.Property(e => e.totalCigarettes).HasColumnName("total_Cigarettes");
 
             var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
                 d => d.ToDateTime(TimeOnly.MinValue),
@@ -354,6 +355,18 @@ public partial class QuitSmokingSupportContext : DbContext
                 .HasColumnName("price_per_pack");
 
         });
+        modelBuilder.Entity<UserAchievement>(entity =>
+        {
+            entity.ToTable("UserAchievements");
+
+            entity.HasKey(e => e.AchievementId);
+            entity.Property(e => e.SmokeFreeDays).HasDefaultValue(0);
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<MemberTrigger>(entity =>
         {
             entity.HasKey(e => e.MemberTriggerId).HasName("PK__MemberTr__7D57174C98FECA46");
@@ -467,7 +480,7 @@ public partial class QuitSmokingSupportContext : DbContext
             entity.Property(e => e.WeekNumber).HasColumnName("week_number");
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
-            entity.Property(e => e.CigarettesReduced).HasColumnName("cigarettes_reduced");
+            entity.Property(e => e.totalCigarettes).HasColumnName("total_cigarettes");
 
             entity.HasOne(e => e.GoalPlan)
                   .WithMany(gp => gp.GoalPlanWeeklyReductions)

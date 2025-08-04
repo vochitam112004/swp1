@@ -64,7 +64,7 @@ namespace WebSmokingSupport.Controllers
                 {
                     GoalPlanId = goalPlan.PlanId,
                     WeekNumber = i + 1,
-                    CigarettesReduced = totalCigarettes,
+                    totalCigarettes = totalCigarettes,
                     StartDate = weekStart,
                     EndDate = weekEnd
                 });
@@ -78,7 +78,7 @@ namespace WebSmokingSupport.Controllers
                 WeeklyReductionId = r.WeeklyReductionId,
                 GoalPlanId = r.GoalPlanId,
                 WeekNumber = r.WeekNumber,
-                CigarettesReduced = r.CigarettesReduced,
+                totalCigarettes = r.totalCigarettes,
                 StartDate = r.StartDate,
                 EndDate = r.EndDate
             }).ToList();

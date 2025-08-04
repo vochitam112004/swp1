@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebSmokingSupport.Data;
 
@@ -11,9 +12,11 @@ using WebSmokingSupport.Data;
 namespace WebSmokingSupport.Migrations
 {
     [DbContext(typeof(QuitSmokingSupportContext))]
-    partial class QuitSmokingSupportContextModelSnapshot : ModelSnapshot
+    [Migration("20250804174225_AddtableAchievement")]
+    partial class AddtableAchievement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,29 +25,6 @@ namespace WebSmokingSupport.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("WebSmokingSupport.Entity.AchievementTemplate", b =>
-                {
-                    b.Property<int>("TemplateId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TemplateId"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RequiredSmokeFreeDays")
-                        .HasColumnType("int");
-
-                    b.HasKey("TemplateId");
-
-                    b.ToTable("AchievementTemplates");
-                });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.Appointment", b =>
                 {
@@ -870,19 +850,14 @@ namespace WebSmokingSupport.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
-                    b.Property<int>("TemplateId")
-                        .HasColumnType("int");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("AchievementId");
 
-                    b.HasIndex("TemplateId");
-
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserAchievements", (string)null);
+                    b.ToTable("UserAchievement");
                 });
 
             modelBuilder.Entity("WebSmokingSupport.Entity.UserBadge", b =>
@@ -1136,19 +1111,11 @@ namespace WebSmokingSupport.Migrations
 
             modelBuilder.Entity("WebSmokingSupport.Entity.UserAchievement", b =>
                 {
-                    b.HasOne("WebSmokingSupport.Entity.AchievementTemplate", "Template")
-                        .WithMany()
-                        .HasForeignKey("TemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("WebSmokingSupport.Entity.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Template");
 
                     b.Navigation("User");
                 });
