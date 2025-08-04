@@ -255,8 +255,8 @@ const Dashboard = () => {
         <div className="content">
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <h3 className="mb-1">Chào mừng trở lại, {user?.fullName || 'Nguyễn Văn A'}</h3>
-              <p className="mb-0 opacity-75">Bạn đã không hút thuốc được 23 ngày</p>
+              <h3 className="mb-1">Chào mừng trở lại, {memberProfile?.displayName || user?.fullName || 'Người dùng'}</h3>
+              <p className="mb-0 opacity-75">Bạn đã không hút thuốc được {currentGoal?.smokeFreeDays || 0} ngày</p>
             </div>
             <div className="text-end">
               <h2 className="mb-0">{(progress.moneySaved || 345000).toLocaleString()}đ</h2>

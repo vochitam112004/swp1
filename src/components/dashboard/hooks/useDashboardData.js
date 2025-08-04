@@ -72,7 +72,7 @@ export const useDashboardData = () => {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/MemberProfile");
+      const res = await api.get("/MemberProfile/GetMyMemberProfile");
       console.log("📦 MemberProfile:", res.data);
       if (res.data && res.data.memberId) {
         setMemberProfile(res.data);
@@ -84,7 +84,7 @@ export const useDashboardData = () => {
         // Set new smoking habits data
         setDailyCigarettes(res.data.dailyCigarettes || 0);
         setYearsOfSmoking(res.data.yearsOfSmoking || 0);
-        setPackPrice(res.data.packPrice || 25000);
+        setPackPrice(res.data.packPrice || res.data.pricePerPack || 25000);
         setCigarettesPerPack(res.data.cigarettesPerPack || 20);
 
         // Set health information
