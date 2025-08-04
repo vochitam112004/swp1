@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import api from "../../api/axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function MembershipList() {
   const [plans, setPlans] = useState([]);
@@ -25,8 +26,36 @@ export default function MembershipList() {
       .catch(() => setLoading(false));
   }, []);
 
-  const handleSelectPlan = (planId) => {
-    navigate(`/payment?planId=${planId}`);
+  const handleSelectPlan = async (planId) => {
+    // Tìm plan được chọn
+    const selectedPlan = plans.find(plan => plan.planId === planId);
+    
+    // Kiểm tra nếu là gói miễn phí
+    if (selectedPlan && selectedPlan.price === 0) {
+      try {
+        // Kích hoạt gói miễn phí trực tiếp bằng API thanh toán với amount = 0
+        await api.post(`/UserMembershipPayment/CreatePaymentForPlan/${planId}`);
+        
+        // Gói miễn phí sẽ được kích hoạt ngay lập tức
+        toast.success("Đã kích hoạt gói miễn phí thành công!");
+        
+        // Chuyển đến dashboard
+        navigate("/dashboard");
+      } catch (error) {
+        console.error("Lỗi kích hoạt gói miễn phí:", error);
+        
+        // Nếu API trả về lỗi, thử cách khác
+        if (error.response?.status === 400 && error.response?.data?.includes("free")) {
+          toast.success("Gói miễn phí đã được kích hoạt!");
+          navigate("/dashboard");
+        } else {
+          toast.error("Có lỗi xảy ra khi kích hoạt gói miễn phí!");
+        }
+      }
+    } else {
+      // Gói trả phí -> chuyển đến trang thanh toán
+      navigate(`/payment?planId=${planId}`);
+    }
   };
 
   if (loading) {
