@@ -99,6 +99,8 @@ const Dashboard = () => {
   const [selectedTriggers, setSelectedTriggers] = useState([]);
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [todayNote, setTodayNote] = useState("");
+  // Thêm state cho ngày ghi nhận
+  const [selectedLogDate, setSelectedLogDate] = useState("");
 
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -144,51 +146,40 @@ const Dashboard = () => {
   // Handle submit progress
   const handleSubmitDailyProgress = async (e) => {
     e.preventDefault();
-    
-    const todayDate = new Date().toISOString().slice(0, 10);
-    const existed = progressLogs.find((log) => (log.logDate || log.date) === todayDate);
-    
+    // Lấy ngày được chọn từ dropdown, nếu không có thì lấy hôm nay
+    const logDate = selectedLogDate || new Date().toISOString().slice(0, 10);
+    const existed = progressLogs.find((log) => (log.logDate || log.date) === logDate);
     if (existed) {
-      toast.error("Bạn đã ghi nhật ký cho ngày hôm nay!");
+      toast.error("Bạn đã ghi nhật ký cho ngày này!");
       return;
     }
-
     if (isNaN(todayCigarettes) || todayCigarettes === "" || todayCigarettes < 0) {
       toast.error("Số điếu thuốc không hợp lệ!");
       return;
     }
-
     if (!todayMood) {
-      toast.error("Vui lòng chọn tâm trạng hôm nay!");
+      toast.error("Vui lòng chọn tâm trạng!");
       return;
     }
-
     try {
       const progressData = {
-        date: todayDate,
+        logDate: logDate,
+        notes: todayNote,
         cigarettesSmoked: parseInt(todayCigarettes),
         mood: todayMood,
-        triggers: selectedTriggers,
-        symptoms: selectedSymptoms,
-        note: todayNote
+        triggers: Array.isArray(selectedTriggers) ? selectedTriggers.join(",") : "",
+        symptoms: Array.isArray(selectedSymptoms) ? selectedSymptoms.join(",") : "",
+        updatedAt: new Date().toISOString(),
       };
-
-      // Call API to save progress
-      await api.post("/ProgressLog", progressData);
-      
-      // Update local state
+      await api.put("/ProgressLog/UpdateProgressLogByDate", progressData);
       setProgressLogs([...progressLogs, progressData]);
-      
-      // Reset form
       setTodayCigarettes("");
       setTodayMood("");
       setSelectedTriggers([]);
       setSelectedSymptoms([]);
       setTodayNote("");
-      
-      toast.success("Đã ghi nhận tiến trình hôm nay thành công!");
-      
-      // Chuyển về tab tổng quan sau khi lưu thành công
+      setSelectedLogDate("");
+      toast.success("Đã ghi nhận tiến trình thành công!");
       setActiveTab("overview");
     } catch (error) {
       console.error("Error saving progress:", error);
@@ -434,9 +425,19 @@ const Dashboard = () => {
 
   // Render tab ghi nhận hôm nay
   const renderDailyLogTab = () => {
-    const todayDate = new Date().toISOString().slice(0, 10);
-    const alreadyLogged = progressLogs.find((log) => (log.logDate || log.date) === todayDate);
-    
+    // Lấy danh sách ngày trong khoảng kế hoạch
+    let planDates = [];
+    if (plan && plan.startDate && plan.endDate) {
+      const start = new Date(plan.startDate);
+      const end = new Date(plan.endDate);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        planDates.push(d.toISOString().slice(0, 10));
+      }
+    }
+    // Lọc ra các ngày đã ghi nhận
+    const loggedDates = progressLogs.map(log => log.logDate || log.date);
+    // Nếu đã chọn ngày thì kiểm tra ngày đó đã ghi nhận chưa
+    const alreadyLogged = selectedLogDate && loggedDates.includes(selectedLogDate);
     return (
       <div className="fade-in">
         {/* Header */}
@@ -445,12 +446,12 @@ const Dashboard = () => {
             <div className="text-center">
               <h3 className="mb-1">
                 <i className="fas fa-calendar-check me-2"></i>
-                Ghi nhận ngày {new Date().toLocaleDateString('vi-VN')}
+                Ghi nhận tiến trình
               </h3>
               <p className="mb-0 opacity-75">
-                {alreadyLogged 
-                  ? "Bạn đã ghi nhận hôm nay. Cảm ơn bạn đã chia sẻ!" 
-                  : "Hãy chia sẻ với chúng tôi ngày hôm nay của bạn"
+                {alreadyLogged
+                  ? `Bạn đã ghi nhận cho ngày ${selectedLogDate}. Cảm ơn bạn đã chia sẻ!`
+                  : "Hãy chọn ngày trong kế hoạch để ghi nhận tiến trình của bạn"
                 }
               </p>
             </div>
@@ -458,38 +459,11 @@ const Dashboard = () => {
         </div>
 
         {alreadyLogged ? (
-          // Hiển thị thông tin đã ghi nhận
           <div className="section-card">
             <div className="card-body text-center">
               <i className="fas fa-check-circle text-success" style={{ fontSize: "4rem" }}></i>
-              <h4 className="mt-3 text-success">Đã ghi nhận hôm nay!</h4>
-              <p className="text-muted">Cảm ơn bạn đã chia sẻ tiến trình hôm nay</p>
-              <div className="row mt-4">
-                <div className="col-md-3">
-                  <div className="text-center">
-                    <h5 className="text-primary">{alreadyLogged.cigarettesSmoked}</h5>
-                    <small className="text-muted">Điếu thuốc</small>
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="text-center">
-                    <h5 className="text-info">{alreadyLogged.mood}</h5>
-                    <small className="text-muted">Tâm trạng</small>
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="text-center">
-                    <h5 className="text-warning">{alreadyLogged.triggers?.length || 0}</h5>
-                    <small className="text-muted">Yếu tố kích hoạt</small>
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="text-center">
-                    <h5 className="text-danger">{alreadyLogged.symptoms?.length || 0}</h5>
-                    <small className="text-muted">Triệu chứng</small>
-                  </div>
-                </div>
-              </div>
+              <h4 className="mt-3 text-success">Đã ghi nhận ngày này!</h4>
+              <p className="text-muted">Cảm ơn bạn đã chia sẻ tiến trình</p>
               <button 
                 className="btn btn-outline-primary mt-3"
                 onClick={() => setActiveTab("overview")}
@@ -499,8 +473,28 @@ const Dashboard = () => {
             </div>
           </div>
         ) : (
-          // Form ghi nhận
           <form onSubmit={handleSubmitDailyProgress}>
+            {/* Chọn ngày trong kế hoạch */}
+            <div className="section-card mb-4">
+              <div className="card-body">
+                <h5 className="card-title">
+                  <i className="fas fa-calendar-alt me-2"></i>Chọn ngày ghi nhận *
+                </h5>
+                <select
+                  className="form-select"
+                  value={selectedLogDate}
+                  onChange={e => setSelectedLogDate(e.target.value)}
+                  required
+                >
+                  <option value="">-- Chọn ngày --</option>
+                  {planDates.map(date => (
+                    <option key={date} value={date} disabled={loggedDates.includes(date)}>
+                      {new Date(date).toLocaleDateString('vi-VN')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
             {/* Số điếu thuốc */}
             <div className="daily-progress-card mb-4">
               <div className="card-header text-white">

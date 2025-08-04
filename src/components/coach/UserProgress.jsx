@@ -15,34 +15,48 @@ export default function UserProgress() {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        // Step 1: Fetch all users
         const res = await api.get("/User/Get-All-User");
         const userList = res.data.filter((u) => u.userType === "Member");
 
-        // Step 2: Fetch profile for each user individually.
-        // Note: This creates an N+1 query problem. For better performance,
-        // the backend API should ideally provide an endpoint that returns users with their profiles already joined.
         const profiles = await Promise.all(
           userList.map(async (user) => {
             try {
-              const profileRes = await api.get(`/api/MemberProfile/GetMemberProfileByUserId/${user.userId}`);
+              const [profileRes, goalRes] = await Promise.all([
+                api.get(`/MemberProfile/GetMemberProfileByUserId/${user.userId}`),
+                api.get(`/CurrentGoal?userId=${user.userId}`),
+              ]);
+
               return {
                 ...user,
-                ...profileRes.data, // Spread profile data directly
+                ...profileRes.data,
+                totalMoneySaved: goalRes.data.totalMoneySaved ?? 0,
               };
             } catch (e) {
-              console.warn(`Could not find profile for userId ${user.userId}.`);
-              // Return user with empty profile fields to prevent crashes
-              return { 
-                ...user, 
-                health: null,
-                quitAttempts: null, 
-                cigarettesSmoked: null,
-                experienceLevel: null,
+              console.warn(`Could not fetch data for userId ${user.userId}.`, e);
+
+              let profile = {};
+              try {
+                const profileRes = await api.get(`/MemberProfile/GetMemberProfileByUserId/${user.userId}`);
+                profile = profileRes.data;
+              } catch {
+                // leave profile fields as null if fail
+                profile = {
+                  health: null,
+                  quitAttempts: null,
+                  cigarettesSmoked: null,
+                  experienceLevel: null,
+                };
+              }
+
+              return {
+                ...user,
+                ...profile,
+                totalMoneySaved: 0,
               };
             }
           })
         );
+
         setUsers(profiles);
       } catch (error) {
         console.error("Error fetching the user list:", error);
@@ -59,20 +73,10 @@ export default function UserProgress() {
     return amount.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
   };
 
-  // This calculates the total money NOT spent during past quit attempts.
-  const calculateSavings = (user) => {
-    if (user.pricePerPack && user.cigarettesPerPack && user.cigarettesSmoked && user.quitAttempts) {
-      const pricePerCigarette = user.pricePerPack / user.cigarettesPerPack;
-      return user.quitAttempts * user.cigarettesSmoked * pricePerCigarette;
-    }
-    return 0;
-  };
-
   const filteredUsers = users.filter((user) =>
     user.displayName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
-  // Common styles for Paper components for consistency (DRY principle)
+
   const paperStyles = {
     p: 2,
     borderRadius: 3,
@@ -97,6 +101,7 @@ export default function UserProgress() {
           label="Tìm kiếm người dùng theo tên"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{ mb: 2 }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -113,7 +118,7 @@ export default function UserProgress() {
               <TableCell align="center">Lần thử cai</TableCell>
               <TableCell align="center">Số năm hút thuốc</TableCell>
               <TableCell align="center">Số điếu / ngày</TableCell>
-              <TableCell align="center">Tiền tiết kiệm ước tính</TableCell>
+              <TableCell align="center">Tiền tiết kiệm</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -135,21 +140,23 @@ export default function UserProgress() {
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ fontWeight: 'medium', color: calculateSavings(user) > 0 ? 'success.main' : 'text.secondary' }}
+                    sx={{
+                      fontWeight: 'medium',
+                      color: user.totalMoneySaved > 0 ? 'success.main' : 'text.secondary',
+                    }}
                   >
-                    {formatMoney(calculateSavings(user))}
+                    {formatMoney(user.totalMoneySaved)}
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell colSpan={6}>
-                   <Box display="flex" flexDirection="column" alignItems="center" p={4} gap={2}>
-                      <PersonSearchOffIcon color="action" sx={{ fontSize: 40 }} />
-                      <Typography variant="body1" color="text.secondary">
-                        Không tìm thấy người dùng nào khớp với tìm kiếm của bạn.
-                      </Typography>
-                   </Box>
+                  <Box display="flex" justifyContent="center" alignItems="center" p={4}>
+                    <Typography variant="body1" color="text.secondary">
+                      Không tìm thấy người dùng nào khớp với tìm kiếm của bạn.
+                    </Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             )}
