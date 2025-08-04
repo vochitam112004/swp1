@@ -318,8 +318,8 @@ const ProgressTab = ({ currentGoal, plan }) => {
                           </span>
                         </td>
                         <td><span className={`badge bg-${moodInfo.color}`}>{moodInfo.emoji} {moodInfo.label}</span></td>
-                        <td>{(log.triggers || '').split(',').filter(t => t.trim()).length} yếu tố</td>
-                        <td>{(log.symptoms || '').split(',').filter(s => s.trim()).length} triệu chứng</td>
+                        <td>{log.triggers}</td>
+                        <td>{log.symptoms}</td>
                         <td>{log.notes ? log.notes : <span className="text-muted">Không có</span>}</td>
                       </tr>
                     );

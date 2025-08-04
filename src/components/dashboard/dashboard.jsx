@@ -565,66 +565,38 @@ const Dashboard = () => {
             </div>
 
             {/* Yếu tố kích hoạt thêm thuốc */}
-            <div className="section-card mb-4">
-              <div className="card-body">
-                <h5 className="card-title">
-                  <i className="fas fa-exclamation-triangle me-2"></i>Yếu tố kích hoạt thêm thuốc
-                </h5>
-                <p className="text-muted small mb-3">Chọn những yếu tố đã khiến bạn muốn hút thuốc hôm nay</p>
-                <div className="row g-2">
-                  {triggerOptions.map((trigger, index) => (
-                    <div key={index} className="col-6 col-md-4">
-                      <button
-                        type="button"
-                        className={`trigger-btn btn w-100 text-start ${
-                          selectedTriggers.includes(trigger) ? 'btn-warning' : 'btn-outline-warning'
-                        }`}
-                        onClick={() => {
-                          if (selectedTriggers.includes(trigger)) {
-                            setSelectedTriggers(selectedTriggers.filter(t => t !== trigger));
-                          } else {
-                            setSelectedTriggers([...selectedTriggers, trigger]);
-                          }
-                        }}
-                      >
-                        <small>{trigger}</small>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+<div className="section-card mb-4">
+  <div className="card-body">
+    <h5 className="card-title">
+      <i className="fas fa-exclamation-triangle me-2"></i>Yếu tố kích hoạt thêm thuốc
+    </h5>
+    <p className="text-muted small mb-3">Nhập các yếu tố đã khiến bạn muốn hút thuốc hôm nay (cách nhau bằng dấu phẩy)</p>
+    <input
+      type="text"
+      className="form-control"
+      placeholder="Ví dụ: Căng thẳng công việc, Uống cà phê, ..."
+      value={selectedTriggers}
+      onChange={e => setSelectedTriggers(e.target.value)}
+    />
+  </div>
+</div>
 
             {/* Triệu chứng cai thuốc */}
-            <div className="section-card mb-4">
-              <div className="card-body">
-                <h5 className="card-title">
-                  <i className="fas fa-heartbeat me-2"></i>Triệu chứng cai thuốc
-                </h5>
-                <p className="text-muted small mb-3">Những triệu chứng bạn đã trải qua hôm nay</p>
-                <div className="row g-2">
-                  {symptomOptions.map((symptom, index) => (
-                    <div key={index} className="col-6 col-md-4">
-                      <button
-                        type="button"
-                        className={`symptom-btn btn w-100 text-start ${
-                          selectedSymptoms.includes(symptom) ? 'btn-info' : 'btn-outline-info'
-                        }`}
-                        onClick={() => {
-                          if (selectedSymptoms.includes(symptom)) {
-                            setSelectedSymptoms(selectedSymptoms.filter(s => s !== symptom));
-                          } else {
-                            setSelectedSymptoms([...selectedSymptoms, symptom]);
-                          }
-                        }}
-                      >
-                        <small>{symptom}</small>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+<div className="section-card mb-4">
+  <div className="card-body">
+    <h5 className="card-title">
+      <i className="fas fa-heartbeat me-2"></i>Triệu chứng cai thuốc
+    </h5>
+    <p className="text-muted small mb-3">Nhập các triệu chứng bạn đã trải qua hôm nay (cách nhau bằng dấu phẩy)</p>
+    <input
+      type="text"
+      className="form-control"
+      placeholder="Ví dụ: Căng thẳng, Ho khan, ..."
+      value={selectedSymptoms}
+      onChange={e => setSelectedSymptoms(e.target.value)}
+    />
+  </div>
+</div>
 
             {/* Ghi chú thêm */}
             <div className="section-card mb-4">
