@@ -11,6 +11,5 @@ public partial class Ranking
     public int? Score { get; set; }
 
     public DateTime? LastUpdated { get; set; }
-
     public virtual User? User { get; set; }
 }

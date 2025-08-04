@@ -18,7 +18,7 @@ namespace WebSmokingSupport.Controllers
             _context = context;
             _logger = logger;
         }
-        [HttpGet("get-ranking-by-reduced-days")]
+        [HttpGet("GetAllRankings")]
         [Authorize(Roles = "Member,Coach,Admin")]
         public async Task<IActionResult> GetRankingByReducedDays()
         {
