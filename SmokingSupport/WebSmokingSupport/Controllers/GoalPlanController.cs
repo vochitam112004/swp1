@@ -48,6 +48,7 @@ namespace WebSmokingSupport.Controllers
             var goalPlanResponses = goalPlans.Select(gp => new DTOGoalPlanForRead
             {
                 PlanId = gp.PlanId,
+                UserId = gp.Member?.UserId ?? 0,
                 MemberDisplayName = gp.Member?.User?.DisplayName ?? "Unknown",
                 StartDate = gp.StartDate,
                 isCurrentGoal = gp.isCurrentGoal,
@@ -86,6 +87,7 @@ namespace WebSmokingSupport.Controllers
             var goalPlanResponses = goalPlans.Select(gp => new DTOGoalPlanForRead
             {
                 PlanId = gp.PlanId,
+                UserId = gp.Member?.UserId ?? 0,
                 MemberDisplayName = gp.Member?.User?.DisplayName ?? "Unknown",
                 StartDate = gp.StartDate,
                 isCurrentGoal = gp.isCurrentGoal,
@@ -147,6 +149,7 @@ namespace WebSmokingSupport.Controllers
                 {
                     MemberId = memberProfileExisted.MemberId,
                     StartDate = dto.StartDate,
+                    UserId= userId,
                     EndDate = dto.EndDate,
                     isCurrentGoal = true,
                     TotalDays = (dto.EndDate.DayNumber - dto.StartDate.DayNumber) + 1,
@@ -240,6 +243,7 @@ namespace WebSmokingSupport.Controllers
             var goalPlanResponse = new DTOGoalPlanForRead
             {
                 PlanId = activeGoalPlan.PlanId,
+                UserId = activeGoalPlan.Member?.UserId ?? 0,
                 MemberDisplayName = activeGoalPlan.Member?.User?.DisplayName ?? "Unknown",
                 StartDate = activeGoalPlan.StartDate,
                 isCurrentGoal = activeGoalPlan.isCurrentGoal,
@@ -254,10 +258,6 @@ namespace WebSmokingSupport.Controllers
         [Authorize(Roles = "Member")]
         public async Task<ActionResult> DeleteGoalPlan(int planId)
         {
-            if (planId <= 0)
-            {
-                return BadRequest($"Invalid plan ID = {planId}.");
-            }
             var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaims, out int userId))
             {
@@ -269,17 +269,18 @@ namespace WebSmokingSupport.Controllers
             {
                 return NotFound("Member profile not found. Please create a profile before deleting a goal plan.");
             }
-            var goalPlanExisted = await _context.GoalPlans
+            var goalPlan = await _context.GoalPlans
                 .Include(gp => gp.Member)
                 .ThenInclude(m => m.User)
                 .FirstOrDefaultAsync(gp => gp.PlanId == planId && gp.MemberId == memberProfileExisted.MemberId);
-            if (goalPlanExisted == null)
+            if (goalPlan == null)
             {
-                return NotFound($"Goal plan not found for the specified plan ID = {planId}.");
+                return NotFound("Goal plan not found.");
             }
-            _context.GoalPlans.Remove(goalPlanExisted);
+            goalPlan.isCurrentGoal = false;
+            _context.GoalPlans.Update(goalPlan);
             await _context.SaveChangesAsync();
             return NoContent();
-        }
+        }   
     }
 }

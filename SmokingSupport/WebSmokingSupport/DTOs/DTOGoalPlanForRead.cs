@@ -3,6 +3,7 @@
     public class DTOGoalPlanForRead
     {
         public int PlanId { get; set; }
+        public int UserId { get; set; }
         public DateOnly StartDate { get; set; } 
         public bool isCurrentGoal { get; set; } = true;
         public DateOnly EndDate { get; set; }

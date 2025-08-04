@@ -11,6 +11,7 @@ public partial class GoalPlan
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int PlanId { get; set; }
     public int MemberId { get; set; } 
+    public int UserId { get; set; } 
     public DateOnly StartDate { get; set; } // ngày bắt đầu kế hoạch
     public bool isCurrentGoal { get; set; } = true;
     public DateOnly EndDate { get; set; } // ngày kết thúc kế hoạch
