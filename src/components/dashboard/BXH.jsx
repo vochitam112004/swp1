@@ -117,7 +117,7 @@ export default function BXH() {
               <Typography className="rank-name">{top3[1]?.userName || "Ẩn danh"}</Typography>
               {renderBadge(top3[1]?.badge)}
               <Typography className="rank-days">{top3[1]?.score || 0}</Typography>
-              <Typography className="rank-label">ngày không hút thuốc</Typography>
+              <Typography className="rank-label">ngày giảm hút thuốc</Typography>
             </div>
 
             <div className="rank-card rank-1">
@@ -131,7 +131,7 @@ export default function BXH() {
               <Typography className="rank-name">{top3[0]?.userName || "Ẩn danh"}</Typography>
               {renderBadge(top3[0]?.badge)}
               <Typography className="rank-days">{top3[0]?.score || 0}</Typography>
-              <Typography className="rank-label">ngày không hút thuốc</Typography>
+              <Typography className="rank-label">ngày giảm hút thuốc</Typography>
             </div>
 
             {top3.length >= 3 && (
@@ -146,7 +146,7 @@ export default function BXH() {
                 <Typography className="rank-name">{top3[2]?.userName || "Ẩn danh"}</Typography>
                 {renderBadge(top3[2]?.badge)}
                 <Typography className="rank-days">{top3[2]?.score || 0}</Typography>
-                <Typography className="rank-label">ngày không hút thuốc</Typography>
+                <Typography className="rank-label">ngày giảm hút thuốc</Typography>
               </div>
             )}
           </div>
