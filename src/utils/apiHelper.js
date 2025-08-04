@@ -1,20 +1,12 @@
 import api from '../api/axios';
 import { DateUtils } from './dateUtils';
 
-/**
- * API helper functions with consistent error handling and data normalization
- */
 export const ApiHelper = {
-  /**
-   * Fetch progress logs with date normalization
-   * @returns {Promise<Array>} - Normalized progress logs
-   */
   fetchProgressLogs: async () => {
     try {
       const response = await api.get("/ProgressLog/GetProgress-logs");
       const logs = response.data || [];
       
-      // Normalize date fields and sort by date
       return logs
         .map(log => DateUtils.normalizeFields(log))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -24,39 +16,20 @@ export const ApiHelper = {
     }
   },
 
-  /**
-   * Fetch current goal with field normalization
-   * @returns {Promise<Object>} - Normalized current goal
-   */
-  fetchCurrentGoal: async () => {
-    try {
-      const response = await api.get("/CurrentGoal");
-      return DateUtils.normalizeFields(response.data);
-    } catch (error) {
-      console.error('❌ Error fetching current goal:', error);
-      throw new Error('Không thể lấy mục tiêu hiện tại');
-    }
-  },
-
-  /**
-   * Fetch goal plan with field normalization
-   * @returns {Promise<Object>} - Normalized goal plan
-   */
   fetchGoalPlan: async () => {
     try {
-      const response = await api.get("/GoalPlan/current-goal");
-      return DateUtils.normalizeFields(response.data);
+      const response = await api.get("/GoalPlan/GetMyCurrentGoalPlans");
+      const data = response.data;
+      if (Array.isArray(data) && data.length > 0) {
+        return DateUtils.normalizeFields(data[0]);
+      }
+      return null;
     } catch (error) {
       console.error('❌ Error fetching goal plan:', error);
-      return null; // Return null instead of throwing for optional data
+      return null;
     }
   },
 
-  /**
-   * Fetch weekly plans for a goal plan
-   * @param {number} planId - Goal plan ID
-   * @returns {Promise<Array>} - Weekly plans with normalized dates
-   */
   fetchWeeklyPlans: async (planId) => {
     try {
       const response = await api.get(`/GoalPlanWeeklyReduction/plan/${planId}`);
@@ -71,11 +44,6 @@ export const ApiHelper = {
     }
   },
 
-  /**
-   * Create a new progress log
-   * @param {Object} logData - Progress log data
-   * @returns {Promise<Object>} - Created progress log
-   */
   createProgressLog: async (logData) => {
     try {
       const normalizedData = {
@@ -91,20 +59,15 @@ export const ApiHelper = {
     }
   },
 
-  /**
-   * Create a new goal plan with proper date handling
-   * @param {Object} planData - Goal plan data
-   * @returns {Promise<Object>} - Created goal plan
-   */
   createGoalPlan: async (planData) => {
     try {
       const normalizedData = {
         ...planData,
         startDate: DateUtils.toISODateString(planData.startDate),
-        targetQuitDate: DateUtils.toISODateString(planData.targetQuitDate)
+        endDate: DateUtils.toISODateString(planData.targetQuitDate)
       };
       
-      const response = await api.post('/GoalPlan', normalizedData);
+      const response = await api.post('/GoalPlan/CreateGoalPlan', normalizedData);
       return DateUtils.normalizeFields(response.data);
     } catch (error) {
       console.error('❌ Error creating goal plan:', error);
@@ -112,11 +75,23 @@ export const ApiHelper = {
     }
   },
 
-  /**
-   * Create weekly reduction plan
-   * @param {Object} weeklyData - Weekly plan data
-   * @returns {Promise<Object>} - Created weekly plan
-   */
+  updateGoalPlan: async (planData) => {
+    try {
+      const normalizedData = {
+        startDate: DateUtils.toISODateString(planData.startDate),
+        endDate: DateUtils.toISODateString(planData.targetQuitDate),
+        isCurrentGoal: planData.isCurrentGoal || true,
+        updatedAt: new Date().toISOString()
+      };
+
+      const response = await api.put('/GoalPlan/UpdateMyGoalPlan', normalizedData);
+      return DateUtils.normalizeFields(response.data);
+    } catch (error) {
+      console.error('❌ Error updating goal plan:', error);
+      throw new Error('Không thể cập nhật kế hoạch mục tiêu');
+    }
+  },
+
   createWeeklyPlan: async (weeklyData) => {
     try {
       const normalizedData = {
@@ -133,22 +108,17 @@ export const ApiHelper = {
     }
   },
 
-  /**
-   * Fetch all dashboard data in one call with proper error handling
-   * @returns {Promise<Object>} - All dashboard data
-   */
   fetchAllDashboardData: async () => {
     const results = await Promise.allSettled([
       ApiHelper.fetchProgressLogs(),
-      ApiHelper.fetchCurrentGoal(),
       ApiHelper.fetchGoalPlan()
     ]);
 
-    const [progressLogsResult, currentGoalResult, goalPlanResult] = results;
+    const [progressLogsResult, goalPlanResult] = results;
 
     return {
       progressLogs: progressLogsResult.status === 'fulfilled' ? progressLogsResult.value : [],
-      currentGoal: currentGoalResult.status === 'fulfilled' ? currentGoalResult.value : null,
+      currentGoal: null,
       goalPlan: goalPlanResult.status === 'fulfilled' ? goalPlanResult.value : null,
       errors: results
         .filter(result => result.status === 'rejected')
