@@ -20,8 +20,12 @@ import LaunchIcon from "@mui/icons-material/Launch";
 import { toast } from 'react-toastify';
 import api from '../../../api/axios';
 import AppointmentBookingForm from './AppointmentBookingForm';
+import GoogleMeetLink from '../../common/GoogleMeetLink';
 
-const AppointmentManager = () => {
+// Link Google Meet mặc định
+const DEFAULT_GOOGLE_MEET_LINK = 'https://meet.google.com/fkb-kdsd-bgu';
+
+const AppointmentManagerNew = () => {
   const {
     appointments,
     loading,
@@ -66,26 +70,30 @@ const AppointmentManager = () => {
     <Box>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={currentTab} onChange={handleTabChange} aria-label="appointment tabs">
-          <Tab label="Đặt lịch hẹn mới" icon={<i className="fas fa-plus" />} />
-          <Tab label="Lịch hẹn của tôi" icon={<i className="fas fa-calendar-check" />} />
+          <Tab label="Đặt lịch hẹn mới" />
+          <Tab label="Lịch hẹn của tôi" />
         </Tabs>
       </Box>
 
+      {/* Tab 0: Booking Form */}
       {currentTab === 0 && (
         <AppointmentBookingForm onAppointmentCreated={handleAppointmentCreated} />
       )}
 
+      {/* Tab 1: My Appointments */}
       {currentTab === 1 && (
         <Box>
           <Typography variant="h5" gutterBottom>
-            Danh sách lịch hẹn của tôi
+            Lịch hẹn của tôi
           </Typography>
-
+          
           {loading ? (
-            <CircularProgress />
-          ) : !Array.isArray(appointments) || appointments.length === 0 ? (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+              <CircularProgress />
+            </Box>
+          ) : appointments.length === 0 ? (
             <Alert severity="info">
-              Bạn chưa có lịch hẹn nào. Hãy đặt lịch hẹn mới với huấn luyện viên!
+              Bạn chưa có lịch hẹn nào. Hãy đặt lịch hẹn mới!
             </Alert>
           ) : (
             <TableContainer component={Paper}>
@@ -117,33 +125,30 @@ const AppointmentManager = () => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        {appointment.meetingLink ? (
-                          <Button
-                            size="small"
-                            color="primary"
-                            href={appointment.meetingLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            endIcon={<LaunchIcon />}
-                          >
-                            Tham gia
-                          </Button>
-                        ) : (
-                          <Button variant="outlined" size="small" disabled>
-                            Chưa có
-                          </Button>
-                        )}
+                        <GoogleMeetLink 
+                          meetingLink={
+                            appointment.meetingLink && appointment.meetingLink.trim() 
+                              ? appointment.meetingLink 
+                              : DEFAULT_GOOGLE_MEET_LINK
+                          } 
+                        />
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          variant="outlined" 
-                          color="error" 
-                          size="small" 
-                          onClick={() => handleCancelAppointment(appointment.appointmentId)}
-                          disabled={appointment.status === 'Cancelled'}
-                        >
-                          {appointment.status === 'Cancelled' ? 'Đã hủy' : 'Hủy'}
-                        </Button>
+                        {(appointment.status === 'Pending' || appointment.status === 'Confirmed') && (
+                          <Button 
+                            variant="contained" 
+                            color="error" 
+                            size="small"
+                            onClick={() => handleCancelAppointment(appointment.appointmentId)}
+                          >
+                            Hủy
+                          </Button>
+                        )}
+                        {appointment.status === 'Cancelled' && (
+                          <Button variant="outlined" size="small" disabled>
+                            Đã hủy
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -157,4 +162,4 @@ const AppointmentManager = () => {
   );
 };
 
-export default AppointmentManager;
+export default AppointmentManagerNew;

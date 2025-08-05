@@ -13,13 +13,24 @@ import {
   CircularProgress,
   Alert,
   Tabs,
-  Tab
+  Tab,
+  Chip,
+  Tooltip,
+  IconButton
 } from "@mui/material";
 import { useDashboardData } from "../../dashboard/hooks/useDashboardData";
-import LaunchIcon from "@mui/icons-material/Launch";
+import { 
+  Launch as LaunchIcon,
+  VideoCall as VideoIcon,
+  ContentCopy as CopyIcon
+} from "@mui/icons-material";
 import { toast } from 'react-toastify';
 import api from '../../../api/axios';
 import AppointmentBookingForm from './AppointmentBookingForm';
+import GoogleMeetLink from '../../common/GoogleMeetLink';
+
+// Link Google Meet mặc định cho tất cả appointments
+const DEFAULT_GOOGLE_MEET_LINK = 'https://meet.google.com/fkb-kdsd-bgu';
 
 const AppointmentManager = () => {
   const {
@@ -35,6 +46,22 @@ const AppointmentManager = () => {
     // eslint-disable-next-line
   }, []);
 
+  // Debug: Log appointments data
+  useEffect(() => {
+    if (appointments && appointments.length > 0) {
+      console.log('🔍 Debug Appointments Data:', appointments);
+      appointments.forEach((apt, index) => {
+        console.log(`📅 Appointment ${index + 1}:`, {
+          id: apt.appointmentId,
+          meetingLink: apt.meetingLink,
+          hasLink: !!apt.meetingLink,
+          linkLength: apt.meetingLink?.length || 0,
+          fallbackLink: apt.meetingLink?.trim() || DEFAULT_GOOGLE_MEET_LINK
+        });
+      });
+    }
+  }, [appointments]);
+
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
   };
@@ -48,6 +75,28 @@ const AppointmentManager = () => {
     const date = new Date(dateString);
     return date.toLocaleDateString("vi-VN");
   };
+
+  // Copy link to clipboard - remove this function since we use GoogleMeetLink component
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('Đã copy link vào clipboard!')
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        toast.success('Đã copy link vào clipboard!')
+      } catch (fallbackError) {
+        toast.error('Không thể copy link')
+      }
+      document.body.removeChild(textArea)
+    }
+  }
 
   const handleCancelAppointment = async (appointmentId) => {
     if (window.confirm('Bạn có chắc muốn hủy lịch hẹn này?')) {
@@ -117,22 +166,12 @@ const AppointmentManager = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    {appointment.meetingLink ? (
-                      <Button
-                        size="small"
-                        color="primary"
-                        href={appointment.meetingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        endIcon={<LaunchIcon />}
-                      >
-                        Tham gia
-                      </Button>
-                    ) : (
-                      <Button variant="outlined" size="small" disabled>
-                        Chưa có
-                      </Button>
-                    )}
+                    <GoogleMeetLink 
+                      meetingLink={appointment.meetingLink?.trim() || DEFAULT_GOOGLE_MEET_LINK}
+                      variant="button"
+                      size="small"
+                      showCopy={true}
+                    />
                   </TableCell>
                   <TableCell>
                     {(appointment.status === 'Pending' || appointment.status === 'Confirmed') && (

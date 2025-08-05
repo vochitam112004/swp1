@@ -16,12 +16,30 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    Alert
+    Alert,
+    Checkbox,
+    FormControlLabel,
+    Chip,
+    Tooltip,
+    Divider
 } from '@mui/material'
 import { Link } from '@mui/material'
+import { 
+    ContentCopy as CopyIcon,
+    VideoCall as VideoIcon,
+    Link as LinkIcon,
+    Add as AddIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon
+} from '@mui/icons-material'
 import { toast } from 'react-toastify'
 import { useAuth } from '../auth/AuthContext'
 import api from '../../api/axios'
+import { generateGoogleMeetLink, copyToClipboard, isValidGoogleMeetLink } from '../../utils/googleMeetUtils'
+import GoogleMeetLink from '../common/GoogleMeetLink'
+
+// Link Google Meet cố định cho tất cả slots
+const DEFAULT_GOOGLE_MEET_LINK = 'https://meet.google.com/fkb-kdsd-bgu'
 
 export default function AppointmentList() {
     const { user } = useAuth()
@@ -32,7 +50,7 @@ export default function AppointmentList() {
         appointmentDate: '',
         startTime: '',
         endTime: '',
-        meetingLink: ''
+        meetingLink: DEFAULT_GOOGLE_MEET_LINK
     })
     const [openEditSlot, setOpenEditSlot] = useState(false);
     const [editSlot, setEditSlot] = useState({
@@ -125,6 +143,12 @@ export default function AppointmentList() {
             return
         }
 
+        // Validate Google Meet link if provided
+        if (newSlot.meetingLink && !isValidGoogleMeetLink(newSlot.meetingLink)) {
+            toast.error('Link Google Meet không hợp lệ! Vui lòng sử dụng format: https://meet.google.com/xxx-xxxx-xxx')
+            return
+        }
+
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/
         if (!dateRegex.test(newSlot.appointmentDate)) {
             toast.error('Ngày phải có định dạng YYYY-MM-DD!')
@@ -163,7 +187,7 @@ export default function AppointmentList() {
                 appointmentDate: newSlot.appointmentDate,
                 startTime: `${newSlot.startTime}:00`,  // HH:MM:SS format required
                 endTime: `${newSlot.endTime}:00`,      // HH:MM:SS format required
-                meetingLink: newSlot.meetingLink || null  // Thêm Google Meet link nếu có
+                meetingLink: newSlot.meetingLink || null  // Sử dụng link đã nhập
             }]
         }
 
@@ -206,7 +230,7 @@ export default function AppointmentList() {
             
             toast.success('Tạo slot rảnh thành công!')
             setOpenAddSlot(false)
-            setNewSlot({ appointmentDate: '', startTime: '', endTime: '', meetingLink: '' })
+            setNewSlot({ appointmentDate: '', startTime: '', endTime: '', meetingLink: DEFAULT_GOOGLE_MEET_LINK })
             fetchMyCoachSlots()
         } catch (error) {
             console.error("❌ Error:", error)
@@ -265,7 +289,7 @@ export default function AppointmentList() {
             startTime: formatTimeForInput(slot.startTime),
             endTime: formatTimeForInput(slot.endTime),
             status: slot.status || '',
-            meetingLink: slot.meetingLink || ''
+            meetingLink: slot.meetingLink || DEFAULT_GOOGLE_MEET_LINK
         });
         setOpenEditSlot(true);
     };
@@ -278,6 +302,12 @@ export default function AppointmentList() {
 
         if (editSlot.startTime >= editSlot.endTime) {
             toast.error('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc!')
+            return
+        }
+
+        // Validate Google Meet link if provided
+        if (editSlot.meetingLink && !isValidGoogleMeetLink(editSlot.meetingLink)) {
+            toast.error('Link Google Meet không hợp lệ! Vui lòng sử dụng format: https://meet.google.com/xxx-xxxx-xxx')
             return
         }
 
@@ -356,7 +386,13 @@ export default function AppointmentList() {
                         <span style={{ color: 'orange', fontWeight: 'bold' }}>●</span> Other - Trạng thái khác
                     </Typography>
                 </Box>
-                <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={() => setOpenAddSlot(true)}>
+                <Button 
+                    variant="contained" 
+                    color="primary" 
+                    sx={{ mb: 2 }} 
+                    onClick={() => setOpenAddSlot(true)}
+                    startIcon={<AddIcon />}
+                >
                     Thêm slot rảnh
                 </Button>
                 {slots.length === 0 ? (
@@ -369,6 +405,7 @@ export default function AppointmentList() {
                                     <TableCell>Ngày</TableCell>
                                     <TableCell>Thời gian</TableCell>
                                     <TableCell>Trạng thái</TableCell>
+                                    <TableCell>Google Meet</TableCell>
                                     <TableCell>Thành viên đặt</TableCell>
                                     <TableCell>Thao tác</TableCell>
                                 </TableRow>
@@ -391,6 +428,14 @@ export default function AppointmentList() {
                                                     {slot.status}
                                                 </span>
                                             </TableCell>
+                                            <TableCell>
+                                                <GoogleMeetLink 
+                                                    meetingLink={slot.meetingLink?.trim() || DEFAULT_GOOGLE_MEET_LINK}
+                                                    variant="button"
+                                                    size="small"
+                                                    showCopy={true}
+                                                />
+                                            </TableCell>
                                             <TableCell>{slot.memberName || <span className="text-muted">Chưa có</span>}</TableCell>
                                             <TableCell>
                                                 <IconButton 
@@ -399,7 +444,7 @@ export default function AppointmentList() {
                                                     disabled={isBooked || hasBooking}
                                                     title={isBooked || hasBooking ? "Không thể xóa slot đã được đặt" : "Xóa slot"}
                                                 >
-                                                    <i className="fas fa-trash"></i>
+                                                    <DeleteIcon />
                                                 </IconButton>
                                                 <IconButton 
                                                     color="primary" 
@@ -407,7 +452,7 @@ export default function AppointmentList() {
                                                     disabled={isBooked || hasBooking}
                                                     title={isBooked || hasBooking ? "Không thể sửa slot đã được đặt" : "Chỉnh sửa slot"}
                                                 >
-                                                    <i className="fas fa-edit"></i>
+                                                    <EditIcon />
                                                 </IconButton>
                                             </TableCell>
                                         </TableRow>
@@ -440,13 +485,12 @@ export default function AppointmentList() {
                                         <TableCell>{item.appointmentDate}</TableCell>
                                         <TableCell>{item.startTime} - {item.endTime}</TableCell>
                                         <TableCell>
-                                            {item.meetingLink ? (
-                                                <Link href={item.meetingLink} target="_blank" rel="noopener noreferrer" underline="hover">
-                                                    Tham gia
-                                                </Link>
-                                            ) : (
-                                                'Chưa có'
-                                            )}
+                                            <GoogleMeetLink 
+                                                meetingLink={item.meetingLink?.trim() || DEFAULT_GOOGLE_MEET_LINK}
+                                                variant="link"
+                                                size="small"
+                                                showCopy={true}
+                                            />
                                         </TableCell>
                                         <TableCell>
                                             <span className={`badge bg-${item.status === 'Confirmed' ? 'success' : item.status === 'Pending' ? 'warning' : 'secondary'}`}>
@@ -461,104 +505,240 @@ export default function AppointmentList() {
                 )}
 
                 {/* Dialog thêm slot */}
-                <Dialog open={openAddSlot} onClose={() => setOpenAddSlot(false)}>
-                    <DialogTitle>Thêm slot rảnh mới</DialogTitle>
+                <Dialog open={openAddSlot} onClose={() => setOpenAddSlot(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AddIcon />
+                        Thêm slot rảnh mới
+                    </DialogTitle>
                     <DialogContent>
-                        <TextField
-                            margin="dense"
-                            label="Ngày"
-                            type="date"
-                            fullWidth
-                            variant="outlined"
-                            value={newSlot.appointmentDate}
-                            onChange={(e) => setNewSlot({ ...newSlot, appointmentDate: e.target.value })}
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Thời gian bắt đầu"
-                            type="time"
-                            fullWidth
-                            variant="outlined"
-                            value={newSlot.startTime}
-                            onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Thời gian kết thúc"
-                            type="time"
-                            fullWidth
-                            variant="outlined"
-                            value={newSlot.endTime}
-                            onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Link Google Meet"
-                            fullWidth
-                            variant="outlined"
-                            value={newSlot.meetingLink}
-                            onChange={(e) => setNewSlot({ ...newSlot, meetingLink: e.target.value })}
-                            placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                            helperText="Bạn có thể thêm link Google Meet ngay khi tạo slot"
-                        />
+                        <Box sx={{ pt: 1 }}>
+                            <TextField
+                                margin="dense"
+                                label="Ngày"
+                                type="date"
+                                fullWidth
+                                variant="outlined"
+                                value={newSlot.appointmentDate}
+                                onChange={(e) => setNewSlot({ ...newSlot, appointmentDate: e.target.value })}
+                                InputLabelProps={{ shrink: true }}
+                            />
+                            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                                <TextField
+                                    margin="dense"
+                                    label="Thời gian bắt đầu"
+                                    type="time"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={newSlot.startTime}
+                                    onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                                <TextField
+                                    margin="dense"
+                                    label="Thời gian kết thúc"
+                                    type="time"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={newSlot.endTime}
+                                    onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </Box>
+                            
+                            <Divider sx={{ my: 2 }} />
+                            
+                            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                <VideoIcon />
+                                Google Meet
+                            </Typography>
+                            
+                            <TextField
+                                margin="dense"
+                                label="Link Google Meet"
+                                fullWidth
+                                variant="outlined"
+                                value={newSlot.meetingLink}
+                                onChange={(e) => setNewSlot({ ...newSlot, meetingLink: e.target.value })}
+                                placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                helperText="Link này sẽ được sử dụng cho tất cả member đặt lịch slot này"
+                                InputProps={{
+                                    startAdornment: newSlot.meetingLink && (
+                                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                            <Tooltip title="Copy link">
+                                                <IconButton 
+                                                    edge="start" 
+                                                    onClick={async () => {
+                                                        const result = await copyToClipboard(newSlot.meetingLink)
+                                                        if (result.success) {
+                                                            toast.success(result.message)
+                                                        } else {
+                                                            toast.error(result.message)
+                                                        }
+                                                    }}
+                                                    size="small"
+                                                >
+                                                    <CopyIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Reset về link mặc định">
+                                                <IconButton 
+                                                    onClick={() => setNewSlot({ ...newSlot, meetingLink: DEFAULT_GOOGLE_MEET_LINK })}
+                                                    size="small"
+                                                    color="secondary"
+                                                >
+                                                    <LinkIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
+                                    )
+                                }}
+                            />
+                            
+                            <Alert severity="info" sx={{ mt: 1 }}>
+                                <Typography variant="body2">
+                                    💡 Link mặc định: {DEFAULT_GOOGLE_MEET_LINK}
+                                </Typography>
+                            </Alert>
+                        </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => setOpenAddSlot(false)}>Hủy</Button>
-                        <Button onClick={handleAddSlot} variant="contained" color="primary">Thêm</Button>
+                        <Button onClick={() => {
+                            setOpenAddSlot(false)
+                        }}>
+                            Hủy
+                        </Button>
+                        <Button 
+                            onClick={handleAddSlot} 
+                            variant="contained" 
+                            color="primary"
+                            startIcon={<AddIcon />}
+                        >
+                            Tạo slot
+                        </Button>
                     </DialogActions>
                 </Dialog>
 
                 {/* Dialog chỉnh sửa slot */}
-                <Dialog open={openEditSlot} onClose={() => setOpenEditSlot(false)}>
-                    <DialogTitle>Cập nhật slot rảnh</DialogTitle>
+                <Dialog open={openEditSlot} onClose={() => setOpenEditSlot(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <EditIcon />
+                        Cập nhật slot rảnh
+                    </DialogTitle>
                     <DialogContent>
-                        <TextField
-                            margin="dense"
-                            label="Ngày"
-                            type="date"
-                            fullWidth
-                            variant="outlined"
-                            value={editSlot.appointmentDate}
-                            onChange={(e) => setEditSlot({ ...editSlot, appointmentDate: e.target.value })}
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Thời gian bắt đầu"
-                            type="time"
-                            fullWidth
-                            variant="outlined"
-                            value={editSlot.startTime}
-                            onChange={(e) => setEditSlot({ ...editSlot, startTime: e.target.value })}
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Thời gian kết thúc"
-                            type="time"
-                            fullWidth
-                            variant="outlined"
-                            value={editSlot.endTime}
-                            onChange={(e) => setEditSlot({ ...editSlot, endTime: e.target.value })}
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Trạng thái"
-                            fullWidth
-                            variant="outlined"
-                            value={editSlot.status}
-                            onChange={(e) => setEditSlot({ ...editSlot, status: e.target.value })}
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Link Online"
-                            fullWidth
-                            variant="outlined"
-                            value={editSlot.meetingLink}
-                            onChange={(e) => setEditSlot({ ...editSlot, meetingLink: e.target.value })}
-                        />
+                        <Box sx={{ pt: 1 }}>
+                            <TextField
+                                margin="dense"
+                                label="Ngày"
+                                type="date"
+                                fullWidth
+                                variant="outlined"
+                                value={editSlot.appointmentDate}
+                                onChange={(e) => setEditSlot({ ...editSlot, appointmentDate: e.target.value })}
+                                InputLabelProps={{ shrink: true }}
+                            />
+                            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                                <TextField
+                                    margin="dense"
+                                    label="Thời gian bắt đầu"
+                                    type="time"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={editSlot.startTime}
+                                    onChange={(e) => setEditSlot({ ...editSlot, startTime: e.target.value })}
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                                <TextField
+                                    margin="dense"
+                                    label="Thời gian kết thúc"
+                                    type="time"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={editSlot.endTime}
+                                    onChange={(e) => setEditSlot({ ...editSlot, endTime: e.target.value })}
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </Box>
+                            <TextField
+                                margin="dense"
+                                label="Trạng thái"
+                                fullWidth
+                                variant="outlined"
+                                value={editSlot.status}
+                                onChange={(e) => setEditSlot({ ...editSlot, status: e.target.value })}
+                                disabled
+                                helperText="Trạng thái được tự động cập nhật"
+                            />
+                            
+                            <Divider sx={{ my: 2 }} />
+                            
+                            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                <VideoIcon />
+                                Google Meet Link
+                            </Typography>
+                            
+                            <TextField
+                                margin="dense"
+                                label="Link Google Meet"
+                                fullWidth
+                                variant="outlined"
+                                value={editSlot.meetingLink}
+                                onChange={(e) => setEditSlot({ ...editSlot, meetingLink: e.target.value })}
+                                placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                helperText="Cập nhật link Google Meet cho slot này"
+                                InputProps={{
+                                    endAdornment: editSlot.meetingLink && (
+                                        <Box sx={{ display: 'flex', gap: 1 }}>
+                                            <Tooltip title="Copy link">
+                                                <IconButton 
+                                                    onClick={async () => {
+                                                        const result = await copyToClipboard(editSlot.meetingLink)
+                                                        if (result.success) {
+                                                            toast.success(result.message)
+                                                        } else {
+                                                            toast.error(result.message)
+                                                        }
+                                                    }}
+                                                    size="small"
+                                                >
+                                                    <CopyIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Reset về link mặc định">
+                                                <IconButton 
+                                                    onClick={() => setEditSlot({ 
+                                                        ...editSlot, 
+                                                        meetingLink: DEFAULT_GOOGLE_MEET_LINK 
+                                                    })}
+                                                    size="small"
+                                                    color="secondary"
+                                                >
+                                                    <LinkIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
+                                    )
+                                }}
+                            />
+                            
+                            {editSlot.meetingLink && (
+                                <Alert severity="info" sx={{ mt: 1 }}>
+                                    <Typography variant="body2">
+                                        💡 Link này sẽ được sử dụng cho tất cả member đặt lịch slot này
+                                    </Typography>
+                                </Alert>
+                            )}
+                        </Box>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() => setOpenEditSlot(false)}>Hủy</Button>
-                        <Button onClick={handleUpdateSlot} variant="contained" color="primary">Cập nhật</Button>
+                        <Button 
+                            onClick={handleUpdateSlot} 
+                            variant="contained" 
+                            color="primary"
+                            startIcon={<EditIcon />}
+                        >
+                            Cập nhật
+                        </Button>
                     </DialogActions>
                 </Dialog>
             </Box>
