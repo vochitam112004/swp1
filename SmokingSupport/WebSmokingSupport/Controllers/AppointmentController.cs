@@ -225,9 +225,7 @@ namespace WebSmokingSupport.Controllers
             var appointments = await query.ToListAsync();
             return Ok(appointments.Select(MapToDTO).ToList());
         }
-
-        [HttpPut("{appointmentId}")]
-        [Authorize(Roles = "Member, Coach")]
+       
         [HttpPut("{appointmentId}")]
         [Authorize(Roles = "Member, Coach")]
         public async Task<IActionResult> UpdateAppointment(int appointmentId, [FromBody] DTOAppointmentForUpdate dto)
@@ -236,25 +234,11 @@ namespace WebSmokingSupport.Controllers
                 .Include(a => a.Member)
                 .Include(a => a.Coach)
                 .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
-            if (appointment == null)
-                return NotFound("Appointment not found.");
+            if (appointment == null) return NotFound("Appointment not found.");
 
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
-
-            
             if (appointment.Member?.UserId != userId && appointment.Coach?.UserId != userId)
                 return Forbid("You are not allowed to update this appointment.");
-
-            
-            if (role == "Member")
-            {
-                if (dto.AppointmentDate.HasValue || dto.StartTime.HasValue || dto.EndTime.HasValue)
-                    return BadRequest("Members cannot change appointment date or time. Please cancel and book a new slot.");
-
-                if (!string.IsNullOrEmpty(dto.MeetingLink))
-                    return BadRequest("Members cannot change the meeting link.");
-            }
 
             if (dto.AppointmentDate.HasValue) appointment.AppointmentDate = dto.AppointmentDate.Value;
             if (dto.StartTime.HasValue) appointment.StartTime = dto.StartTime.Value;
@@ -268,7 +252,6 @@ namespace WebSmokingSupport.Controllers
 
             return Ok("Appointment updated successfully.");
         }
-
 
         [HttpGet("MyMembers")]
         [Authorize(Roles = "Coach")]
