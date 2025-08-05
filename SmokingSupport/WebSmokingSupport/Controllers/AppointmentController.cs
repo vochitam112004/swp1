@@ -22,7 +22,7 @@ namespace WebSmokingSupport.Controllers
             _appointmentRepository = appointmentRepository;
         }
 
-
+        
         [HttpPost("Coach/CreateWeekSlots")]
         [Authorize(Roles = "Coach")]
         public async Task<ActionResult<IEnumerable<DTOCoachSlotCreated>>> CreateWeekSlots([FromBody] DTOCoachWeekSlotsCreate dto)
@@ -36,15 +36,12 @@ namespace WebSmokingSupport.Controllers
 
             foreach (var slotDto in dto.Availabilities)
             {
-                
                 if (slotDto.AppointmentDate < DateOnly.FromDateTime(DateTime.UtcNow))
                     return BadRequest($"Appointment date {slotDto.AppointmentDate} cannot be in the past.");
 
-                
                 if (slotDto.EndTime <= slotDto.StartTime)
                     return BadRequest($"End time must be later than start time for date {slotDto.AppointmentDate}.");
 
-                
                 bool isOverlap = await _context.Appointments.AnyAsync(a =>
                     a.CoachId == coachProfile.CoachId &&
                     a.AppointmentDate == slotDto.AppointmentDate &&
@@ -55,7 +52,6 @@ namespace WebSmokingSupport.Controllers
                 if (isOverlap)
                     return BadRequest($"Slot overlaps with an existing one on {slotDto.AppointmentDate}.");
 
-                // Tạo slot mới
                 var appointment = new Appointment
                 {
                     CoachId = coachProfile.CoachId,
@@ -72,7 +68,6 @@ namespace WebSmokingSupport.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Trả về list slot đã tạo
             var response = createdSlots.Select(s => new DTOCoachSlotCreated
             {
                 AppointmentId = s.AppointmentId,
@@ -86,8 +81,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(response);
         }
 
-
-
+       
         [HttpGet("Coach/MySlots")]
         [Authorize(Roles = "Coach")]
         public async Task<ActionResult<IEnumerable<DTOAppointmentForCoachView>>> MySchedule()
@@ -113,6 +107,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(slots);
         }
 
+       
         [HttpPut("Coach/UpdateSlot/{appointmentId}")]
         [Authorize(Roles = "Coach")]
         public async Task<IActionResult> UpdateAvailability(int appointmentId, [FromBody] DTOAppointmentForUpdate dto)
@@ -133,6 +128,8 @@ namespace WebSmokingSupport.Controllers
             await _context.SaveChangesAsync();
             return Ok("Slot updated successfully.");
         }
+
+       
         [HttpDelete("Coach/DeleteSlot/{appointmentId}")]
         [Authorize(Roles = "Coach")]
         public async Task<IActionResult> DeleteAvailability(int appointmentId)
@@ -149,6 +146,8 @@ namespace WebSmokingSupport.Controllers
             await _context.SaveChangesAsync();
             return Ok("Slot deleted successfully.");
         }
+
+        
         [HttpGet("Member/CoachSlots/{coachId}")]
         [Authorize(Roles = "Member")]
         public async Task<ActionResult<IEnumerable<DTOAppointmentForMemberView>>> GetCoachAvailableSlots(int coachId)
@@ -168,6 +167,7 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(slots);
         }
+
         [HttpPost("Member/Book/{appointmentId}")]
         [Authorize(Roles = "Member")]
         public async Task<IActionResult> BookFromAvailability(int appointmentId)
@@ -186,6 +186,8 @@ namespace WebSmokingSupport.Controllers
 
             return Ok("Appointment booked successfully.");
         }
+
+
         [HttpDelete("Member/Cancel/{appointmentId}")]
         [Authorize(Roles = "Member")]
         public async Task<IActionResult> CancelAppointment(int appointmentId)
@@ -206,6 +208,8 @@ namespace WebSmokingSupport.Controllers
 
             return Ok("Appointment cancelled successfully.");
         }
+
+       
         [HttpGet("MyAppointments")]
         [Authorize(Roles = "Member, Coach")]
         public async Task<ActionResult<IEnumerable<DTOAppointmentForRead>>> GetMyAppointments()
@@ -225,7 +229,8 @@ namespace WebSmokingSupport.Controllers
             var appointments = await query.ToListAsync();
             return Ok(appointments.Select(MapToDTO).ToList());
         }
-       
+
+      
         [HttpPut("{appointmentId}")]
         [Authorize(Roles = "Member, Coach")]
         public async Task<IActionResult> UpdateAppointment(int appointmentId, [FromBody] DTOAppointmentForUpdate dto)
@@ -234,18 +239,35 @@ namespace WebSmokingSupport.Controllers
                 .Include(a => a.Member)
                 .Include(a => a.Coach)
                 .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
-            if (appointment == null) return NotFound("Appointment not found.");
+
+            if (appointment == null)
+                return NotFound("Appointment not found.");
 
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
             if (appointment.Member?.UserId != userId && appointment.Coach?.UserId != userId)
                 return Forbid("You are not allowed to update this appointment.");
 
-            if (dto.AppointmentDate.HasValue) appointment.AppointmentDate = dto.AppointmentDate.Value;
-            if (dto.StartTime.HasValue) appointment.StartTime = dto.StartTime.Value;
-            if (dto.EndTime.HasValue) appointment.EndTime = dto.EndTime.Value;
-            if (dto.Notes != null) appointment.Notes = dto.Notes;
-            if (dto.Status != null) appointment.Status = dto.Status;
-            if (dto.MeetingLink != null) appointment.MeetingLink = dto.MeetingLink;
+            if (role == "Member")
+            {
+                if (dto.AppointmentDate.HasValue || dto.StartTime.HasValue || dto.EndTime.HasValue)
+                    return BadRequest("Members cannot change date or time. Please cancel and rebook.");
+                if (!string.IsNullOrEmpty(dto.MeetingLink))
+                    return BadRequest("Members cannot change the meeting link.");
+
+                if (dto.Status != null) appointment.Status = dto.Status;
+                if (dto.Notes != null) appointment.Notes = dto.Notes;
+            }
+            else if (role == "Coach")
+            {
+                if (dto.AppointmentDate.HasValue) appointment.AppointmentDate = dto.AppointmentDate.Value;
+                if (dto.StartTime.HasValue) appointment.StartTime = dto.StartTime.Value;
+                if (dto.EndTime.HasValue) appointment.EndTime = dto.EndTime.Value;
+                if (dto.MeetingLink != null) appointment.MeetingLink = dto.MeetingLink;
+                if (dto.Status != null) appointment.Status = dto.Status;
+                if (dto.Notes != null) appointment.Notes = dto.Notes;
+            }
 
             appointment.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -253,6 +275,7 @@ namespace WebSmokingSupport.Controllers
             return Ok("Appointment updated successfully.");
         }
 
+     
         [HttpGet("MyMembers")]
         [Authorize(Roles = "Coach")]
         public async Task<ActionResult<IEnumerable<DTOMemberView>>> GetMyMembers()
@@ -272,11 +295,9 @@ namespace WebSmokingSupport.Controllers
                     Name = g.Key.User.DisplayName,
                     Email = g.Key.User.Email,
                     PhoneNumber = g.Key.User.PhoneNumber,
-
                     TotalAppointments = g.Count(),
                     CompletedAppointments = g.Count(a => a.Status == "Completed"),
                     CancelledAppointments = g.Count(a => a.Status == "Cancelled"),
-
                     NextAppointmentDate = g.Where(a => a.Status == "Scheduled" && a.AppointmentDate >= DateOnly.FromDateTime(DateTime.UtcNow))
                                            .OrderBy(a => a.AppointmentDate)
                                            .Select(a => a.AppointmentDate)
@@ -295,7 +316,7 @@ namespace WebSmokingSupport.Controllers
             return Ok(members);
         }
 
-
+        
         private DTOAppointmentForRead MapToDTO(Appointment a)
         {
             return new DTOAppointmentForRead
