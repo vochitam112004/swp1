@@ -14,9 +14,6 @@ import FeedbackManager from "./FeedbackManager";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import BadgeManager from "./BadgeManager";
-import SystemOverview from "./SystemOverview";
-import AchievementTemplateManager from "./AchievementTemplateManager";
-import UserAchievementManager from "./UserAchievementManager";
 
 export default function AdminPage() {
   const [tab, setTab] = useState(0);
@@ -101,7 +98,6 @@ export default function AdminPage() {
           <Tab label="Gói thành viên" />
           <Tab label="Phản hồi & Đánh giá" />
           <Tab label="Quản lí huy hiệu" />
-          <Tab label="Mẫu thành tích" />
         </Tabs>
       </Box>
 
@@ -112,7 +108,6 @@ export default function AdminPage() {
         {tab === 2 && <MembershipManager />}
         {tab === 3 && <FeedbackManager />}
         {tab === 4 && <BadgeManager />}
-        {tab === 5 && <AchievementTemplateManager />}
       </Box>
     </Box>
   );

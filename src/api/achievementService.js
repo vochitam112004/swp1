@@ -6,7 +6,7 @@ import api from './axios';
  */
 export const achievementService = {
   // =================== ACHIEVEMENT TEMPLATE APIS ===================
-  
+
   /**
    * GET /api/AchievementTemplate
    * Get all achievement templates
@@ -144,22 +144,12 @@ export const achievementService = {
    * @param {number} assignmentData.templateId - Template ID to assign
    * @returns {Promise} Promise containing assignment result
    */
-  assignAchievement: async (assignmentData) => {
+  assignAchievement: async ({ userId, templateId }) => {
     try {
-      const response = await api.post('/UserAchievement/assign', {
-        userId: assignmentData.userId,
-        templateId: assignmentData.templateId
-      });
-      return {
-        success: true,
-        data: response.data
-      };
+      await api.post('/UserAchievement/assign', { userId, templateId });
+      return { success: true };
     } catch (error) {
-      console.error('Error assigning achievement:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message
-      };
+      return { success: false, error: error.message };
     }
   },
 
@@ -173,15 +163,9 @@ export const achievementService = {
   removeUserAchievement: async (userId, templateId) => {
     try {
       await api.delete(`/UserAchievement/${userId}/${templateId}`);
-      return {
-        success: true
-      };
+      return { success: true };
     } catch (error) {
-      console.error('Error removing user achievement:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message
-      };
+      return { success: false, error: error.message };
     }
   },
 
@@ -214,7 +198,7 @@ export const achievementService = {
    * @returns {Array} Array of qualifying templates
    */
   getQualifyingTemplates: (smokeFreeDays, templates = []) => {
-    return templates.filter(template => 
+    return templates.filter(template =>
       smokeFreeDays >= template.requiredSmokeFreeDays
     ).sort((a, b) => b.requiredSmokeFreeDays - a.requiredSmokeFreeDays);
   },

@@ -91,7 +91,7 @@ export default function ManageCoach() {
 
     try {
       const formData = new FormData();
-      formData.append("UserName", editingData.userName || "");
+      formData.append("UserName", editingData.username || "");
       formData.append("Email", editingData.email || "");
       formData.append("PhoneNumber", editingData.phoneNumber || "");
       formData.append("Address", editingData.address || "");
@@ -200,7 +200,7 @@ export default function ManageCoach() {
         <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#fff", p: 3, width: 500, borderRadius: 2, boxShadow: 24 }}>
           <Typography variant="h6" gutterBottom>Cập nhật Coach</Typography>
           <Grid container spacing={2}>
-            {["userName", "displayName", "email", "phoneNumber", "address", "specialization"].map((field) => (
+            {["username", "displayName", "email", "phoneNumber", "address", "specialization"].map((field) => (
               <Grid item xs={12} key={field}>
                 <TextField
                   label={fieldLabels[field] || field}
@@ -225,27 +225,89 @@ export default function ManageCoach() {
 
       {/* Modal Create */}
       <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)}>
-        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 500, minHeight: 400, bgcolor: "background.paper", borderRadius: 2, boxShadow: 24, p: 3, display: "flex", flexDirection: "column" }}>
-          <Typography variant="h6" gutterBottom>Thêm Coach</Typography>
-          <Box sx={{ flexGrow: 1 }}>
-            <Grid container spacing={2}>
-              {["username", "passWord", "displayName", "email", "phoneNumber", "address", "specialization"].map((field) => (
-                <Grid item xs={12} key={field}>
-                  <TextField
-                    label={fieldLabels[field] || field}
-                    fullWidth
-                    value={newCoach[field]}
-                    onChange={(e) => setNewCoach({ ...newCoach, [field]: e.target.value })}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-          <Box sx={{ mt: "auto", pt: 2, display: "flex", justifyContent: "center" }}>
-            <Button variant="contained" onClick={handleCreateCoach}>Tạo</Button>
-          </Box>
-        </Box>
-      </Modal>
+  <Box sx={{
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: 500,
+    minHeight: 400,
+    bgcolor: "background.paper",
+    borderRadius: 2,
+    boxShadow: 24,
+    p: 3,
+    display: "flex",
+    flexDirection: "column"
+  }}>
+    <Typography variant="h6" gutterBottom>Thêm Coach</Typography>
+    <Box sx={{ flexGrow: 1 }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <TextField
+            label="Tên đăng nhập"
+            fullWidth
+            value={newCoach.username}
+            onChange={e => setNewCoach({ ...newCoach, username: e.target.value })}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Mật khẩu"
+            type="password"
+            fullWidth
+            value={newCoach.passWord}
+            onChange={e => setNewCoach({ ...newCoach, passWord: e.target.value })}
+            placeholder="Nhập mật khẩu cho coach"
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Tên hiển thị"
+            fullWidth
+            value={newCoach.displayName}
+            onChange={e => setNewCoach({ ...newCoach, displayName: e.target.value })}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Email"
+            fullWidth
+            value={newCoach.email}
+            onChange={e => setNewCoach({ ...newCoach, email: e.target.value })}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Số điện thoại"
+            fullWidth
+            value={newCoach.phoneNumber}
+            onChange={e => setNewCoach({ ...newCoach, phoneNumber: e.target.value })}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Địa chỉ"
+            fullWidth
+            value={newCoach.address}
+            onChange={e => setNewCoach({ ...newCoach, address: e.target.value })}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Chứng chỉ/Chuyên môn"
+            fullWidth
+            value={newCoach.specialization}
+            onChange={e => setNewCoach({ ...newCoach, specialization: e.target.value })}
+            placeholder="Ví dụ: Tâm lý học, Sức khỏe, ..."
+          />
+        </Grid>
+      </Grid>
+    </Box>
+    <Box sx={{ mt: "auto", pt: 2, display: "flex", justifyContent: "center" }}>
+      <Button variant="contained" onClick={handleCreateCoach}>Tạo</Button>
+    </Box>
+  </Box>
+</Modal>
 
       {/* Dialog Delete */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
