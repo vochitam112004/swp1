@@ -803,6 +803,7 @@ const Dashboard = () => {
             progress={progress}
             achievedBadges={achievedBadges}
             setAchievedBadges={setAchievedBadges}
+            userId={user?.id}
           />
         );
 

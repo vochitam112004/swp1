@@ -33,7 +33,7 @@ export default function AchievementTemplateManager() {
   const [form, setForm] = useState({
     name: "",
     description: "",
-    requiredSmokeFreeDays: 0,
+    requiredMoneySaved: 0,
   });
   const [open, setOpen] = useState(false);
 
@@ -64,7 +64,7 @@ export default function AchievementTemplateManager() {
     const { name, value } = e.target;
     setForm({
       ...form,
-      [name]: name === "requiredSmokeFreeDays" ? parseInt(value) || 0 : value,
+      [name]: name === "requiredMoneySaved" ? parseInt(value) || 0 : value,
     });
   };
 
@@ -75,8 +75,8 @@ export default function AchievementTemplateManager() {
       return;
     }
 
-    if (form.requiredSmokeFreeDays < 0) {
-      toast.warn("Số ngày không hút thuốc phải là số dương.");
+    if (form.requiredMoneySaved < 0) {
+      toast.warn("Số tiền tiết kiệm phải là số dương.");
       return;
     }
 
@@ -112,7 +112,7 @@ export default function AchievementTemplateManager() {
     setForm({
       name: template.name,
       description: template.description,
-      requiredSmokeFreeDays: template.requiredSmokeFreeDays,
+      requiredMoneySaved: template.requiredMoneySaved,
     });
     setOpen(true);
   };
@@ -120,14 +120,14 @@ export default function AchievementTemplateManager() {
   // Handle add new
   const handleAdd = () => {
     setEditTemplate(null);
-    setForm({ name: "", description: "", requiredSmokeFreeDays: 0 });
+    setForm({ name: "", description: "", requiredMoneySaved: 0 });
     setOpen(true);
   };
 
   // Handle delete
   const handleDelete = async (templateId) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa mẫu thành tích này?")) return;
-    
+
     try {
       const result = await achievementService.deleteTemplate(templateId);
       if (result.success) {
@@ -146,11 +146,11 @@ export default function AchievementTemplateManager() {
   const handleCloseDialog = () => {
     setOpen(false);
     setEditTemplate(null);
-    setForm({ name: "", description: "", requiredSmokeFreeDays: 0 });
+    setForm({ name: "", description: "", requiredMoneySaved: 0 });
   };
 
-  // Sort templates by required days
-  const sortedTemplates = [...templates].sort((a, b) => a.requiredSmokeFreeDays - b.requiredSmokeFreeDays);
+  // Sort templates by required money saved
+  const sortedTemplates = [...templates].sort((a, b) => a.requiredMoneySaved - b.requiredMoneySaved);
 
   if (loading) {
     return (
@@ -170,11 +170,11 @@ export default function AchievementTemplateManager() {
             Quản lý mẫu thành tích
           </Typography>
         </Box>
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAdd}
-          sx={{ 
+          sx={{
             background: 'linear-gradient(45deg, #FF6B6B, #4ECDC4)',
             '&:hover': {
               background: 'linear-gradient(45deg, #FF5252, #26C6DA)',
@@ -188,8 +188,8 @@ export default function AchievementTemplateManager() {
       {/* Info Alert */}
       <Alert severity="info" sx={{ mb: 3 }}>
         <Typography variant="body2">
-          Mẫu thành tích định nghĩa các cột mốc quan trọng trong hành trình cai thuốc. 
-          Khi người dùng đạt đủ số ngày không hút thuốc, họ sẽ tự động nhận được thành tích tương ứng.
+          Mẫu thành tích định nghĩa các cột mốc quan trọng trong hành trình tiết kiệm tiền từ việc cai thuốc.
+          Khi người dùng tiết kiệm đủ số tiền, họ sẽ tự động nhận được thành tích tương ứng.
         </Typography>
       </Alert>
 
@@ -200,27 +200,27 @@ export default function AchievementTemplateManager() {
             <TableRow>
               <TableCell sx={{ fontWeight: 'bold' }}>Tên thành tích</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Mô tả</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Yêu cầu (ngày)</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Yêu cầu (VNĐ)</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Cấp độ</TableCell>
               <TableCell align="right" sx={{ fontWeight: 'bold' }}>Hành động</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {sortedTemplates.map((template, index) => {
-              // Determine achievement level based on required days
+              // Determine achievement level based on requiredMoneySaved
               let level = "Mới bắt đầu";
               let levelColor = "default";
-              
-              if (template.requiredSmokeFreeDays >= 365) {
+
+              if (template.requiredMoneySaved >= 10000000) {
                 level = "Chuyên gia";
                 levelColor = "error";
-              } else if (template.requiredSmokeFreeDays >= 90) {
+              } else if (template.requiredMoneySaved >= 3000000) {
                 level = "Nâng cao";
                 levelColor = "warning";
-              } else if (template.requiredSmokeFreeDays >= 30) {
+              } else if (template.requiredMoneySaved >= 1000000) {
                 level = "Trung cấp";
                 levelColor = "info";
-              } else if (template.requiredSmokeFreeDays >= 7) {
+              } else if (template.requiredMoneySaved >= 200000) {
                 level = "Cơ bản";
                 levelColor = "success";
               }
@@ -229,13 +229,13 @@ export default function AchievementTemplateManager() {
                 <TableRow key={template.templateId} hover>
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={1}>
-                      <EmojiEventsIcon 
-                        sx={{ 
-                          color: levelColor === 'error' ? '#f44336' : 
-                                 levelColor === 'warning' ? '#ff9800' :
-                                 levelColor === 'info' ? '#2196f3' :
-                                 levelColor === 'success' ? '#4caf50' : '#9e9e9e'
-                        }} 
+                      <EmojiEventsIcon
+                        sx={{
+                          color: levelColor === 'error' ? '#f44336' :
+                            levelColor === 'warning' ? '#ff9800' :
+                              levelColor === 'info' ? '#2196f3' :
+                                levelColor === 'success' ? '#4caf50' : '#9e9e9e'
+                        }}
                       />
                       <Typography fontWeight="medium">
                         {template.name}
@@ -248,31 +248,31 @@ export default function AchievementTemplateManager() {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip 
-                      label={`${template.requiredSmokeFreeDays} ngày`}
+                    <Chip
+                      label={template.requiredMoneySaved?.toLocaleString('vi-VN') + " VNĐ"}
                       color="primary"
                       size="small"
                     />
                   </TableCell>
                   <TableCell>
-                    <Chip 
+                    <Chip
                       label={level}
                       color={levelColor}
                       size="small"
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton 
-                      color="primary" 
-                      onClick={() => handleEdit(template)} 
+                    <IconButton
+                      color="primary"
+                      onClick={() => handleEdit(template)}
                       size="small"
                       title="Chỉnh sửa"
                     >
                       <EditIcon />
                     </IconButton>
-                    <IconButton 
-                      color="error" 
-                      onClick={() => handleDelete(template.templateId)} 
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDelete(template.templateId)}
                       size="small"
                       title="Xóa"
                     >
@@ -302,8 +302,8 @@ export default function AchievementTemplateManager() {
       )}
 
       {/* Create/Edit Dialog */}
-      <Dialog 
-        open={open} 
+      <Dialog
+        open={open}
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
@@ -323,7 +323,7 @@ export default function AchievementTemplateManager() {
             onChange={handleChange}
             fullWidth
             required
-            placeholder="VD: Ngày đầu tiên không thuốc"
+            placeholder="VD: Tiết kiệm 1 triệu đồng"
           />
 
           <TextField
@@ -340,21 +340,21 @@ export default function AchievementTemplateManager() {
 
           <TextField
             margin="dense"
-            label="Số ngày không hút thuốc yêu cầu"
-            name="requiredSmokeFreeDays"
+            label="Số tiền tiết kiệm yêu cầu (VNĐ)"
+            name="requiredMoneySaved"
             type="number"
-            value={form.requiredSmokeFreeDays}
+            value={form.requiredMoneySaved}
             onChange={handleChange}
             fullWidth
             required
             inputProps={{ min: 0 }}
-            helperText="Số ngày tối thiểu để đạt được thành tích này"
+            helperText="Số tiền tối thiểu để đạt được thành tích này"
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Hủy</Button>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             onClick={handleSave}
             disabled={!form.name.trim()}
           >

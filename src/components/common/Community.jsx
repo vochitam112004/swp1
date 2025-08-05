@@ -10,6 +10,17 @@ const Community = () => {
     const [sortBy, setSortBy] = useState("newest"); // newest, oldest
     const [selectedJournal, setSelectedJournal] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [sharedBadge, setSharedBadge] = useState(null);
+
+    useEffect(() => {
+        const shared = localStorage.getItem("sharedBadgeToCommunity");
+        if (shared) {
+            const { badge } = JSON.parse(shared);
+            setSharedBadge(badge); // Lưu vào state để render
+            toast.success(`🎉 Bạn vừa chia sẻ thành tích: ${badge.label} lên cộng đồng!`);
+            localStorage.removeItem("sharedBadgeToCommunity");
+        }
+    }, []);
 
     // Lấy tất cả nhật ký công khai từ API
     useEffect(() => {
@@ -160,6 +171,17 @@ const Community = () => {
                         </select>
                     </div>
                 </div>
+
+                {sharedBadge && (
+                    <div className="alert alert-info d-flex align-items-center mb-4 shadow-sm">
+                        <i className="fas fa-award text-warning me-3" style={{ fontSize: "2rem" }} />
+                        <div>
+                            <strong>Thành tích vừa chia sẻ:</strong>
+                            <div className="fw-bold">{sharedBadge.label}</div>
+                            <div className="small text-muted">{sharedBadge.description}</div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Journal List */}
                 <div className="row">

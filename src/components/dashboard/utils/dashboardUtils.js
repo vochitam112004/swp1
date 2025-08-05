@@ -3,6 +3,9 @@ import { toast } from "react-toastify";
 import { TIPS } from "../constants/dashboardConstants";
 import { DateUtils } from "../../../utils/dateUtils";
 
+/**
+ * Đọc và parse localStorage an toàn
+ */
 export const safeParse = (key, fallback) => {
   try {
     const val = localStorage.getItem(key);
@@ -12,14 +15,19 @@ export const safeParse = (key, fallback) => {
   }
 };
 
-// ✅ Đã sửa: truyền badgeTemplates thay vì dùng BADGES hardcode
+/**
+ * Lấy danh sách huy hiệu đã đạt dựa trên số tiền tiết kiệm (theo API mới)
+ * @param {object} progress - Thông tin tiến trình (phải có moneySaved)
+ * @param {array} badgeTemplates - Danh sách template (phải có requiredMoneySaved)
+ * @returns {array} Danh sách badge đã đạt
+ */
 export const getAchievedBadges = (progress, badgeTemplates) => {
   if (!progress || !badgeTemplates) return [];
 
-  const { smokeFreeDays } = progress;
+  const { moneySaved } = progress;
 
   return badgeTemplates
-    .filter(t => smokeFreeDays >= t.requiredSmokeFreeDays)
+    .filter(t => moneySaved >= t.requiredMoneySaved)
     .map(t => ({
       key: t.templateId,
       label: t.name,
@@ -114,16 +122,21 @@ export const getPersonalizedTips = (daysNoSmoke) => {
   );
 };
 
+/**
+ * Tính toán tiến trình dựa trên log: ngày không hút, tiền tiết kiệm, sức khỏe
+ * @param {array} progressLogs
+ * @returns {object} { daysNoSmoke, moneySaved, health }
+ */
 export const calculateProgress = (progressLogs) => {
   let daysNoSmoke = 0;
   let moneySaved = 0;
   let health = 0;
-  
+
   progressLogs.forEach((log) => {
     if (log.cigarettesSmoked === 0) daysNoSmoke += 1;
-    moneySaved += log.pricePerPack || 0;
+    moneySaved += log.moneySaved || 0; // Sửa: cộng đúng trường moneySaved từ log
   });
-  
+
   health = Math.min(daysNoSmoke, 100);
   return { daysNoSmoke, moneySaved, health };
 };
@@ -140,7 +153,7 @@ export const calculateGoalProgress = (currentGoal, plan) => {
 
 export const getGoalDays = (plan) => {
   const normalizedPlan = DateUtils.normalizeFields(plan);
-  
+
   if (normalizedPlan && normalizedPlan.startDate && normalizedPlan.targetQuitDate) {
     return DateUtils.daysDifference(normalizedPlan.targetQuitDate, normalizedPlan.startDate);
   }

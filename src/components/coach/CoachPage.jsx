@@ -136,7 +136,6 @@ export default function CoachDashboard() {
           <Tab label="Tiến trình & Sức khỏe" />
           <Tab label="Danh sách lịch hẹn" />
           <Tab label="Mẫu thành tích" />
-          <Tab label="Quản lý thành tích" />
           <Tab label="Hồ sơ cá nhân" />
         </Tabs>
       </Box>
@@ -147,8 +146,7 @@ export default function CoachDashboard() {
         {tab === 1 && <UserProgress />}
         {tab === 2 && <AppointmentList />}
         {tab === 3 && <AchievementTemplateManager />}
-        {tab === 4 && <UserAchievementManager />}
-        {tab === 5 && <CoachProfileTabs />}
+        {tab === 4 && <CoachProfileTabs />}
       </Box>
     </Box>
   );

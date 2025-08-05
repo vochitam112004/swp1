@@ -30,18 +30,20 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import Autocomplete from "@mui/material/Autocomplete";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import PersonIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 import { toast } from "react-toastify";
 import achievementService from "../../api/achievementService";
-import { baseApiUrl } from "../../api/axios";
+import api from "../../api/axios";
 
 export default function UserAchievementManager() {
   const [userAchievements, setUserAchievements] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchUserId, setSearchUserId] = useState("");
+  const [userOptions, setUserOptions] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -61,10 +63,20 @@ export default function UserAchievementManager() {
     }
   };
 
+  // Fetch all users for selection
+  const fetchAllUsers = async () => {
+    try {
+      const res = await api.get("/User/Get-All-User");
+      setUserOptions(res.data); // [{userId, displayName, email, ...}]
+    } catch (error) {
+      toast.error("Không thể tải danh sách người dùng!");
+    }
+  };
+
   // Fetch user achievements
   const fetchUserAchievements = async (userId) => {
     if (!userId) return;
-    
+
     try {
       setLoading(true);
       const result = await achievementService.getUserAchievements(userId);
@@ -85,17 +97,8 @@ export default function UserAchievementManager() {
 
   useEffect(() => {
     fetchTemplates();
+    fetchAllUsers();
   }, []);
-
-  // Handle search user
-  const handleSearchUser = () => {
-    const userId = parseInt(searchUserId);
-    if (isNaN(userId) || userId <= 0) {
-      toast.warn("Vui lòng nhập ID người dùng hợp lệ!");
-      return;
-    }
-    fetchUserAchievements(userId);
-  };
 
   // Handle assign achievement
   const handleAssignAchievement = async () => {
@@ -148,25 +151,31 @@ export default function UserAchievementManager() {
     return templates.filter(template => !assignedTemplateIds.includes(template.templateId));
   };
 
-  // Calculate progress statistics
+  // Calculate progress statistics (dựa trên tiền tiết kiệm)
   const getProgressStats = () => {
     if (!userAchievements.length || !selectedUserId) return null;
 
+    // Lấy thành tích mới nhất (theo lastUpdated)
     const latestAchievement = userAchievements.reduce((latest, current) => {
       return new Date(current.lastUpdated) > new Date(latest.lastUpdated) ? current : latest;
     });
 
-    const totalDays = latestAchievement.smokeFreeDays;
+    // Lấy tổng số tiền đã tiết kiệm lớn nhất trong các thành tích đã đạt
+    const maxMoneySaved = Math.max(
+      ...userAchievements.map(a => a.template?.requiredMoneySaved || 0)
+    );
+
+    // Tìm thành tích tiếp theo dựa trên requiredMoneySaved
     const nextTemplate = templates
-      .filter(t => t.requiredSmokeFreeDays > totalDays)
-      .sort((a, b) => a.requiredSmokeFreeDays - b.requiredSmokeFreeDays)[0];
+      .filter(t => t.requiredMoneySaved > maxMoneySaved)
+      .sort((a, b) => a.requiredMoneySaved - b.requiredMoneySaved)[0];
 
     return {
-      currentDays: totalDays,
+      currentMoney: maxMoneySaved,
       achievementsCount: userAchievements.length,
       totalTemplates: templates.length,
       nextAchievement: nextTemplate,
-      daysUntilNext: nextTemplate ? nextTemplate.requiredSmokeFreeDays - totalDays : 0
+      moneyUntilNext: nextTemplate ? nextTemplate.requiredMoneySaved - maxMoneySaved : 0
     };
   };
 
@@ -184,35 +193,33 @@ export default function UserAchievementManager() {
         </Box>
       </Box>
 
-      {/* Search Section */}
+      {/* User Selection Section */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Tìm kiếm người dùng
+            Chọn người dùng
           </Typography>
-          <Box display="flex" gap={2} alignItems="center">
-            <TextField
-              label="ID người dùng"
-              value={searchUserId}
-              onChange={(e) => setSearchUserId(e.target.value)}
-              type="number"
-              placeholder="Nhập ID người dùng"
-              size="small"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearchUser();
-                }
-              }}
-            />
-            <Button
-              variant="contained"
-              onClick={handleSearchUser}
-              startIcon={<SearchIcon />}
-              disabled={!searchUserId.trim()}
-            >
-              Tìm kiếm
-            </Button>
-          </Box>
+          <Autocomplete
+            options={userOptions}
+            getOptionLabel={(option) =>
+              `${option.displayName || option.userName} (${option.email})`
+            }
+            value={selectedUser}
+            onChange={(e, value) => {
+              setSelectedUser(value);
+              if (value) {
+                fetchUserAchievements(value.userId);
+              } else {
+                setSelectedUserId(null);
+                setUserAchievements([]);
+              }
+            }}
+            renderInput={(params) => (
+              <TextField {...params} label="Tìm kiếm hoặc chọn người dùng" placeholder="Nhập tên, email..." />
+            )}
+            sx={{ width: 400, mb: 1 }}
+            isOptionEqualToValue={(option, value) => option.userId === value.userId}
+          />
         </CardContent>
       </Card>
 
@@ -233,13 +240,13 @@ export default function UserAchievementManager() {
                     <Typography variant="subtitle1" fontWeight="bold">
                       User ID: {selectedUserId}
                     </Typography>
-                    {userAchievements.length > 0 && userAchievements[0].user && (
+                    {selectedUser && (
                       <>
                         <Typography variant="body2" color="textSecondary">
-                          {userAchievements[0].user.displayName || userAchievements[0].user.username}
+                          {selectedUser.displayName || selectedUser.userName}
                         </Typography>
                         <Typography variant="body2" color="textSecondary">
-                          {userAchievements[0].user.email}
+                          {selectedUser.email}
                         </Typography>
                       </>
                     )}
@@ -258,7 +265,7 @@ export default function UserAchievementManager() {
                   </Typography>
                   <Stack spacing={1}>
                     <Typography variant="body2">
-                      📅 Ngày không hút thuốc: <strong>{progressStats.currentDays} ngày</strong>
+                      💰 Tiền tiết kiệm lớn nhất: <strong>{progressStats.currentMoney.toLocaleString('vi-VN')} VNĐ</strong>
                     </Typography>
                     <Typography variant="body2">
                       🏆 Thành tích đạt được: <strong>{progressStats.achievementsCount}/{progressStats.totalTemplates}</strong>
@@ -267,7 +274,7 @@ export default function UserAchievementManager() {
                       <Typography variant="body2" color="warning.main">
                         🎯 Thành tích tiếp theo: <strong>{progressStats.nextAchievement.name}</strong>
                         <br />
-                        (Còn {progressStats.daysUntilNext} ngày)
+                        (Còn {progressStats.moneyUntilNext.toLocaleString('vi-VN')} VNĐ)
                       </Typography>
                     ) : (
                       <Typography variant="body2" color="success.main">
@@ -315,7 +322,6 @@ export default function UserAchievementManager() {
                   <TableRow>
                     <TableCell sx={{ fontWeight: 'bold' }}>Thành tích</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>Yêu cầu</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Ngày hiện tại</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>Cập nhật lần cuối</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>Trạng thái</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 'bold' }}>Hành động</TableCell>
@@ -339,15 +345,10 @@ export default function UserAchievementManager() {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={`${achievement.template?.requiredSmokeFreeDays || 0} ngày`}
+                          label={`${achievement.template?.requiredMoneySaved?.toLocaleString('vi-VN') || 0} VNĐ`}
                           color="primary"
                           size="small"
                         />
-                      </TableCell>
-                      <TableCell>
-                        <Typography fontWeight="bold" color="success.main">
-                          {achievement.smokeFreeDays} ngày
-                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
@@ -356,16 +357,8 @@ export default function UserAchievementManager() {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={
-                            achievement.smokeFreeDays >= (achievement.template?.requiredSmokeFreeDays || 0)
-                              ? "Đã đạt"
-                              : "Chưa đạt"
-                          }
-                          color={
-                            achievement.smokeFreeDays >= (achievement.template?.requiredSmokeFreeDays || 0)
-                              ? "success"
-                              : "warning"
-                          }
+                          label="Đã đạt"
+                          color="success"
                           size="small"
                         />
                       </TableCell>
@@ -396,10 +389,10 @@ export default function UserAchievementManager() {
         <Box textAlign="center" py={8}>
           <SearchIcon sx={{ fontSize: '4rem', color: 'text.secondary', mb: 2 }} />
           <Typography variant="h6" color="textSecondary">
-            Tìm kiếm người dùng để xem thành tích
+            Chọn người dùng để xem thành tích
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Nhập ID người dùng để xem và quản lý thành tích của họ
+            Hãy chọn một người dùng để xem và quản lý thành tích của họ
           </Typography>
         </Box>
       )}
@@ -430,7 +423,7 @@ export default function UserAchievementManager() {
                   <Box>
                     <Typography>{template.name}</Typography>
                     <Typography variant="body2" color="textSecondary">
-                      Yêu cầu: {template.requiredSmokeFreeDays} ngày - {template.description}
+                      Yêu cầu: {template.requiredMoneySaved?.toLocaleString('vi-VN')} VNĐ - {template.description}
                     </Typography>
                   </Box>
                 </MenuItem>

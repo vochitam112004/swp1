@@ -43,7 +43,7 @@ export const achievementService = {
     try {
       const response = await api.post('/AchievementTemplate', {
         name: templateData.name,
-        requiredSmokeFreeDays: templateData.requiredSmokeFreeDays,
+        requiredMoneySaved: templateData.requiredMoneySaved, // đổi trường này
         description: templateData.description
       });
       return {
@@ -73,7 +73,7 @@ export const achievementService = {
     try {
       const response = await api.put(`/AchievementTemplate/${templateId}`, {
         name: templateData.name,
-        requiredSmokeFreeDays: templateData.requiredSmokeFreeDays,
+        requiredMoneySaved: templateData.requiredMoneySaved, // đổi trường này
         description: templateData.description
       });
       return {

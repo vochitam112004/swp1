@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import api from '../../../api/axios';
 import { getAchievedBadges, sendBrowserNotification } from "../utils/dashboardUtils";
 
-const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
+const BadgeComponents = ({ userId, progress, achievedBadges, setAchievedBadges }) => {
   const [badgeTemplates, setBadgeTemplates] = useState([]);
   const [encourages, setEncourages] = useState(() => {
     const saved = localStorage.getItem("encourages");
@@ -13,22 +13,31 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
   const [commentInputs, setCommentInputs] = useState({});
   const [forceUpdate, setForceUpdate] = useState(0);
 
-  // 🔄 Fetch badge templates from API
+  // 🔄 Fetch badge templates from API & đồng bộ thành tích
   useEffect(() => {
-    const fetchBadgeTemplates = async () => {
+    if (!userId) return;
+    const syncAchievements = async () => {
       try {
-        const response = await api.get("/AchievementTemplate");
-        const data = response.data;
-        setBadgeTemplates(data);
+        await api.post("/UserAchievement/assign-by-money");
+        const res = await api.get(`/UserAchievement/${userId}`);
+        const badges = Array.isArray(res.data)
+          ? res.data.map(a => ({
+            key: a.template?.templateId || a.templateId,
+            label: a.template?.name || "",
+            icon: "fas fa-award",
+            description: a.template?.description || "",
+          }))
+          : [];
+        setAchievedBadges(badges);
       } catch (error) {
-        console.error("Lỗi khi tải huy hiệu:", error);
+        console.warn("Không thể đồng bộ thành tích từ server:", error);
       }
     };
+    syncAchievements();
+    // eslint-disable-next-line
+  }, [userId, progress, setAchievedBadges]);
 
-    fetchBadgeTemplates();
-  }, []);
-
-  // 🏅 Xác định huy hiệu đã đạt
+  // 🏅 Xác định huy hiệu đã đạt (nếu dùng badgeTemplates)
   useEffect(() => {
     if (!progress || badgeTemplates.length === 0) return;
 
@@ -61,15 +70,13 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
     setAchievedBadges(stored);
   }, [progress, badgeTemplates, setAchievedBadges]);
 
+  // --- Các hàm xử lý ---
   const shareBadge = (badge) => {
-    const shared = JSON.parse(localStorage.getItem("sharedBadges") || "[]");
-    shared.push({
-      badge: badge.label,
-      user: progress.displayName || "Bạn",
-      time: new Date().toLocaleString(),
-    });
-    localStorage.setItem("sharedBadges", JSON.stringify(shared));
-    toast.info(`Bạn đã chia sẻ huy hiệu "${badge.label}" lên cộng đồng!`);
+    localStorage.setItem("sharedBadgeToCommunity", JSON.stringify({
+      badge,
+      sharedAt: new Date().toISOString()
+    }));
+    window.location.href = "/community";
   };
 
   const handleEncourage = (idx) => {
@@ -105,6 +112,7 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
     return comments[idx] || [];
   };
 
+  // --- Render danh sách badge ---
   const renderBadgeList = () => {
     return (
       <div className="row">
@@ -198,6 +206,7 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
     );
   };
 
+  // --- Return UI ---
   return (
     <div className="badge-section">
       <div className="d-flex justify-content-between align-items-center mb-4">
