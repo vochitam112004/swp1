@@ -52,7 +52,6 @@ namespace WebSmokingSupport.Controllers
             return Ok(template);
         }
 
-
         [HttpDelete("{id}")]
         [Authorize(Roles = "Coach, Admin")]
         public async Task<ActionResult> Delete(int id)
