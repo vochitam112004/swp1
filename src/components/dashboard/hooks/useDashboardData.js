@@ -91,6 +91,7 @@ export const useDashboardData = () => {
         setPreviousAttempts(res.data.previousAttempts || "");
 
         // Set new smoking habits data
+        setCigarettesSmoked(res.data.cigarettesSmoked || 0);
         setDailyCigarettes(res.data.dailyCigarettes || 0);
         setYearsOfSmoking(res.data.yearsOfSmoking || 0);
         setPackPrice(res.data.packPrice || res.data.pricePerPack || 25000);
