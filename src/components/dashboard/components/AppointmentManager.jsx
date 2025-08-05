@@ -11,11 +11,6 @@ import {
   Paper,
   Button,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Alert,
   Tabs,
   Tab
@@ -25,7 +20,6 @@ import LaunchIcon from "@mui/icons-material/Launch";
 import { toast } from 'react-toastify';
 import api from '../../../api/axios';
 import AppointmentBookingForm from './AppointmentBookingForm';
-import { validateMeetingLink, getMeetingLinkErrorMessage, exampleUrls } from '../../../utils/urlValidation';
 
 const AppointmentManager = () => {
   const {
@@ -35,16 +29,6 @@ const AppointmentManager = () => {
   } = useDashboardData();
 
   const [currentTab, setCurrentTab] = useState(0);
-  const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [editAppointment, setEditAppointment] = useState({
-    appointmentId: '',
-    appointmentDate: '',
-    startTime: '',
-    endTime: '',
-    status: '',
-    notes: '',
-    meetingLink: ''
-  });
 
   useEffect(() => {
     fetchAppointments();
@@ -75,53 +59,6 @@ const AppointmentManager = () => {
         console.error('Lỗi khi hủy lịch hẹn:', error);
         toast.error('Lỗi khi hủy lịch hẹn!');
       }
-    }
-  };
-
-  const handleOpenEditDialog = (appointment) => {
-    setEditAppointment({
-      appointmentId: appointment.appointmentId,
-      appointmentDate: appointment.appointmentDate.split('T')[0], // Format for date input
-      startTime: appointment.startTime,
-      endTime: appointment.endTime,
-      status: appointment.status || '',
-      notes: appointment.notes || '',
-      meetingLink: appointment.meetingLink || ''
-    });
-    setOpenEditDialog(true);
-  };
-
-  const handleUpdateAppointment = async () => {
-    if (!editAppointment.appointmentDate || !editAppointment.startTime || !editAppointment.endTime) {
-      toast.error('Vui lòng điền đầy đủ thông tin!');
-      return;
-    }
-
-    if (editAppointment.startTime >= editAppointment.endTime) {
-      toast.error('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc!');
-      return;
-    }
-
-    if (editAppointment.meetingLink && !validateMeetingLink(editAppointment.meetingLink)) {
-      toast.error(getMeetingLinkErrorMessage(editAppointment.meetingLink));
-      return;
-    }
-
-    try {
-      await api.put(`/Appointment/${editAppointment.appointmentId}`, {
-        appointmentDate: editAppointment.appointmentDate,
-        startTime: editAppointment.startTime,
-        endTime: editAppointment.endTime,
-        status: editAppointment.status,
-        notes: editAppointment.notes,
-        meetingLink: editAppointment.meetingLink
-      });
-      toast.success('Cập nhật lịch hẹn thành công!');
-      setOpenEditDialog(false);
-      fetchAppointments();
-    } catch (error) {
-      console.error('Lỗi khi cập nhật lịch hẹn:', error);
-      toast.error('Lỗi khi cập nhật lịch hẹn!');
     }
   };
 
@@ -159,7 +96,6 @@ const AppointmentManager = () => {
                 <TableCell>Thời gian</TableCell>
                 <TableCell>Coach</TableCell>
                 <TableCell>Trạng thái</TableCell>
-                <TableCell>Ghi chú</TableCell>
                 <TableCell>Meeting Link</TableCell>
                 <TableCell>Hành động</TableCell>
               </TableRow>
@@ -180,7 +116,6 @@ const AppointmentManager = () => {
                       {appointment.status}
                     </span>
                   </TableCell>
-                  <TableCell>{appointment.notes || "-"}</TableCell>
                   <TableCell>
                     {appointment.meetingLink ? (
                       <Button
@@ -200,16 +135,6 @@ const AppointmentManager = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button 
-                      variant="outlined" 
-                      color="primary" 
-                      size="small" 
-                      sx={{ mr: 1 }}
-                      onClick={() => handleOpenEditDialog(appointment)}
-                      disabled={appointment.status === 'Cancelled'}
-                    >
-                      Sửa
-                    </Button>
                     {(appointment.status === 'Pending' || appointment.status === 'Confirmed') && (
                       <Button 
                         variant="contained" 
@@ -220,6 +145,11 @@ const AppointmentManager = () => {
                         Hủy
                       </Button>
                     )}
+                    {appointment.status === 'Cancelled' && (
+                      <Button variant="outlined" size="small" disabled>
+                        Đã hủy
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -227,76 +157,8 @@ const AppointmentManager = () => {
           </Table>
         </TableContainer>
       )}
-
-      {/* Dialog sửa lịch hẹn */}
-      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Cập nhật lịch hẹn</DialogTitle>
-        <DialogContent>
-          <TextField
-            margin="dense"
-            label="Ngày (YYYY-MM-DD)"
-            type="date"
-            fullWidth
-            value={editAppointment.appointmentDate}
-            onChange={e => setEditAppointment({ ...editAppointment, appointmentDate: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            margin="dense"
-            label="Giờ bắt đầu"
-            type="time"
-            fullWidth
-            value={editAppointment.startTime}
-            onChange={e => setEditAppointment({ ...editAppointment, startTime: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            margin="dense"
-            label="Giờ kết thúc"
-            type="time"
-            fullWidth
-            value={editAppointment.endTime}
-            onChange={e => setEditAppointment({ ...editAppointment, endTime: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            margin="dense"
-            label="Trạng thái"
-            fullWidth
-            value={editAppointment.status}
-            onChange={e => setEditAppointment({ ...editAppointment, status: e.target.value })}
-            disabled
-            helperText="Trạng thái được quản lý bởi hệ thống"
-          />
-          <TextField
-            margin="dense"
-            label="Ghi chú"
-            fullWidth
-            multiline
-            minRows={2}
-            value={editAppointment.notes}
-            onChange={e => setEditAppointment({ ...editAppointment, notes: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Link Online"
-            fullWidth
-            value={editAppointment.meetingLink}
-            onChange={e => setEditAppointment({ ...editAppointment, meetingLink: e.target.value })}
-            placeholder={exampleUrls.googleMeet}
-            helperText="Hỗ trợ: Google Meet, Zoom, Teams, Webex, GoToMeeting, Discord, Skype"
-            error={editAppointment.meetingLink && !validateMeetingLink(editAppointment.meetingLink)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEditDialog(false)}>Hủy</Button>
-          <Button onClick={handleUpdateAppointment} variant="contained" color="primary">
-            Cập nhật
-          </Button>
-        </DialogActions>
-      </Dialog>
-        </Box>
-      )}
+      </Box>
+    )}
     </Box>
   );
 };

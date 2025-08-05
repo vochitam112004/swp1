@@ -47,7 +47,6 @@ const AppointmentBookingForm = ({ onAppointmentCreated }) => {
   const [loading, setLoading] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [bookingNote, setBookingNote] = useState('');
   const [confirmDialog, setConfirmDialog] = useState(false);
 
   // Fetch coaches when component mounts
@@ -138,14 +137,11 @@ const AppointmentBookingForm = ({ onAppointmentCreated }) => {
       setLoading(true);
       
       // Book the appointment
-      await api.post(`/Appointment/Member/Book/${selectedSlot.appointmentId}`, {
-        notes: bookingNote || `Đặt lịch hẹn với ${selectedCoach?.displayName}`
-      });
+      await api.post(`/Appointment/Member/Book/${selectedSlot.appointmentId}`, {});
 
       toast.success('Đặt lịch hẹn thành công!');
       setConfirmDialog(false);
       setSelectedSlot(null);
-      setBookingNote('');
       
       // Refresh data
       if (selectedCoach) {
@@ -369,20 +365,6 @@ const AppointmentBookingForm = ({ onAppointmentCreated }) => {
                   </Typography>
                 </Grid>
               </Grid>
-
-              <Divider sx={{ my: 2 }} />
-
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Ghi chú (tùy chọn)"
-                placeholder="Nhập nội dung bạn muốn trao đổi hoặc ghi chú đặc biệt..."
-                value={bookingNote}
-                onChange={(e) => setBookingNote(e.target.value)}
-                variant="outlined"
-                sx={{ mb: 2 }}
-              />
 
               <Alert severity="success" icon={<VideoIcon />}>
                 Link cuộc họp sẽ được gửi cho bạn sau khi huấn luyện viên xác nhận.

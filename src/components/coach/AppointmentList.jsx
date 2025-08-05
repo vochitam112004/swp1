@@ -31,7 +31,8 @@ export default function AppointmentList() {
     const [newSlot, setNewSlot] = useState({
         appointmentDate: '',
         startTime: '',
-        endTime: ''
+        endTime: '',
+        meetingLink: ''
     })
     const [openEditSlot, setOpenEditSlot] = useState(false);
     const [editSlot, setEditSlot] = useState({
@@ -40,7 +41,6 @@ export default function AppointmentList() {
         startTime: '',
         endTime: '',
         status: '',
-        notes: '',
         meetingLink: ''
     });
 
@@ -75,7 +75,16 @@ export default function AppointmentList() {
     }, [])
 
     // Xóa slot rảnh
-    const deleteCoachSlot = async (appointmentId) => {
+    const deleteCoachSlot = async (appointmentId, slot) => {
+        // Kiểm tra slot đã được book chưa
+        const isBooked = slot?.status !== 'Available';
+        const hasBooking = slot?.memberName && slot?.memberName !== '';
+        
+        if (isBooked || hasBooking) {
+            toast.warning('Không thể xóa slot đã được thành viên đặt lịch!');
+            return;
+        }
+
         if (window.confirm('Bạn có chắc muốn xóa slot này?')) {
             try {
                 await api.delete(`/Appointment/Coach/DeleteSlot/${appointmentId}`)
@@ -83,7 +92,17 @@ export default function AppointmentList() {
                 fetchMyCoachSlots()
             } catch (error) {
                 console.error("Lỗi khi xóa slot:", error)
-                toast.error('Lỗi khi xóa slot!')
+                
+                let errorMessage = 'Lỗi khi xóa slot!'
+                if (error.response?.status === 400) {
+                    if (typeof error.response?.data === 'string') {
+                        errorMessage = error.response.data
+                        if (errorMessage.includes('booked')) {
+                            errorMessage = 'Không thể xóa slot đã được đặt lịch. Vui lòng hủy lịch hẹn trước.'
+                        }
+                    }
+                }
+                toast.error(errorMessage)
             }
         }
     }
@@ -143,7 +162,8 @@ export default function AppointmentList() {
             availabilities: [{
                 appointmentDate: newSlot.appointmentDate,
                 startTime: `${newSlot.startTime}:00`,  // HH:MM:SS format required
-                endTime: `${newSlot.endTime}:00`       // HH:MM:SS format required
+                endTime: `${newSlot.endTime}:00`,      // HH:MM:SS format required
+                meetingLink: newSlot.meetingLink || null  // Thêm Google Meet link nếu có
             }]
         }
 
@@ -153,9 +173,40 @@ export default function AppointmentList() {
         try {
             const response = await api.post('/Appointment/Coach/CreateWeekSlots', payload)
             console.log('✅ SUCCESS!', response.data)
+            
+            // Nếu có meetingLink và tạo slot thành công, cập nhật thêm meetingLink
+            if (newSlot.meetingLink && response.data) {
+                try {
+                    // Lấy appointmentId của slot vừa tạo
+                    await fetchMyCoachSlots(); // Refresh để lấy slot mới
+                    
+                    // Tìm slot vừa tạo (cùng ngày và thời gian)
+                    const currentSlots = await api.get('/Appointment/Coach/MySlots');
+                    const newCreatedSlot = currentSlots.data.find(slot => 
+                        slot.appointmentDate === newSlot.appointmentDate &&
+                        slot.startTime.substring(0,5) === newSlot.startTime &&
+                        slot.endTime.substring(0,5) === newSlot.endTime
+                    );
+                    
+                    if (newCreatedSlot) {
+                        await api.put(`/Appointment/Coach/UpdateSlot/${newCreatedSlot.appointmentId}`, {
+                            appointmentDate: newCreatedSlot.appointmentDate,
+                            startTime: newCreatedSlot.startTime,
+                            endTime: newCreatedSlot.endTime,
+                            status: newCreatedSlot.status,
+                            meetingLink: newSlot.meetingLink
+                        });
+                        console.log('✅ Meeting link added successfully!');
+                    }
+                } catch (linkError) {
+                    console.warn('⚠️ Slot created but failed to add meeting link:', linkError);
+                    toast.warning('Slot tạo thành công nhưng không thể thêm link Google Meet. Bạn có thể thêm sau bằng cách chỉnh sửa slot.');
+                }
+            }
+            
             toast.success('Tạo slot rảnh thành công!')
             setOpenAddSlot(false)
-            setNewSlot({ appointmentDate: '', startTime: '', endTime: '' })
+            setNewSlot({ appointmentDate: '', startTime: '', endTime: '', meetingLink: '' })
             fetchMyCoachSlots()
         } catch (error) {
             console.error("❌ Error:", error)
@@ -191,13 +242,29 @@ export default function AppointmentList() {
     }
 
     const handleOpenEditSlot = (slot) => {
+        // Kiểm tra slot đã được book chưa
+        const isBooked = slot.status !== 'Available';
+        const hasBooking = slot.memberName && slot.memberName !== '';
+        
+        if (isBooked || hasBooking) {
+            toast.warning('Không thể chỉnh sửa slot đã được thành viên đặt lịch!');
+            return;
+        }
+
+        // Format thời gian để hiển thị trong input (HH:MM)
+        const formatTimeForInput = (timeStr) => {
+            if (timeStr && timeStr.length >= 5) {
+                return timeStr.substring(0, 5); // Lấy HH:MM từ HH:MM:SS
+            }
+            return timeStr;
+        };
+
         setEditSlot({
             appointmentId: slot.appointmentId,
             appointmentDate: slot.appointmentDate,
-            startTime: slot.startTime,
-            endTime: slot.endTime,
+            startTime: formatTimeForInput(slot.startTime),
+            endTime: formatTimeForInput(slot.endTime),
             status: slot.status || '',
-            notes: slot.notes || '',
             meetingLink: slot.meetingLink || ''
         });
         setOpenEditSlot(true);
@@ -214,13 +281,34 @@ export default function AppointmentList() {
             return
         }
 
+        // Validate date format
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+        if (!dateRegex.test(editSlot.appointmentDate)) {
+            toast.error('Ngày phải có định dạng YYYY-MM-DD!')
+            return
+        }
+
+        // Validate time format
+        const timeRegex = /^\d{2}:\d{2}$/
+        if (!timeRegex.test(editSlot.startTime) || !timeRegex.test(editSlot.endTime)) {
+            toast.error('Thời gian phải có định dạng HH:MM!')
+            return
+        }
+
         try {
+            // Đảm bảo format thời gian có giây (HH:MM:SS)
+            const formatTime = (timeStr) => {
+                if (timeStr && timeStr.length === 5) {
+                    return timeStr + ':00'; // Thêm :00 cho giây
+                }
+                return timeStr;
+            };
+
             await api.put(`/Appointment/Coach/UpdateSlot/${editSlot.appointmentId}`, {
                 appointmentDate: editSlot.appointmentDate,
-                startTime: editSlot.startTime,
-                endTime: editSlot.endTime,
+                startTime: formatTime(editSlot.startTime),
+                endTime: formatTime(editSlot.endTime),
                 status: editSlot.status,
-                notes: editSlot.notes,
                 meetingLink: editSlot.meetingLink
             });
             toast.success('Cập nhật slot thành công!')
@@ -228,13 +316,108 @@ export default function AppointmentList() {
             fetchMyCoachSlots();
         } catch (error) {
             console.error("Lỗi khi cập nhật slot:", error);
-            toast.error('Lỗi khi cập nhật slot!')
+            console.error("Error details:", error.response?.data);
+            console.error("Error status:", error.response?.status);
+            
+            let errorMessage = 'Lỗi khi cập nhật slot!'
+            if (error.response?.status === 400) {
+                if (typeof error.response?.data === 'string') {
+                    errorMessage = error.response.data
+                    if (errorMessage.includes('booked')) {
+                        errorMessage = 'Không thể cập nhật slot đã được đặt lịch. Slot này đã có member đặt rồi.'
+                    }
+                } else if (error.response?.data?.errors) {
+                    const errors = error.response.data.errors
+                    const errorKeys = Object.keys(errors)
+                    errorMessage = `Validation lỗi: ${errorKeys.join(', ')}`
+                } else if (error.response?.data?.message) {
+                    errorMessage = error.response.data.message
+                }
+            }
+            toast.error(errorMessage)
         }
     };
 
     return (
         <div>
             <Box p={3}>
+                <Typography variant="h6" gutterBottom>Danh sách lịch hẹn của tôi</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    💡 Lưu ý: Chỉ có thể chỉnh sửa/xóa các slot chưa được thành viên đặt lịch
+                </Typography>
+                <Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span style={{ color: 'green', fontWeight: 'bold' }}>●</span> Available - Có thể đặt
+                    </Typography>
+                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span style={{ color: 'blue', fontWeight: 'bold' }}>●</span> Booked - Đã được đặt
+                    </Typography>
+                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span style={{ color: 'orange', fontWeight: 'bold' }}>●</span> Other - Trạng thái khác
+                    </Typography>
+                </Box>
+                <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={() => setOpenAddSlot(true)}>
+                    Thêm slot rảnh
+                </Button>
+                {slots.length === 0 ? (
+                    <Typography>Chưa có slot rảnh nào.</Typography>
+                ) : (
+                    <TableContainer component={Paper} sx={{ mb: 4 }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>Ngày</TableCell>
+                                    <TableCell>Thời gian</TableCell>
+                                    <TableCell>Trạng thái</TableCell>
+                                    <TableCell>Thành viên đặt</TableCell>
+                                    <TableCell>Thao tác</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {slots.map(slot => {
+                                    const isBooked = slot.status !== 'Available';
+                                    const hasBooking = slot.memberName && slot.memberName !== '';
+                                    
+                                    return (
+                                        <TableRow key={slot.appointmentId}>
+                                            <TableCell>{slot.appointmentDate}</TableCell>
+                                            <TableCell>{slot.startTime} - {slot.endTime}</TableCell>
+                                            <TableCell>
+                                                <span style={{
+                                                    color: slot.status === 'Available' ? 'green' : 
+                                                           slot.status === 'Booked' ? 'blue' : 'orange',
+                                                    fontWeight: 'bold'
+                                                }}>
+                                                    {slot.status}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>{slot.memberName || <span className="text-muted">Chưa có</span>}</TableCell>
+                                            <TableCell>
+                                                <IconButton 
+                                                    color="error" 
+                                                    onClick={() => deleteCoachSlot(slot.appointmentId, slot)}
+                                                    disabled={isBooked || hasBooking}
+                                                    title={isBooked || hasBooking ? "Không thể xóa slot đã được đặt" : "Xóa slot"}
+                                                >
+                                                    <i className="fas fa-trash"></i>
+                                                </IconButton>
+                                                <IconButton 
+                                                    color="primary" 
+                                                    onClick={() => handleOpenEditSlot(slot)}
+                                                    disabled={isBooked || hasBooking}
+                                                    title={isBooked || hasBooking ? "Không thể sửa slot đã được đặt" : "Chỉnh sửa slot"}
+                                                >
+                                                    <i className="fas fa-edit"></i>
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+
                 <Typography variant="h6" gutterBottom>Lịch hẹn từ thành viên</Typography>
                 {appointments.length === 0 ? (
                     <Typography>Không có lịch hẹn nào.</Typography>
@@ -246,7 +429,6 @@ export default function AppointmentList() {
                                     <TableCell>Thành viên</TableCell>
                                     <TableCell>Ngày</TableCell>
                                     <TableCell>Thời gian</TableCell>
-                                    <TableCell>Ghi chú</TableCell>
                                     <TableCell>Link Online</TableCell>
                                     <TableCell>Trạng thái</TableCell>
                                 </TableRow>
@@ -257,7 +439,6 @@ export default function AppointmentList() {
                                         <TableCell>{item.memberName}</TableCell>
                                         <TableCell>{item.appointmentDate}</TableCell>
                                         <TableCell>{item.startTime} - {item.endTime}</TableCell>
-                                        <TableCell>{item.notes || 'Không có'}</TableCell>
                                         <TableCell>
                                             {item.meetingLink ? (
                                                 <Link href={item.meetingLink} target="_blank" rel="noopener noreferrer" underline="hover">
@@ -279,53 +460,13 @@ export default function AppointmentList() {
                     </TableContainer>
                 )}
 
-                <Typography variant="h6" gutterBottom>Slot rảnh của bạn</Typography>
-                <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={() => setOpenAddSlot(true)}>
-                    Thêm slot rảnh
-                </Button>
-                {slots.length === 0 ? (
-                    <Typography>Chưa có slot rảnh nào.</Typography>
-                ) : (
-                    <TableContainer component={Paper}>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Ngày</TableCell>
-                                    <TableCell>Thời gian</TableCell>
-                                    <TableCell>Trạng thái</TableCell>
-                                    <TableCell>Thành viên đặt</TableCell>
-                                    <TableCell>Thao tác</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {slots.map(slot => (
-                                    <TableRow key={slot.appointmentId}>
-                                        <TableCell>{slot.appointmentDate}</TableCell>
-                                        <TableCell>{slot.startTime} - {slot.endTime}</TableCell>
-                                        <TableCell>{slot.status}</TableCell>
-                                        <TableCell>{slot.memberName || <span className="text-muted">Chưa có</span>}</TableCell>
-                                        <TableCell>
-                                            <IconButton color="error" onClick={() => deleteCoachSlot(slot.appointmentId)}>
-                                                <i className="fas fa-trash"></i>
-                                            </IconButton>
-                                            <IconButton color="primary" onClick={() => handleOpenEditSlot(slot)}>
-                                                <i className="fas fa-edit"></i>
-                                            </IconButton>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                )}
-
                 {/* Dialog thêm slot */}
                 <Dialog open={openAddSlot} onClose={() => setOpenAddSlot(false)}>
                     <DialogTitle>Thêm slot rảnh mới</DialogTitle>
                     <DialogContent>
                         <TextField
                             margin="dense"
-                            label="Ngày (YYYY-MM-DD)"
+                            label="Ngày"
                             type="date"
                             fullWidth
                             variant="outlined"
@@ -349,6 +490,16 @@ export default function AppointmentList() {
                             variant="outlined"
                             value={newSlot.endTime}
                             onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Link Google Meet"
+                            fullWidth
+                            variant="outlined"
+                            value={newSlot.meetingLink}
+                            onChange={(e) => setNewSlot({ ...newSlot, meetingLink: e.target.value })}
+                            placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                            helperText="Bạn có thể thêm link Google Meet ngay khi tạo slot"
                         />
                     </DialogContent>
                     <DialogActions>
@@ -395,16 +546,6 @@ export default function AppointmentList() {
                             variant="outlined"
                             value={editSlot.status}
                             onChange={(e) => setEditSlot({ ...editSlot, status: e.target.value })}
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Ghi chú"
-                            fullWidth
-                            variant="outlined"
-                            multiline
-                            rows={2}
-                            value={editSlot.notes}
-                            onChange={(e) => setEditSlot({ ...editSlot, notes: e.target.value })}
                         />
                         <TextField
                             margin="dense"
