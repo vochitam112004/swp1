@@ -34,44 +34,62 @@ export const TriggerFactorService = {
   },
 
   /**
-   * GET /api/TriggerFactor/member/{memberId}
-   * Get specific member's trigger factors (for coaches)
+   * GET member's trigger factors (for coaches)
+   * Try multiple possible endpoints since Swagger doesn't specify this
    * @param {number} memberId - Member ID
    */
   getMemberTriggerFactors: async (memberId) => {
     try {
-      // Try different possible endpoints since we don't have a specific one
+      console.log(`🔄 Trying to fetch triggers for memberId: ${memberId}`);
+      
+      // Try different possible endpoints
       let response;
+      let endpointUsed = '';
       
       try {
-        // First try a coach-specific endpoint if it exists
-        response = await api.get(`/TriggerFactor/member/${memberId}/triggers`);
+        // Option 1: Try a coach-specific endpoint
+        endpointUsed = `/TriggerFactor/GetMemberTriggerFactors/${memberId}`;
+        response = await api.get(endpointUsed);
+        console.log(`✅ Success with endpoint: ${endpointUsed}`);
       } catch (error1) {
         try {
-          // Try another possible endpoint
-          response = await api.get(`/TriggerFactor/GetTriggerFactorByMember/${memberId}`);
+          // Option 2: Try with query parameter
+          endpointUsed = `/TriggerFactor/Get-MyTriggerFactor?memberId=${memberId}`;
+          response = await api.get(endpointUsed);
+          console.log(`✅ Success with endpoint: ${endpointUsed}`);
         } catch (error2) {
           try {
-            // Try with query parameter
-            response = await api.get('/TriggerFactor/GetMemberTriggerFactors', {
-              params: { memberId }
-            });
+            // Option 3: Try a different pattern
+            endpointUsed = `/TriggerFactor/GetByMember/${memberId}`;
+            response = await api.get(endpointUsed);
+            console.log(`✅ Success with endpoint: ${endpointUsed}`);
           } catch (error3) {
             try {
-              // Try the original endpoint with member ID
-              response = await api.get(`/TriggerFactor/member/${memberId}`);
+              // Option 4: Try coach endpoint with member parameter
+              endpointUsed = `/TriggerFactor/GetMemberTriggers?memberId=${memberId}`;
+              response = await api.get(endpointUsed);
+              console.log(`✅ Success with endpoint: ${endpointUsed}`);
             } catch (error4) {
-              // If all endpoints fail, return empty array for now
-              console.warn('No endpoint available to get member trigger factors, returning empty array');
+              console.warn(`⚠️ All endpoints failed for memberId ${memberId}. Available endpoints might be different.`);
+              console.warn('Tried:', [
+                `/TriggerFactor/GetMemberTriggerFactors/${memberId}`,
+                `/TriggerFactor/Get-MyTriggerFactor?memberId=${memberId}`,
+                `/TriggerFactor/GetByMember/${memberId}`,
+                `/TriggerFactor/GetMemberTriggers?memberId=${memberId}`
+              ]);
+              
+              // Return empty array instead of crashing
               return [];
             }
           }
         }
       }
       
-      return response.data || [];
+      const triggers = response.data || [];
+      console.log(`✅ Found ${triggers.length} triggers for member ${memberId} using ${endpointUsed}`);
+      return triggers;
     } catch (error) {
-      console.error('Error fetching member trigger factors:', error);
+      console.error(`❌ Error fetching member trigger factors for memberId ${memberId}:`, error);
       // Return empty array instead of throwing error to prevent UI crashes
       return [];
     }
@@ -147,36 +165,27 @@ export const TriggerFactorService = {
       return response.data;
     } catch (error) {
       console.error('❌ Error assigning trigger factors to member:', error);
-      
-      // Try alternative endpoint if the first one fails
-      try {
-        console.log('🔄 Trying alternative assign endpoint...');
-        const response = await api.post('/TriggerFactor/AssignToMember', {
-          memberId: memberId,
-          triggerFactorIds: triggerIds
-        });
-        console.log('✅ Successfully assigned triggers via alternative endpoint');
-        return response.data;
-      } catch (error2) {
-        console.error('❌ Alternative endpoint also failed:', error2);
-        throw new Error(error.response?.data?.message || 'Không thể gán yếu tố kích thích cho thành viên');
-      }
+      throw new Error(error.response?.data?.message || 'Không thể gán yếu tố kích thích cho thành viên');
     }
   },
 
   /**
-   * POST /api/TriggerFactor/assign (current user)
-   * Assign trigger factors to current user (no memberId needed)
+   * Assign trigger factors to current user
+   * Since there's no endpoint without memberId, we need to get current user's memberId first
    * @param {number[]} triggerIds - Array of trigger factor IDs
    */
   assignTriggerFactorsToCurrentUser: async (triggerIds) => {
     try {
-      // Based on the Swagger spec, there are two assign endpoints:
-      // 1. POST /api/TriggerFactor/assign/{memberId} - for specific member
-      // 2. POST /api/TriggerFactor/assign - likely for current user
-      // We'll try the second one first, then fallback if needed
-      const response = await api.post('/TriggerFactor/assign', triggerIds);
-      return response.data;
+      // We need to get the current user's member profile to get memberId
+      // Import MemberProfileService to get current user's memberId
+      const { MemberProfileService } = await import('./memberProfileService.js');
+      const memberProfile = await MemberProfileService.getMyMemberProfile();
+      
+      if (!memberProfile?.memberId) {
+        throw new Error('Không tìm thấy hồ sơ thành viên. Vui lòng tạo hồ sơ trước.');
+      }
+
+      return await TriggerFactorService.assignTriggerFactorsToMember(memberProfile.memberId, triggerIds);
     } catch (error) {
       console.error('Error assigning trigger factors to current user:', error);
       throw new Error(error.response?.data?.message || 'Không thể gán yếu tố kích thích');

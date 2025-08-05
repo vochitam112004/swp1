@@ -31,6 +31,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { getAvailableActions } from '../../../utils/triggerFactorPermissions';
 import ApiHelper from '../../../utils/apiHelper';
 import api from '../../../api/axios';
+import MemberProfileService from '../../../api/memberProfileService';
 
 /**
  * TriggerFactor Manager for Coach
@@ -111,12 +112,35 @@ export default function CoachTriggerFactorManager() {
     if (!selectedMember) return;
     
     try {
-      // For now, we'll use the current user endpoint and hope backend handles context
-      // In a real implementation, we'd need a specific endpoint for coach to get member's triggers
-      const triggers = await ApiHelper.fetchMyTriggerFactors();
+      console.log(`🔄 Loading triggers for member: ${selectedMember.displayName} (userId: ${selectedMember.userId})`);
+      
+      // First get the member's memberProfile to get the memberId
+      let memberId = selectedMember.memberId;
+      
+      if (!memberId) {
+        try {
+          const memberProfile = await MemberProfileService.getMemberProfileByUserId(selectedMember.userId);
+          memberId = memberProfile?.memberId;
+          console.log(`📝 Found memberId: ${memberId} for user ${selectedMember.userId}`);
+        } catch (error) {
+          console.warn(`⚠️ No member profile found for user ${selectedMember.userId}:`, error);
+          setMemberTriggers([]);
+          return;
+        }
+      }
+      
+      if (!memberId) {
+        console.warn(`⚠️ No memberId found for user ${selectedMember.userId}`);
+        setMemberTriggers([]);
+        return;
+      }
+      
+      // Now get the member's trigger factors using the memberId
+      const triggers = await ApiHelper.getMemberTriggerFactors(memberId);
+      console.log(`✅ Loaded ${triggers.length} triggers for member ${selectedMember.displayName}`);
       setMemberTriggers(triggers);
     } catch (error) {
-      console.error('Error loading member triggers:', error);
+      console.error('❌ Error loading member triggers:', error);
       toast.error('Không thể tải yếu tố kích thích của thành viên');
       setMemberTriggers([]);
     }
@@ -156,7 +180,28 @@ export default function CoachTriggerFactorManager() {
 
     setLoading(true);
     try {
-      await ApiHelper.createAndAssignTriggerFactorToMember(newTriggerName.trim(), selectedMember.userId);
+      console.log(`🔄 Creating and assigning trigger "${newTriggerName}" to member: ${selectedMember.displayName}`);
+      
+      // Get the member's memberId first
+      let memberId = selectedMember.memberId;
+      
+      if (!memberId) {
+        try {
+          const memberProfile = await MemberProfileService.getMemberProfileByUserId(selectedMember.userId);
+          memberId = memberProfile?.memberId;
+          console.log(`📝 Found memberId: ${memberId} for user ${selectedMember.userId}`);
+        } catch (error) {
+          toast.error('Không tìm thấy hồ sơ thành viên. Thành viên cần tạo hồ sơ trước.');
+          return;
+        }
+      }
+      
+      if (!memberId) {
+        toast.error('Không tìm thấy ID thành viên. Thành viên cần tạo hồ sơ trước.');
+        return;
+      }
+      
+      await ApiHelper.createAndAssignTriggerFactorToMember(newTriggerName.trim(), memberId);
       await Promise.all([
         loadAllTriggerFactors(),
         loadMemberTriggers()
@@ -165,8 +210,8 @@ export default function CoachTriggerFactorManager() {
       setCreateDialogOpen(false);
       toast.success('✅ Đã tạo và gán yếu tố kích thích cho thành viên');
     } catch (error) {
-      console.error('Error creating and assigning trigger factor:', error);
-      toast.error(error.message);
+      console.error('❌ Error creating and assigning trigger factor:', error);
+      toast.error(error.message || 'Có lỗi khi tạo và gán yếu tố kích thích');
     } finally {
       setLoading(false);
     }
@@ -185,15 +230,38 @@ export default function CoachTriggerFactorManager() {
 
     setLoading(true);
     try {
+      console.log(`🔄 Assigning triggers to member: ${selectedMember.displayName}`);
+      
+      // Get the member's memberId first
+      let memberId = selectedMember.memberId;
+      
+      if (!memberId) {
+        try {
+          const memberProfile = await MemberProfileService.getMemberProfileByUserId(selectedMember.userId);
+          memberId = memberProfile?.memberId;
+          console.log(`📝 Found memberId: ${memberId} for user ${selectedMember.userId}`);
+        } catch (error) {
+          toast.error('Không tìm thấy hồ sơ thành viên. Thành viên cần tạo hồ sơ trước.');
+          return;
+        }
+      }
+      
+      if (!memberId) {
+        toast.error('Không tìm thấy ID thành viên. Thành viên cần tạo hồ sơ trước.');
+        return;
+      }
+      
       const triggerIds = selectedTriggersToAssign.map(t => t.triggerId);
-      await ApiHelper.assignTriggerFactorsToMember(selectedMember.userId, triggerIds);
+      console.log(`🔄 Assigning trigger IDs [${triggerIds.join(', ')}] to memberId ${memberId}`);
+      
+      await ApiHelper.assignTriggerFactorsToMember(memberId, triggerIds);
       await loadMemberTriggers();
       setSelectedTriggersToAssign([]);
       setAssignDialogOpen(false);
       toast.success('✅ Đã gán yếu tố kích thích cho thành viên');
     } catch (error) {
-      console.error('Error assigning triggers to member:', error);
-      toast.error(error.message);
+      console.error('❌ Error assigning triggers to member:', error);
+      toast.error(error.message || 'Có lỗi khi gán yếu tố kích thích');
     } finally {
       setLoading(false);
     }

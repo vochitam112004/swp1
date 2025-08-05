@@ -17,6 +17,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import CoachMemberProfileEditor from "./CoachMemberProfileEditor";
 import api, { baseApiUrl } from "../../api/axios";
+import MemberProfileService from "../../api/memberProfileService";
 
 export default function UserProfileCard({ user, onProfileUpdate }) {
   const [memberProfile, setMemberProfile] = useState(null);
@@ -28,8 +29,8 @@ export default function UserProfileCard({ user, onProfileUpdate }) {
 
     const fetchMemberProfile = async () => {
       try {
-        const res = await api.get(`/MemberProfile/GetMemberProfileByUserId/${user.userId}`);
-        setMemberProfile(res.data);
+        const memberProfileData = await MemberProfileService.getMemberProfileByUserId(user.userId);
+        setMemberProfile(memberProfileData);
       } catch (error) {
         console.error("Không thể lấy thông tin member profile:", error);
         setMemberProfile(null);

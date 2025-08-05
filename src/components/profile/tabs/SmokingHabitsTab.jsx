@@ -22,6 +22,7 @@ import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import api from "../../../api/axios";
 import { TriggerFactorService } from "../../../api/triggerFactorService";
+import MemberProfileService from "../../../api/memberProfileService";
 import ApiHelper from "../../../utils/apiHelper";
 import { useAuth } from "../../auth/AuthContext";
 import { getAvailableActions } from "../../../utils/triggerFactorPermissions";
@@ -204,24 +205,20 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
       console.log('Update data:', updateData);
 
       if (memberProfile?.memberId) {
-        // Update existing member profile using the correct API endpoint
+        // Update existing member profile using the service
         console.log('Updating existing profile for member:', memberProfile.memberId);
-        const response = await api.put('/MemberProfile/UpdateMyMemberProfile', updateData);
-        console.log('Update response:', response.data);
+        const response = await MemberProfileService.updateMyMemberProfile(updateData);
+        console.log('Update response:', response);
         
-        // API returns appointment data, so we need to merge properly
+        // Merge the updated data with the current profile
         const updatedProfile = { ...memberProfile, ...updateData };
         setMemberProfile(updatedProfile);
       } else {
-        // Create new member profile using the correct API endpoint
+        // Create new member profile using the service
         console.log('Creating new member profile...');
-        const createData = {
-          ...updateData,
-          create: new Date().toISOString()
-        };
-        const response = await api.post('/MemberProfile/CreateMyMemberProfile', createData);
-        console.log('Create response:', response.data);
-        setMemberProfile(response.data);
+        const response = await MemberProfileService.createMyMemberProfile(updateData);
+        console.log('Create response:', response);
+        setMemberProfile(response);
       }
       
       setIsEditing(false);

@@ -11,6 +11,7 @@ import {
 import { toast } from "react-toastify";
 import { useAuth } from "../auth/AuthContext";
 import api, { baseApiUrl } from "../../api/axios";
+import MemberProfileService from "../../api/memberProfileService";
 import AccountTab from "./tabs/AccountTab";
 import SmokingHabitsTab from "./tabs/SmokingHabitsTab";
 import BadgesTab from "./tabs/BadgesTab";
@@ -84,17 +85,11 @@ export default function ProfileTabs() {
 
     const fetchMemberProfile = async () => {
       try {
-        let res;
-        try {
-          res = await api.get("/MemberProfile/GetMyMemberProfile");
-          setMemberProfile(res.data);
-        } catch (error) {
-          // If user doesn't have member profile, create empty one for display
-          console.log("No member profile found, creating empty one");
-          setMemberProfile({});
-        }
+        const memberProfileData = await MemberProfileService.getMyMemberProfile();
+        setMemberProfile(memberProfileData || {});
       } catch (error) {
         console.error("Error fetching member profile:", error);
+        // Set empty object if profile doesn't exist
         setMemberProfile({});
       } finally {
         setLoading(false);

@@ -25,7 +25,9 @@ import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from "@mui/i
 import { toast } from "react-toastify";
 import { useAuth } from "../auth/AuthContext";
 import api from "../../api/axios";
+import MemberProfileService from "../../api/memberProfileService";
 import { ApiErrorHandler } from "../../utils/ApiErrorHandler";
+import AchievementsTab from "./tabs/AchievementsTab";
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -147,29 +149,51 @@ export default function UnifiedProfilePage() {
 
   const fetchMemberProfile = async () => {
     try {
-      const memberRes = await api.get("/api/MemberProfile/GetMyMemberProfile");
-      const memberData = memberRes.data;
-      setMemberProfile(memberData);
+      const memberData = await MemberProfileService.getMyMemberProfile();
       
-      // Initialize forms with member data
-      setSmokingForm({
-        smokingStatus: memberData.smokingStatus || '',
-        cigarettesSmoked: memberData.cigarettesSmoked || 0,
-        yearsOfSmoking: memberData.yearsOfSmoking || 0,
-        pricePerPack: memberData.pricePerPack || 25000,
-        cigarettesPerPack: memberData.cigarettesPerPack || 20,
-        smokingPattern: memberData.smokingPattern || '',
-        smokingTriggers: memberData.smokingTriggers || '',
-        quitAttempts: memberData.quitAttempts || 0,
-        experienceLevel: memberData.experienceLevel || 0,
-        previousAttempts: memberData.previousAttempts || '',
-        personalMotivation: memberData.personalMotivation || ''
-      });
-      
-      setHealthForm({
-        health: memberData.health || ''
-      });
+      if (memberData) {
+        setMemberProfile(memberData);
+        
+        // Initialize forms with member data
+        setSmokingForm({
+          smokingStatus: memberData.smokingStatus || '',
+          cigarettesSmoked: memberData.cigarettesSmoked || 0,
+          yearsOfSmoking: memberData.yearsOfSmoking || 0,
+          pricePerPack: memberData.pricePerPack || 25000,
+          cigarettesPerPack: memberData.cigarettesPerPack || 20,
+          smokingPattern: memberData.smokingPattern || '',
+          smokingTriggers: memberData.smokingTriggers || '',
+          quitAttempts: memberData.quitAttempts || 0,
+          experienceLevel: memberData.experienceLevel || 0,
+          previousAttempts: memberData.previousAttempts || '',
+          personalMotivation: memberData.personalMotivation || ''
+        });
+        
+        setHealthForm({
+          health: memberData.health || ''
+        });
+      } else {
+        // No profile found, set empty state
+        setMemberProfile(null);
+        setSmokingForm({
+          smokingStatus: '',
+          cigarettesSmoked: 0,
+          yearsOfSmoking: 0,
+          pricePerPack: 25000,
+          cigarettesPerPack: 20,
+          smokingPattern: '',
+          smokingTriggers: '',
+          quitAttempts: 0,
+          experienceLevel: 0,
+          previousAttempts: '',
+          personalMotivation: ''
+        });
+        setHealthForm({
+          health: ''
+        });
+      }
     } catch (error) {
+      console.error("Error fetching member profile:", error);
       if (error.response?.status === 404) {
         console.log("ℹ️ Member profile not found - user can create one");
       } else {
@@ -207,10 +231,10 @@ export default function UnifiedProfilePage() {
         ...healthForm
       };
 
-      const response = await api.post('/MemberProfile', defaultProfile);
-      setMemberProfile(response.data);
+      const response = await MemberProfileService.createMyMemberProfile(defaultProfile);
+      setMemberProfile(response);
       toast.success("Đã tạo hồ sơ thành viên thành công!");
-      return response.data;
+      return response;
     } catch (error) {
       ApiErrorHandler.handle(error, 'create-member-profile');
       throw error;
@@ -232,7 +256,7 @@ export default function UnifiedProfilePage() {
             await createMemberProfile();
             return;
           }
-          await api.put(`/MemberProfile/${memberProfile.memberId}`, smokingForm);
+          await MemberProfileService.updateMyMemberProfile(smokingForm);
           setMemberProfile({ ...memberProfile, ...smokingForm });
           toast.success("Đã cập nhật thông tin hút thuốc!");
           break;
@@ -242,7 +266,7 @@ export default function UnifiedProfilePage() {
             await createMemberProfile();
             return;
           }
-          await api.put(`/MemberProfile/${memberProfile.memberId}`, healthForm);
+          await MemberProfileService.updateMyMemberProfile(healthForm);
           setMemberProfile({ ...memberProfile, ...healthForm });
           toast.success("Đã cập nhật thông tin sức khỏe!");
           break;
@@ -348,6 +372,7 @@ export default function UnifiedProfilePage() {
                 <Tab label="🚬 Thói quen hút thuốc" />
                 <Tab label="❤️ Sức khỏe" />
                 <Tab label="🏆 Huy hiệu & Lịch sử" />
+                <Tab label="🎯 Thành tích" />
               </>
             )}
           </Tabs>
@@ -406,6 +431,13 @@ export default function UnifiedProfilePage() {
               membershipHistory={membershipHistory}
               memberProfile={memberProfile}
             />
+          </TabPanel>
+        )}
+
+        {/* Achievements Tab */}
+        {profile?.userType === "Member" && (
+          <TabPanel value={activeTab} index={4}>
+            <AchievementsTab />
           </TabPanel>
         )}
       </Paper>
