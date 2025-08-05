@@ -11,11 +11,59 @@ export const TriggerFactorService = {
    */
   getAllTriggerFactors: async () => {
     try {
+      console.log('🔄 Fetching all trigger factors...');
       const response = await api.get('/TriggerFactor/GetAllTriggerFactor');
-      return response.data;
+      
+      console.log('✅ Raw response:', response);
+      console.log('✅ Response data:', response.data);
+      
+      // Handle different response formats
+      let triggers = response.data;
+      
+      // If response.data is null/undefined, return empty array
+      if (!triggers) {
+        console.log('📝 No trigger data received, returning empty array');
+        return [];
+      }
+      
+      // If response.data is not an array, wrap it or handle accordingly
+      if (!Array.isArray(triggers)) {
+        console.log('📝 Response data is not an array:', typeof triggers);
+        // If it's an object with a property containing the array
+        if (triggers.data && Array.isArray(triggers.data)) {
+          triggers = triggers.data;
+        } else if (triggers.triggerFactors && Array.isArray(triggers.triggerFactors)) {
+          triggers = triggers.triggerFactors;
+        } else if (typeof triggers === 'object') {
+          // If it's a single object, wrap it in an array
+          console.log('📝 Converting single object to array');
+          triggers = [triggers];
+        } else {
+          console.warn('⚠️ Unexpected response format, returning empty array');
+          return [];
+        }
+      }
+      
+      console.log(`✅ Found ${triggers.length} trigger factors (all)`);
+      return triggers;
     } catch (error) {
-      console.error('Error fetching all trigger factors:', error);
-      throw new Error('Không thể lấy danh sách tất cả yếu tố kích thích');
+      console.error('❌ Error fetching all trigger factors:', error);
+      console.error('❌ Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      // Return empty array instead of throwing to prevent UI crashes
+      if (error.response?.status === 404) {
+        console.log('📝 No trigger factors found (404), returning empty array');
+        return [];
+      }
+      
+      // For other errors, still return empty array but log the error
+      console.warn('⚠️ API call failed, returning empty array to prevent UI crash');
+      return [];
     }
   },
 
@@ -25,11 +73,55 @@ export const TriggerFactorService = {
    */
   getMyTriggerFactors: async () => {
     try {
+      console.log('🔄 Fetching my trigger factors...');
       const response = await api.get('/TriggerFactor/Get-MyTriggerFactor');
-      return response.data || [];
+      
+      console.log('✅ Raw response:', response);
+      console.log('✅ Response data:', response.data);
+      
+      // Handle different response formats
+      let triggers = response.data;
+      
+      // If response.data is null/undefined, return empty array
+      if (!triggers) {
+        console.log('📝 No trigger data received, returning empty array');
+        return [];
+      }
+      
+      // If response.data is not an array, wrap it or handle accordingly
+      if (!Array.isArray(triggers)) {
+        console.log('📝 Response data is not an array:', typeof triggers);
+        // If it's an object with a property containing the array
+        if (triggers.data && Array.isArray(triggers.data)) {
+          triggers = triggers.data;
+        } else if (triggers.triggerFactors && Array.isArray(triggers.triggerFactors)) {
+          triggers = triggers.triggerFactors;
+        } else {
+          console.warn('⚠️ Unexpected response format, returning empty array');
+          return [];
+        }
+      }
+      
+      console.log(`✅ Found ${triggers.length} trigger factors for current user`);
+      return triggers;
     } catch (error) {
-      console.error('Error fetching my trigger factors:', error);
-      throw new Error('Không thể lấy danh sách yếu tố kích thích của bạn');
+      console.error('❌ Error fetching my trigger factors:', error);
+      console.error('❌ Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      // Return empty array instead of throwing to prevent UI crashes
+      if (error.response?.status === 404) {
+        console.log('📝 No trigger factors found (404), returning empty array');
+        return [];
+      }
+      
+      // For other errors, still return empty array but log the error
+      console.warn('⚠️ API call failed, returning empty array to prevent UI crash');
+      return [];
     }
   },
 

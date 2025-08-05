@@ -70,40 +70,19 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
       console.log('🔄 Member fetching trigger factors...');
       console.log('Current user:', user);
       
-      let triggerFactors = [];
+      // Use the improved TriggerFactorService
+      const triggerFactors = await TriggerFactorService.getMyTriggerFactors();
       
-      try {
-        // First try the main endpoint
-        triggerFactors = await ApiHelper.fetchMyTriggerFactors();
-        console.log('✅ Member trigger factors from main endpoint:', triggerFactors);
-      } catch (error) {
-        console.log('⚠️ Main endpoint failed, trying direct API call...');
-        try {
-          // Try direct API call
-          const response = await api.get('/TriggerFactor/Get-MyTriggerFactor');
-          triggerFactors = response.data || [];
-          console.log('✅ Member trigger factors from direct API:', triggerFactors);
-        } catch (error2) {
-          console.log('⚠️ Direct API also failed, trying alternative endpoint...');
-          try {
-            // Try alternative endpoint if it exists
-            const response = await api.get(`/TriggerFactor/GetUserTriggerFactors/${user.userId}`);
-            triggerFactors = response.data || [];
-            console.log('✅ Member trigger factors from alternative endpoint:', triggerFactors);
-          } catch (error3) {
-            console.log('❌ All endpoints failed');
-            triggerFactors = [];
-          }
-        }
-      }
-      
-      console.log('Final trigger factors:', triggerFactors);
+      console.log('✅ Member trigger factors loaded:', triggerFactors);
       console.log('Number of triggers found:', triggerFactors?.length || 0);
       
       setTriggerFactors(triggerFactors || []);
       
       if (!triggerFactors || triggerFactors.length === 0) {
-        console.log('⚠️ No trigger factors found for member');
+        console.log('ℹ️ No trigger factors found for current user');
+        toast.info('Chưa có yếu tố kích thích nào. Hãy thêm yếu tố kích thích đầu tiên!');
+      } else {
+        console.log(`✅ Successfully loaded ${triggerFactors.length} trigger factors`);
       }
     } catch (error) {
       console.error('❌ Error in fetchTriggerFactors:', error);
