@@ -16,7 +16,7 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
   useEffect(() => {
     const fetchJournal = async () => {
       try {
-        const res = await api.get("/ProgressLog/GetProgress-logs");
+        const res = await api.get("/DiaryLog");
         setJournal(res.data);
       } catch {
         setJournal([]);
@@ -36,17 +36,14 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
       return;
     }
     try {
-      await api.post("/ProgressLog/CreateProgress-log", {
+      await api.post("/DiaryLog", {
         logDate: journalDate,
-        cigarettesSmoked: 0,
-        pricePerPack: 0,
-        cigarettesPerPack: 20,
-        mood: "",
-        notes: journalEntry,
+        content: journalEntry,
+        createdAt: new Date().toISOString(),
       });
       toast.success("Đã lưu nhật ký!");
       // Sau khi lưu thành công, reload lại nhật ký
-      const res = await api.get("/ProgressLog/GetProgress-logs");
+      const res = await api.get("/DiaryLog");
       setJournal(res.data);
       setJournalEntry("");
       setJournalDate(new Date().toISOString().slice(0, 10));
@@ -58,8 +55,8 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
   // Xử lý sửa nhật ký
   const handleEditJournal = (idx) => {
     const entry = journal[idx];
-    setJournalEntry(entry.notes || entry.content || "");
-    setJournalDate(entry.logDate || entry.date);
+    setJournalEntry(entry.content || "");
+    setJournalDate(entry.logDate ? entry.logDate.split('T')[0] : "");
     setEditIdx(idx);
   };
 
@@ -68,13 +65,13 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
     e.preventDefault();
     const entry = journal[editIdx];
     try {
-      await api.put(`/ProgressLog/UpdateProgress-log/${entry.id || entry.logId}`, {
-        ...entry,
-        notes: journalEntry,
-        logDate: journalDate,
+      await api.put("/DiaryLog", {
+        logId: entry.logId,
+        content: journalEntry,
+        updateAt: new Date().toISOString(),
       });
       toast.success("Đã cập nhật nhật ký!");
-      const res = await api.get("/ProgressLog/GetProgress-logs");
+      const res = await api.get("/DiaryLog");
       setJournal(res.data);
       setEditIdx(null);
       setJournalEntry("");
@@ -90,9 +87,9 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
     
     const entry = journal[idx];
     try {
-      await api.delete(`/ProgressLog/DeleteByIdProgress-log/${entry.id || entry.logId}`);
+      await api.delete(`/DiaryLog/${entry.logId}`);
       toast.success("Đã xóa nhật ký!");
-      const res = await api.get("/ProgressLog/GetProgress-logs");
+      const res = await api.get("/DiaryLog");
       setJournal(res.data);
     } catch {
       toast.error("Xóa nhật ký thất bại!");
@@ -106,11 +103,10 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
       return;
     }
     const rows = [
-      ["Ngày", "Số điếu hút", "Ghi chú"],
+      ["Ngày", "Nội dung"],
       ...journal.map((j) => [
-        j.logDate || j.date,
-        j.cigarettesSmoked || 0,
-        (j.notes || j.content || "").replace(/\n/g, " ")
+        j.logDate ? j.logDate.split('T')[0] : '',
+        (j.content || "").replace(/\n/g, " ")
       ]),
     ];
     const csv = rows.map((r) => r.map((x) => `"${x}"`).join(",")).join("\n");
@@ -121,7 +117,7 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
   // Lọc nhật ký theo tháng
   const filteredJournal = filterMonth
     ? journal.filter((j) => {
-        const date = j.logDate || j.date;
+        const date = j.logDate ? j.logDate.split('T')[0] : '';
         return date && date.startsWith(filterMonth);
       })
     : journal;
@@ -213,8 +209,7 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
                 <thead>
                   <tr>
                     <th>Ngày</th>
-                    <th>Số điếu hút</th>
-                    <th>Ghi chú</th>
+                    <th>Nội dung</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
@@ -222,22 +217,13 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
                   {filteredJournal.map((entry, idx) => (
                     <tr key={idx}>
                       <td>
-                        <strong>{entry.logDate || entry.date}</strong>
+                        <strong>{entry.logDate ? entry.logDate.split('T')[0] : ''}</strong>
                       </td>
                       <td>
-                        <span className={`badge ${
-                          (entry.cigarettesSmoked || 0) === 0 
-                            ? "bg-success" 
-                            : "bg-warning"
-                        }`}>
-                          {entry.cigarettesSmoked || 0} điếu
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ maxWidth: "300px" }}>
-                          {(entry.notes || entry.content || "").length > 100
-                            ? `${(entry.notes || entry.content).substring(0, 100)}...`
-                            : (entry.notes || entry.content || "Không có ghi chú")
+                        <div style={{ maxWidth: "400px" }}>
+                          {(entry.content || "").length > 100
+                            ? `${(entry.content).substring(0, 100)}...`
+                            : (entry.content || "Không có nội dung")
                           }
                         </div>
                       </td>

@@ -247,7 +247,7 @@ const Dashboard = () => {
           <div className="d-flex justify-content-between align-items-center">
             <div>
               <h3 className="mb-1">Chào mừng trở lại, {memberProfile?.displayName || user?.fullName || 'Người dùng'}</h3>
-              <p className="mb-0 opacity-75">Bạn đã không hút thuốc được {currentGoal?.daysReducedSmoking || 0} ngày</p>
+              <p className="mb-0 opacity-75">Bạn cần cai hút thuốc {currentGoal?.daysReducedSmoking || 0} ngày</p>
             </div>
             <div className="text-end">
               <h2 className="mb-0">{(currentGoal?.totalMoneySaved || 0).toLocaleString()}đ</h2>
@@ -265,11 +265,11 @@ const Dashboard = () => {
               <div className="icon-wrapper bg-success mx-auto mb-2">
                 <i className="fas fa-calendar-check text-white"></i>
               </div>
-              <div className="fw-bold">bạn đã thực hiện cai hút thuốc</div>
+              <div className="fw-bold">Bạn cần thực hiện cai hút thuốc</div>
               <h4 className="text-dark mb-0 fw-bold">{currentGoal?.daysReducedSmoking || 0}</h4>
               <small className="text-muted">ngày</small>
               <div className="mt-2">
-                <small className="text-success">Ngày không hút thuốc</small>
+                <small className="text-success">số ngày cai hút thuốc</small>
               </div>
             </div>
           </div>
@@ -310,7 +310,7 @@ const Dashboard = () => {
               <div className="icon-wrapper bg-warning mx-auto mb-2">
                 <i className="fas fa-chart-line text-white"></i>
               </div>
-              <div className="fw-bold">Kể từ ngày đăng ký gói</div>
+              <div className="fw-bold">Kể từ ngày tạo kế hoạch</div>
               <h4 className="text-dark mb-0 fw-bold">
                 {plan?.createdAt
                   ? Math.floor((new Date() - new Date(plan.createdAt)) / (1000 * 60 * 60 * 24))
@@ -318,7 +318,7 @@ const Dashboard = () => {
               </h4>
               <small className="text-muted">ngày</small>
               <div className="mt-2">
-                <small className="text-warning">Thời gian thành công</small>
+                <small className="text-warning">Thời gian đã sử dụng</small>
               </div>
             </div>
           </div>
@@ -408,7 +408,7 @@ const Dashboard = () => {
                 <div className="icon-wrapper bg-dark mb-2">
                   <i className="fas fa-trophy text-white"></i>
                 </div>
-                <small className="text-dark">Kết tư nguy dàng lý</small>
+                <small className="text-dark">Thành tích của bạn</small>
                 <div className="mt-1">
                   <small className="text-muted">Xem thành tích</small>
                 </div>
