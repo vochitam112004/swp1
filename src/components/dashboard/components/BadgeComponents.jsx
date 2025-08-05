@@ -1,10 +1,11 @@
 // Badge management component
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import api from '../../../api/axios';
 import { getAchievedBadges, sendBrowserNotification } from "../utils/dashboardUtils";
-import { BADGES } from "../constants/dashboardConstants";
 
 const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
+  const [badgeTemplates, setBadgeTemplates] = useState([]);
   const [encourages, setEncourages] = useState(() => {
     const saved = localStorage.getItem("encourages");
     return saved ? JSON.parse(saved) : {};
@@ -12,11 +13,26 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
   const [commentInputs, setCommentInputs] = useState({});
   const [forceUpdate, setForceUpdate] = useState(0);
 
-  // Thông báo khi đạt badge mới
+  // 🔄 Fetch badge templates from API
   useEffect(() => {
-    if (!progress) return;
+    const fetchBadgeTemplates = async () => {
+      try {
+        const response = await api.get("/AchievementTemplate");
+        const data = response.data;
+        setBadgeTemplates(data);
+      } catch (error) {
+        console.error("Lỗi khi tải huy hiệu:", error);
+      }
+    };
 
-    const achieved = getAchievedBadges(progress);
+    fetchBadgeTemplates();
+  }, []);
+
+  // 🏅 Xác định huy hiệu đã đạt
+  useEffect(() => {
+    if (!progress || badgeTemplates.length === 0) return;
+
+    const achieved = getAchievedBadges(progress, badgeTemplates);
     const stored = JSON.parse(localStorage.getItem("allBadges") || "[]");
 
     const newBadges = [];
@@ -42,11 +58,9 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
 
     localStorage.setItem("shownBadges", JSON.stringify(shown));
 
-    // 👉 Hiển thị tất cả huy hiệu từng đạt (ổn định)
     setAchievedBadges(stored);
-  }, [progress, setAchievedBadges]);
+  }, [progress, badgeTemplates, setAchievedBadges]);
 
-  // Chia sẻ huy hiệu
   const shareBadge = (badge) => {
     const shared = JSON.parse(localStorage.getItem("sharedBadges") || "[]");
     shared.push({
@@ -59,9 +73,7 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
   };
 
   const handleEncourage = (idx) => {
-    const encouragesObj = JSON.parse(
-      localStorage.getItem("encourages") || "{}"
-    );
+    const encouragesObj = JSON.parse(localStorage.getItem("encourages") || "{}");
     encouragesObj[idx] = (encouragesObj[idx] || 0) + 1;
     localStorage.setItem("encourages", JSON.stringify(encouragesObj));
     setEncourages(encouragesObj);
@@ -70,13 +82,11 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
   };
 
   const handleAddComment = (idx, comment) => {
-    const commentsObj = JSON.parse(
-      localStorage.getItem("badgeComments") || "{}"
-    );
+    const commentsObj = JSON.parse(localStorage.getItem("badgeComments") || "{}");
     if (!commentsObj[idx]) commentsObj[idx] = [];
     commentsObj[idx].push({ text: comment, time: new Date().toLocaleString() });
     localStorage.setItem("badgeComments", JSON.stringify(commentsObj));
-    setForceUpdate(f => f + 1);
+    setForceUpdate((f) => f + 1);
   };
 
   const handleCommentSubmit = (idx) => {
@@ -103,13 +113,13 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
             <div className="card h-100 shadow-sm">
               <div className="card-body">
                 <div className="d-flex align-items-center mb-3">
-                  <i className={`${badge.icon} text-warning me-3`} style={{ fontSize: "2rem" }} />
+                  <i className={`${badge.icon || "fas fa-award"} text-warning me-3`} style={{ fontSize: "2rem" }} />
                   <div>
                     <h5 className="card-title mb-1">{badge.label}</h5>
                     <small className="text-muted">Đã đạt được</small>
                   </div>
                 </div>
-                
+
                 <div className="d-flex gap-2 mb-3">
                   <button
                     className="btn btn-sm btn-outline-primary"
@@ -172,7 +182,7 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
             </div>
           </div>
         ))}
-        
+
         {achievedBadges.length === 0 && (
           <div className="col-12">
             <div className="text-center py-5">
@@ -193,7 +203,7 @@ const BadgeComponents = ({ progress, achievedBadges, setAchievedBadges }) => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3>
           <i className="fas fa-trophy text-warning me-2" />
-          Huy hiệu thành tích ({achievedBadges.length}/{BADGES.length})
+          Huy hiệu thành tích ({achievedBadges.length}/{badgeTemplates.length})
         </h3>
       </div>
       {renderBadgeList()}

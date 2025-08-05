@@ -1,6 +1,6 @@
 // Dashboard utility functions
 import { toast } from "react-toastify";
-import { BADGES, TIPS } from "../constants/dashboardConstants";
+import { TIPS } from "../constants/dashboardConstants";
 import { DateUtils } from "../../../utils/dateUtils";
 
 export const safeParse = (key, fallback) => {
@@ -12,9 +12,20 @@ export const safeParse = (key, fallback) => {
   }
 };
 
-export const getAchievedBadges = (progress) => {
-  if (!progress) return [];
-  return BADGES.filter((badge) => badge.condition(progress));
+// ✅ Đã sửa: truyền badgeTemplates thay vì dùng BADGES hardcode
+export const getAchievedBadges = (progress, badgeTemplates) => {
+  if (!progress || !badgeTemplates) return [];
+
+  const { smokeFreeDays } = progress;
+
+  return badgeTemplates
+    .filter(t => smokeFreeDays >= t.requiredSmokeFreeDays)
+    .map(t => ({
+      key: t.templateId,
+      label: t.name,
+      icon: "fas fa-award", // icon mặc định (có thể cập nhật sau)
+      description: t.description,
+    }));
 };
 
 export const shouldSendReminder = (lastSent, frequency) => {
@@ -81,7 +92,7 @@ export const sendBrowserNotification = (title, body, type = "motivation") => {
   } else {
     toast.info(`${title}: ${body}`);
   }
-  // Lưu lịch sử thông báo
+
   const history = JSON.parse(
     localStorage.getItem("notificationHistory") || "[]"
   );

@@ -102,8 +102,6 @@ export default function AdminPage() {
           <Tab label="Phản hồi & Đánh giá" />
           <Tab label="Quản lí huy hiệu" />
           <Tab label="Mẫu thành tích" />
-          <Tab label="Thành tích người dùng" />
-          <Tab label="Thống kê hệ thống" />
         </Tabs>
       </Box>
 
@@ -115,8 +113,6 @@ export default function AdminPage() {
         {tab === 3 && <FeedbackManager />}
         {tab === 4 && <BadgeManager />}
         {tab === 5 && <AchievementTemplateManager />}
-        {tab === 6 && <UserAchievementManager />}
-        {tab === 7 && <SystemOverview />}
       </Box>
     </Box>
   );
