@@ -91,8 +91,6 @@ namespace WebSmokingSupport.Controllers
                 return BadRequest("Dữ liệu huy hiệu không hợp lệ.");
 
             string? iconUrl = null;
-
-            // Xử lý ảnh nếu có
             if (dto.IconFile != null && dto.IconFile.Length > 0)
             {
                 var uploadPath = Path.Combine(_env.ContentRootPath, "uploads", "badges");

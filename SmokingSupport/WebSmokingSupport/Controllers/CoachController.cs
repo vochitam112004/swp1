@@ -143,6 +143,7 @@ namespace WebSmokingSupport.Controllers
         public async Task<ActionResult<IEnumerable<DTOCoachResponse>>> GetAllCoaches()
         {
             var coaches = await _context.Users
+                .Include(u => u.CoachProfile)
                 .Where(u => u.UserType == "Coach" && u.IsActive == true)
                 .Select(u => new DTOCoachResponse
                 {
@@ -152,7 +153,7 @@ namespace WebSmokingSupport.Controllers
                     Email = u.Email,
                     Username = u.Username,
                     PhoneNumber = u.PhoneNumber,
-                    Specialization = u.PhoneNumber,
+                    Specialization = u.CoachProfile != null ? u.CoachProfile.Specialization : string.Empty,
                     UserType = u.UserType,
                     AvatarUrl = u.AvatarUrl,
                     CreatedAt = u.CreatedAt ?? DateTime.MinValue,
@@ -178,6 +179,7 @@ namespace WebSmokingSupport.Controllers
                     Address = cp.Address,
                     Email = cp.Email,
                     Username = cp.Username, 
+                    Specialization = cp.CoachProfile != null ? cp.CoachProfile.Specialization : string.Empty,
                     PhoneNumber = cp.PhoneNumber,
                     UserType = cp.UserType,
                     AvatarUrl = cp.AvatarUrl,
@@ -222,7 +224,6 @@ namespace WebSmokingSupport.Controllers
 
             var user = coachProfile.Coach;
 
-            // Update User fields
             if (!string.IsNullOrWhiteSpace(dto.UserName))
                 user.Username = dto.UserName;
             if (!string.IsNullOrWhiteSpace(dto.DisplayName))
@@ -236,11 +237,10 @@ namespace WebSmokingSupport.Controllers
             if (dto.IsActive.HasValue)
                 user.IsActive = dto.IsActive.Value;
 
-            // Update CoachProfile fields
             if (!string.IsNullOrWhiteSpace(dto.Specialization))
                 coachProfile.Specialization = dto.Specialization;
 
-            // Upload avatar
+        
             if (avatarFile != null && avatarFile.Length > 0)
             {
                 var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(avatarFile.FileName)}";
