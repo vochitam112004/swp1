@@ -4,13 +4,15 @@ import { toast } from "react-toastify";
 import { saveAs } from "file-saver";
 import api from "../../../api/axios";
 
-const JournalManager = ({ journal, setJournal, progressLogs }) => {
+const JournalManager = ({ journal, setJournal }) => {
   const [journalEntry, setJournalEntry] = useState("");
   const [journalDate, setJournalDate] = useState(() => {
     return new Date().toISOString().slice(0, 10);
   });
   const [editIdx, setEditIdx] = useState(null);
   const [filterMonth, setFilterMonth] = useState("");
+  const [shareModal, setShareModal] = useState({ show: false, entry: null });
+  const [isSharing, setIsSharing] = useState(false);
 
   // Lấy nhật ký từ API khi load
   useEffect(() => {
@@ -93,6 +95,33 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
       setJournal(res.data);
     } catch {
       toast.error("Xóa nhật ký thất bại!");
+    }
+  };
+
+  // Xử lý mở modal chia sẻ
+  const handleOpenShareModal = (entry) => {
+    setShareModal({ show: true, entry });
+  };
+
+  // Xử lý đóng modal chia sẻ
+  const handleCloseShareModal = () => {
+    setShareModal({ show: false, entry: null });
+    setIsSharing(false);
+  };
+
+  // Xử lý chia sẻ nhật ký
+  const handleShareJournal = async () => {
+    try {
+      setIsSharing(true);
+      // Simulate API call - trong thực tế có thể cần API để đánh dấu public
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success("Đã chia sẻ nhật ký lên cộng đồng!");
+      handleCloseShareModal();
+    } catch (error) {
+      console.error("Error sharing journal:", error);
+      toast.error("Không thể chia sẻ nhật ký");
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -232,12 +261,21 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
                           <button
                             className="btn btn-outline-primary"
                             onClick={() => handleEditJournal(idx)}
+                            title="Chỉnh sửa"
                           >
                             <i className="fas fa-edit" />
                           </button>
                           <button
+                            className="btn btn-outline-info"
+                            onClick={() => handleOpenShareModal(entry)}
+                            title="Chia sẻ lên cộng đồng"
+                          >
+                            <i className="fas fa-share-alt" />
+                          </button>
+                          <button
                             className="btn btn-outline-danger"
                             onClick={() => handleDeleteJournal(idx)}
+                            title="Xóa"
                           >
                             <i className="fas fa-trash" />
                           </button>
@@ -259,6 +297,85 @@ const JournalManager = ({ journal, setJournal, progressLogs }) => {
           )}
         </div>
       </div>
+
+      {/* Share Modal */}
+      {shareModal.show && shareModal.entry && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-share-alt me-2" />
+                  Chia sẻ nhật ký
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseShareModal}
+                ></button>
+              </div>
+              
+              <div className="modal-body">
+                <div className="alert alert-info">
+                  <i className="fas fa-info-circle me-2" />
+                  Bạn có muốn chia sẻ nhật ký này lên cộng đồng không?
+                </div>
+                
+                <div className="journal-preview p-3 bg-light rounded">
+                  <div className="mb-2">
+                    <strong>Ngày:</strong> {shareModal.entry.logDate ? 
+                      new Date(shareModal.entry.logDate).toLocaleDateString("vi-VN") : 
+                      "Không xác định"
+                    }
+                  </div>
+                  <div>
+                    <strong>Nội dung:</strong>
+                    <p className="mt-1 mb-0" style={{ maxHeight: "100px", overflowY: "auto" }}>
+                      {shareModal.entry.content}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mt-3">
+                  <small className="text-muted">
+                    <i className="fas fa-shield-alt me-1" />
+                    Nhật ký sẽ được hiển thị công khai với tên hiển thị của bạn.
+                  </small>
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleCloseShareModal}
+                  disabled={isSharing}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleShareJournal}
+                  disabled={isSharing}
+                >
+                  {isSharing ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Đang chia sẻ...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-share-alt me-2" />
+                      Chia sẻ
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -29,6 +29,7 @@ import Contact from "./components/common/Contact";
 import Methodology from "./components/common/Methodology";
 import Research from "./components/common/Research";
 import FAQ from "./components/common/FAQ";
+import Community from "./components/common/Community";
 import MembershipList from "./components/dashboard/membership";
 import ResearchDetail from "./components/common/ResearchDetail";
 import CoachList from "./components/common/CoachList";
@@ -103,6 +104,7 @@ function AppContent() {
           <Route path="/research" element={<Research />} />
           <Route path="/research/:id" element={<ResearchDetail />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/community" element={<Community />} />
           <Route path="/coaches" element={<CoachList />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/create" element={<BlogPostForm />} />

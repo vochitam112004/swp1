@@ -115,6 +115,7 @@ const Navigation = () => {
             MenuListProps={{ onMouseLeave: handleBlogMenuClose }}
           >
             <MenuItem component={Link} to="/blog" onClick={handleBlogMenuClose}>Blog chia sẻ</MenuItem>
+            <MenuItem component={Link} to="/community" onClick={handleBlogMenuClose}>Cộng đồng</MenuItem>
             <MenuItem component={Link} to="/research" onClick={handleBlogMenuClose}>Nghiên cứu</MenuItem>
             <MenuItem component={Link} to="/faq" onClick={handleBlogMenuClose}>Câu hỏi thường gặp</MenuItem>
           </Menu>
