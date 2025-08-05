@@ -31,7 +31,7 @@ namespace WebSmokingSupport.Controllers
 
         [Authorize(Roles ="Member")]
         [HttpPost]
-        public async Task<IActionResult> CreateLog([FromBody] DTODiaryLogForCreate dto)
+        public async Task<ActionResult<DTODiaryLogRead>> CreateLog([FromBody] DTODiaryLogForCreate dto)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
@@ -46,12 +46,21 @@ namespace WebSmokingSupport.Controllers
             _context.UserDiaryLogs.Add(log);
             await _context.SaveChangesAsync();
 
-            return Ok(log);
+            var DiaryLogResponse = new DTODiaryLogRead
+            {
+                LogId = log.LogId,
+                UserId = log.UserId,
+                LogDate = log.LogDate,
+                Content = log.Content,
+                CreatedAt = log.CreatedAt,
+                UpdatedAt = log.UpdatedAt
+            };
+            return CreatedAtAction(nameof(GetAllLogs), new { logId = log.LogId }, DiaryLogResponse);
         }
 
         [Authorize(Roles ="Member")]
         [HttpPut]
-        public async Task<IActionResult> UpdateLog([FromBody] DTODiaryLogForUpdate dto)
+        public async Task<ActionResult<DTODiaryLogRead>> UpdateLog([FromBody] DTODiaryLogForUpdate dto)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
@@ -62,7 +71,16 @@ namespace WebSmokingSupport.Controllers
             log.Content = dto.Content;
             await _context.SaveChangesAsync();
 
-            return Ok(log);
+            var updatedLog = new DTODiaryLogRead
+            {
+                LogId = log.LogId,
+                UserId = log.UserId,
+                LogDate = log.LogDate,
+                Content = log.Content,
+                CreatedAt = log.CreatedAt,
+                UpdatedAt = DateTime.UtcNow
+            };
+            return Ok(updatedLog);
         }
         [Authorize(Roles ="Member")]
         [HttpDelete("{logId}")]

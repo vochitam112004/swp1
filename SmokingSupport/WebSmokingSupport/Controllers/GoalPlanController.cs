@@ -266,7 +266,6 @@ namespace WebSmokingSupport.Controllers
             };
             return Ok(new { GoalPlan = goalPlanResponse, ProgressLogs = progressLog });
         }
-
         [HttpPut("UpdateMyGoalPlan")]
         [Authorize(Roles = "Member")]
         public async Task<ActionResult<DTOGoalPlanForRead>> UpdateGoalPlan([FromBody] DTOGoalPlanForUpdate dto)
@@ -276,50 +275,102 @@ namespace WebSmokingSupport.Controllers
             {
                 return Unauthorized("User not authenticated.");
             }
+
             var memberProfileExisted = await _context.MemberProfiles
-                                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
             if (memberProfileExisted == null)
             {
                 return NotFound("Member profile not found. Please create a profile before updating a goal plan.");
             }
+
             var activeGoalPlan = await _context.GoalPlans
                 .Include(gp => gp.Member)
                 .ThenInclude(m => m.User)
-                .FirstOrDefaultAsync(gp => gp.MemberId == memberProfileExisted.MemberId && gp.isCurrentGoal == true);
+                .FirstOrDefaultAsync(gp => gp.MemberId == memberProfileExisted.MemberId && gp.isCurrentGoal);
             if (activeGoalPlan == null)
             {
                 return NotFound("No active goal plan found for the current member.");
             }
+
             if (dto.StartDate > dto.EndDate)
             {
                 return BadRequest("Start date cannot be after end date.");
             }
+
             if (dto.StartDate < DateOnly.FromDateTime(DateTime.UtcNow))
             {
                 return BadRequest("Start date cannot be in the past.");
             }
-            activeGoalPlan.StartDate = dto.StartDate ?? activeGoalPlan.StartDate;
-            activeGoalPlan.EndDate = dto.EndDate ?? activeGoalPlan.EndDate;
-            activeGoalPlan.isCurrentGoal = dto.IsCurrentGoal ?? activeGoalPlan.isCurrentGoal;
-            activeGoalPlan.TotalDays = (dto.EndDate?.DayNumber - dto.StartDate?.DayNumber) + 1 ?? activeGoalPlan.TotalDays;
-            activeGoalPlan.UpdatedAt = DateTime.UtcNow;
-            await _goalPlanRepository.UpdateAsync(activeGoalPlan);
-            await _context.SaveChangesAsync();
 
-            var goalPlanResponse = new DTOGoalPlanForRead
+            var oldEndDate = activeGoalPlan.EndDate;
+            var newEndDate = dto.EndDate ?? activeGoalPlan.EndDate;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                PlanId = activeGoalPlan.PlanId,
-                UserId = activeGoalPlan.Member?.UserId ?? 0,
-                MemberDisplayName = activeGoalPlan.Member?.User?.DisplayName ?? "Unknown",
-                StartDate = activeGoalPlan.StartDate,
-                isCurrentGoal = activeGoalPlan.isCurrentGoal,
-                EndDate = activeGoalPlan.EndDate,
-                CreatedAt = activeGoalPlan.CreatedAt,
-                UpdatedAt = activeGoalPlan.UpdatedAt,
-                TotalDays = activeGoalPlan.TotalDays
-            };
-            return Ok(goalPlanResponse);
+                activeGoalPlan.EndDate = newEndDate;
+                activeGoalPlan.isCurrentGoal = dto.IsCurrentGoal ?? activeGoalPlan.isCurrentGoal;
+                activeGoalPlan.TotalDays = (newEndDate.DayNumber - activeGoalPlan.StartDate.DayNumber) + 1;
+                activeGoalPlan.UpdatedAt = DateTime.UtcNow;
+
+                await _goalPlanRepository.UpdateAsync(activeGoalPlan);
+
+                // Nếu tăng ngày -> tạo thêm ProgressLog
+                if (newEndDate > oldEndDate)
+                {
+                    var date = oldEndDate.AddDays(1);
+                    while (date <= newEndDate)
+                    {
+                        var log = new ProgressLog
+                        {
+                            GoalPlanId = activeGoalPlan.PlanId,
+                            LogDate = date.ToDateTime(TimeOnly.MinValue),
+                            CigarettesSmoked = 0,
+                            Notes = null,
+                            Mood = null,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow,
+                        };
+                        _context.ProgressLogs.Add(log);
+                        date = date.AddDays(1);
+                    }
+                }
+                // Nếu giảm ngày -> xóa các ProgressLog sau EndDate mới
+                else if (newEndDate < oldEndDate)
+                {
+                    var logsToRemove = await _context.ProgressLogs
+                        .Where(pl => pl.GoalPlanId == activeGoalPlan.PlanId && pl.LogDate > newEndDate.ToDateTime(TimeOnly.MinValue))
+                        .ToListAsync();
+
+                    _context.ProgressLogs.RemoveRange(logsToRemove);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                var goalPlanResponse = new DTOGoalPlanForRead
+                {
+                    PlanId = activeGoalPlan.PlanId,
+                    UserId = activeGoalPlan.Member?.UserId ?? 0,
+                    MemberDisplayName = activeGoalPlan.Member?.User?.DisplayName ?? "Unknown",
+                    StartDate = activeGoalPlan.StartDate,
+                    isCurrentGoal = activeGoalPlan.isCurrentGoal,
+                    EndDate = activeGoalPlan.EndDate,
+                    CreatedAt = activeGoalPlan.CreatedAt,
+                    UpdatedAt = activeGoalPlan.UpdatedAt,
+                    TotalDays = activeGoalPlan.TotalDays
+                };
+
+                return Ok(goalPlanResponse);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
+
         [HttpDelete("{planId}")]
         [Authorize(Roles = "Member")]
         public async Task<ActionResult> DeleteGoalPlan(int planId)
