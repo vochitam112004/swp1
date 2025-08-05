@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace WebSmokingSupport.Controllers
 {
@@ -29,32 +30,92 @@ namespace WebSmokingSupport.Controllers
                 .Include(ua => ua.Template)
                 .Where(ua => ua.UserId == userId)
                 .ToListAsync();
-
             return Ok(achievements);
         }
 
-        [HttpPost("assign")]
+        [HttpPost("assign-by-money")]
         [Authorize(Roles = "Member")]
-        public async Task<IActionResult> AssignAchievement([FromBody] AssignAchievementDTO dto)
+        public async Task<IActionResult> AssignAchievementBasedOnMoneySaved()
         {
-            var alreadyExists = await _context.UserAchievements
-                .AnyAsync(ua => ua.UserId == dto.UserId && ua.TemplateId == dto.TemplateId);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized("User not authenticated");
 
-            if (alreadyExists)
-                return BadRequest("User already has this achievement.");
+            int userId = int.Parse(userIdClaim);
 
-            var newAchievement = new UserAchievement
+            var memberProfile = await _context.MemberProfiles
+                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+            if (memberProfile == null)
+                return NotFound("Member profile not found.");
+
+            var progressLogs = await _context.ProgressLogs
+                .Include(pl => pl.GoalPlan)
+                .Where(pl => pl.GoalPlan != null
+                          && pl.GoalPlan.MemberId == memberProfile.MemberId
+                          && pl.GoalPlan.isCurrentGoal == true)
+                .ToListAsync();
+
+            double pricePerCigarette = 0;
+            if (memberProfile.CigarettesPerPack > 0)
             {
-                UserId = dto.UserId,
-                TemplateId = dto.TemplateId,
-                LastUpdated = DateTime.UtcNow
-            };
+                pricePerCigarette = (double)(memberProfile.PricePerPack / memberProfile.CigarettesPerPack);
+            }
 
-            _context.UserAchievements.Add(newAchievement);
+            double totalSaved = 0;
+
+            foreach (var log in progressLogs)
+            {
+                if (log.CigarettesSmoked.HasValue)
+                {
+                    int reduced = (memberProfile.CigarettesSmoked ?? 0) - log.CigarettesSmoked.Value;
+                    if (reduced > 0)
+                        totalSaved += reduced * pricePerCigarette;
+                }
+            }
+
+            // Lấy danh sách achievement có yêu cầu về số tiền tiết kiệm
+            var moneyAchievements = await _context.AchievementTemplates
+                .Where(a => a.RequiredSmokeFreeDays != null)
+                .OrderBy(a => a.RequiredSmokeFreeDays)
+                .ToListAsync();
+
+            var userAchievements = await _context.UserAchievements
+                .Where(ua => ua.UserId == userId)
+                .Select(ua => ua.TemplateId)
+                .ToListAsync();
+
+            var newAchievements = new List<UserAchievement>();
+
+            foreach (var achievement in moneyAchievements)
+            {
+                if (totalSaved >= achievement.RequiredSmokeFreeDays &&
+                    !userAchievements.Contains(achievement.TemplateId))
+                {
+                    newAchievements.Add(new UserAchievement
+                    {
+                        UserId = userId,
+                        TemplateId = achievement.TemplateId,
+                        LastUpdated = DateTime.UtcNow
+                    });
+                }
+            }
+
+            if (!newAchievements.Any())
+            {
+                return Ok("No new achievement assigned.");
+            }
+
+            _context.UserAchievements.AddRange(newAchievements);
             await _context.SaveChangesAsync();
 
-            return Ok(newAchievement);
+            return Ok(newAchievements.Select(a => new
+            {
+                a.TemplateId,
+                a.UserId,
+                a.LastUpdated
+            }));
         }
+
         [HttpDelete("{userId}/{templateId}")]
         [Authorize(Roles ="Coach,Admin")]
         public async Task<IActionResult> DeleteAchievement(int userId, int templateId)

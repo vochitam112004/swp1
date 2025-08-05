@@ -32,7 +32,6 @@ namespace WebSmokingSupport.Controllers
                 RequiredSmokeFreeDays = dto.RequiredSmokeFreeDays,
                 Description = dto.Description
             };
-
             _context.AchievementTemplates.Add(template);
             await _context.SaveChangesAsync();
             return Ok(template);

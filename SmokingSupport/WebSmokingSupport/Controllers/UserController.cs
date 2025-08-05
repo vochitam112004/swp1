@@ -301,7 +301,6 @@ namespace WebSmokingSupport.Controllers
                 _context.MemberProfiles.RemoveRange(_context.MemberProfiles.Where(m => m.UserId == userId));
                 _context.CoachProfiles.RemoveRange(_context.CoachProfiles.Where(c => c.UserId == userId));
 
-                // ====== Xóa chính User ======
                 await _userRepository.RemoveAsync(user);
 
                 // Lưu thay đổi
