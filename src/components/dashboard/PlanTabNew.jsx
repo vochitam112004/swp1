@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ApiHelper } from "../../utils/apiHelper";
 import DateUtils from "../../utils/dateUtils";
 import { toast } from "react-toastify";
@@ -9,6 +9,7 @@ export default function PlanTabNew() {
   const [generatedWeeks, setGeneratedWeeks] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [dailyReductions, setDailyReductions] = useState([]);
 
   const [formData, setFormData] = useState({
     startDate: DateUtils.toISODateString(new Date()),
@@ -22,8 +23,16 @@ export default function PlanTabNew() {
 
   const fetchSchedule = async () => {
     const data = await ApiHelper.fetchGeneratedWeeklySchedule();
-    console.log("📅 Weekly schedule:", data); // Debug log
     setGeneratedWeeks(data);
+  };
+
+  const fetchDailyReductions = async () => {
+    try {
+      const currentGoal = await ApiHelper.fetchCurrentGoal();
+      setDailyReductions(currentGoal?.dailyReductions || []);
+    } catch (error) {
+      setDailyReductions([]);
+    }
   };
 
   const fetchCurrentPlan = async () => {
@@ -110,6 +119,7 @@ export default function PlanTabNew() {
 
   useEffect(() => {
     fetchCurrentPlan();
+    fetchDailyReductions();
   }, []);
 
   return (
@@ -219,14 +229,25 @@ export default function PlanTabNew() {
                   </tr>
                 </thead>
                 <tbody>
-                  {generatedWeeks.map((week, index) => (
-                    <tr key={index}>
-                      <td>Tuần {week.weekNumber}</td>
-                      <td>{DateUtils.toVietnameseString(week.startDate)}</td>
-                      <td>{DateUtils.toVietnameseString(week.endDate)}</td>
-                      <td>{week.cigarettesReduced}</td>
-                    </tr>
-                  ))}
+                  {generatedWeeks.map((week, index) => {
+                    // So sánh ngày ở dạng yyyy-mm-dd, loại bỏ giờ
+                    const weekStartStr = week.startDate.slice(0, 10);
+                    const weekEndStr = week.endDate.slice(0, 10);
+                    const totalReduced = dailyReductions
+                      .filter(d => {
+                        const dDateStr = d.date.slice(0, 10);
+                        return dDateStr >= weekStartStr && dDateStr <= weekEndStr;
+                      })
+                      .reduce((sum, d) => sum + (d.cigarettesReduced || 0), 0);
+                    return (
+                      <tr key={index}>
+                        <td>Tuần {week.weekNumber}</td>
+                        <td>{DateUtils.toVietnameseString(week.startDate)}</td>
+                        <td>{DateUtils.toVietnameseString(week.endDate)}</td>
+                        <td>{totalReduced}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

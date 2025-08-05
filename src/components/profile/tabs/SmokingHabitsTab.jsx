@@ -69,15 +69,72 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
     try {
       console.log('🔄 Member fetching trigger factors...');
       console.log('Current user:', user);
-      
-      // Use the improved TriggerFactorService
-      const triggerFactors = await TriggerFactorService.getMyTriggerFactors();
-      
-      console.log('✅ Member trigger factors loaded:', triggerFactors);
+      let triggerFactors = [];
+
+      // Ưu tiên lấy theo memberId nếu có
+      if (memberProfile?.memberId) {
+        try {
+          const response = await api.get(`/TriggerFactor/GetMemberTriggerFactors/${memberProfile.memberId}`);
+          triggerFactors = response.data || [];
+          console.log('✅ Member trigger factors from memberId endpoint:', triggerFactors);
+        } catch (error1) {
+          if (error1?.response?.status === 403) {
+            if (actions.isCoach || actions.isAdmin) {
+              console.log('❌ MemberId endpoint 403 Forbidden:', error1);
+              toast.warning('Bạn không có quyền xem yếu tố kích thích của thành viên này!');
+            } else {
+              console.log('⚠️ MemberId endpoint failed, trying fallback...', error1);
+            }
+          } else {
+            console.log('⚠️ MemberId endpoint failed, trying fallback...', error1);
+          }
+        }
+      }
+
+      // Nếu vẫn chưa có, thử các endpoint khác
+      if (!triggerFactors || triggerFactors.length === 0) {
+        try {
+          triggerFactors = await ApiHelper.fetchMyTriggerFactors();
+          console.log('✅ Member trigger factors from main endpoint:', triggerFactors);
+        } catch (error) {
+          // Nếu lỗi là 401 thì không log chi tiết, chỉ thử tiếp endpoint khác
+          if (error?.response?.status !== 401) {
+            console.log('⚠️ Main endpoint failed, trying direct API call...', error);
+          } else {
+            console.log('⚠️ Main endpoint failed with 401, skipping log');
+          }
+          try {
+            const response = await api.get('/TriggerFactor/Get-MyTriggerFactor');
+            triggerFactors = response.data || [];
+            console.log('✅ Member trigger factors from direct API:', triggerFactors);
+          } catch (error2) {
+            if (error2?.response?.status !== 401) {
+              console.log('⚠️ Direct API also failed, trying alternative endpoint...', error2);
+            } else {
+              console.log('⚠️ Direct API also failed with 401, skipping log');
+            }
+            if (user?.userId) {
+              try {
+                const response = await api.get(`/TriggerFactor/GetUserTriggerFactors/${user.userId}`);
+                triggerFactors = response.data || [];
+                console.log('✅ Member trigger factors from alternative endpoint:', triggerFactors);
+              } catch {
+                console.log('❌ All endpoints failed');
+                triggerFactors = [];
+              }
+            } else {
+              console.log('❌ userId is undefined, skipping GetUserTriggerFactors endpoint');
+              triggerFactors = [];
+            }
+          }
+        }
+      }
+
+      console.log('Final trigger factors:', triggerFactors);
       console.log('Number of triggers found:', triggerFactors?.length || 0);
-      
+
       setTriggerFactors(triggerFactors || []);
-      
+
       if (!triggerFactors || triggerFactors.length === 0) {
         console.log('ℹ️ No trigger factors found for current user');
         toast.info('Chưa có yếu tố kích thích nào. Hãy thêm yếu tố kích thích đầu tiên!');
@@ -557,7 +614,7 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
                 fontSize: '1.2rem'
               }}
             >
-              🎯 Yếu tố kích thích hút thuốc ({triggerFactors.length})
+              🎯 Yếu tố kích thích hút thuốc
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
