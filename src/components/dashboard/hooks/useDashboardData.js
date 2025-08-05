@@ -187,7 +187,7 @@ export const useDashboardData = () => {
   // Fetch appointments
   const fetchAppointments = async () => {
     try {
-      const res = await api.get("/Appointment/GetAppointments");
+      const res = await api.get("/Appointment/MyAppointments");
       setAppointments(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Appointment Error:", error);

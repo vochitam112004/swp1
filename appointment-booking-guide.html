@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Form Đặt Lịch Hẹn</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .title {
+            color: #1976d2;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h3 {
+            color: #333;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 10px;
+        }
+        .api-endpoint {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #1976d2;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .method {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .code {
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        .feature {
+            background: #e8f5e8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        .note {
+            background: #fff3cd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1 class="title">🎯 Form Đặt Lịch Hẹn với Coach - Tổng Quan</h1>
+        
+        <div class="section">
+            <h3>📋 Mô Tả Tính Năng</h3>
+            <p>Tôi đã tạo một hệ thống đặt lịch hẹn hoàn chỉnh cho phép member đặt lịch với coach. Hệ thống bao gồm:</p>
+            
+            <div class="feature">
+                <strong>✨ Form Đặt Lịch Mới (AppointmentBookingForm)</strong><br>
+                - Hiển thị danh sách coaches có sẵn<br>
+                - Cho phép chọn coach và xem lịch trống<br>
+                - Đặt lịch với slot cụ thể<br>
+                - Thêm ghi chú tùy chọn
+            </div>
+
+            <div class="feature">
+                <strong>📅 Quản Lý Lịch Hẹn (AppointmentManager)</strong><br>
+                - Tab "Đặt lịch hẹn mới"<br>
+                - Tab "Lịch hẹn của tôi"<br>
+                - Chỉnh sửa và hủy lịch hẹn<br>
+                - Xem link meeting khi có
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🔗 API Endpoints Sử Dụng</h3>
+            
+            <div class="api-endpoint">
+                <strong class="method">GET</strong> <code>/Coach</code><br>
+                <em>Lấy danh sách coaches</em>
+            </div>
+
+            <div class="api-endpoint">
+                <strong class="method">GET</strong> <code>/ChatMessage/available-contacts</code><br>
+                <em>Fallback endpoint cho danh sách coaches</em>
+            </div>
+
+            <div class="api-endpoint">
+                <strong class="method">GET</strong> <code>/Appointment/Member/CoachSlots/{coachId}</code><br>
+                <em>Lấy slots trống của coach cụ thể</em>
+            </div>
+
+            <div class="api-endpoint">
+                <strong class="method">POST</strong> <code>/Appointment/Member/Book/{appointmentId}</code><br>
+                <em>Đặt lịch hẹn với slot cụ thể</em>
+            </div>
+
+            <div class="api-endpoint">
+                <strong class="method">GET</strong> <code>/Appointment/MyAppointments</code><br>
+                <em>Lấy danh sách lịch hẹn của member</em>
+            </div>
+
+            <div class="api-endpoint">
+                <strong class="method">DELETE</strong> <code>/Appointment/Member/Cancel/{appointmentId}</code><br>
+                <em>Hủy lịch hẹn</em>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📁 Files Đã Tạo/Sửa</h3>
+            
+            <div class="code">
+src/components/dashboard/components/AppointmentBookingForm.jsx    (MỚI)
+src/components/dashboard/components/AppointmentManagerNew.jsx     (MỚI)
+src/pages/AppointmentBookingPage.jsx                               (MỚI)
+src/components/dashboard/dashboard.jsx                             (SỬA)
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🎨 Giao Diện Tính Năng</h3>
+            
+            <div class="feature">
+                <strong>Bước 1:</strong> Chọn Coach từ danh sách cards hiển thị
+                <ul>
+                    <li>Hiển thị avatar, tên, chuyên môn</li>
+                    <li>Trạng thái hoạt động</li>
+                    <li>Thông tin liên hệ</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <strong>Bước 2:</strong> Xem lịch trống của Coach
+                <ul>
+                    <li>Bảng hiển thị ngày, giờ</li>
+                    <li>Chỉ hiển thị slots "Available"</li>
+                    <li>Sắp xếp theo thời gian</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <strong>Bước 3:</strong> Đặt lịch
+                <ul>
+                    <li>Click "Đặt lịch" trên slot mong muốn</li>
+                    <li>Dialog xác nhận với thông tin chi tiết</li>
+                    <li>Thêm ghi chú tùy chọn</li>
+                    <li>Xác nhận đặt lịch</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🚀 Cách Sử Dụng</h3>
+            
+            <div class="note">
+                <strong>Trong Dashboard:</strong><br>
+                1. Vào Dashboard → Tab "Lên lịch hẹn"<br>
+                2. Chọn tab "Đặt lịch hẹn mới"<br>
+                3. Chọn coach và slot<br>
+                4. Xác nhận đặt lịch
+            </div>
+
+            <div class="note">
+                <strong>Trang riêng:</strong><br>
+                Có thể tạo route riêng để sử dụng <code>AppointmentBookingPage</code>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>⚡ Tính Năng Nổi Bật</h3>
+            
+            <div class="feature">
+                <strong>🎯 User Experience:</strong>
+                <ul>
+                    <li>Giao diện thân thiện với Material-UI</li>
+                    <li>Responsive design</li>
+                    <li>Loading states và error handling</li>
+                    <li>Toast notifications</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <strong>🔒 Data Validation:</strong>
+                <ul>
+                    <li>Kiểm tra slot còn available</li>
+                    <li>Validate thời gian trong tương lai</li>
+                    <li>Handle error cases</li>
+                    <li>Fallback cho missing data</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <strong>🔄 Real-time Updates:</strong>
+                <ul>
+                    <li>Refresh data sau khi đặt lịch</li>
+                    <li>Chuyển tab tự động</li>
+                    <li>Cập nhật trạng thái real-time</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📝 Luồng Hoạt Động</h3>
+            <div class="code">
+1. Member vào Dashboard → Tab "Lên lịch hẹn"
+2. Chọn "Đặt lịch hẹn mới"
+3. Hệ thống load danh sách coaches từ API
+4. Member chọn coach → Load slots của coach đó
+5. Member chọn slot phù hợp → Mở dialog xác nhận
+6. Member thêm ghi chú (optional) → Xác nhận
+7. Gọi API book appointment
+8. Chuyển sang tab "Lịch hẹn của tôi" hiển thị appointment vừa tạo
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>💡 Lưu ý:</strong> 
+            Form này đã được tích hợp hoàn toàn vào dashboard hiện tại và sử dụng các API endpoints đã có sẵn trong hệ thống.
+        </div>
+    </div>
+</body>
+</html>

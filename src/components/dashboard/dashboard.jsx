@@ -20,7 +20,7 @@ import "../../css/Dashboard.css";
 import BadgeComponents from "./components/BadgeComponents";
 import ProgressTracker from "./components/ProgressTracker";
 import JournalManager from "./components/JournalManager";
-import AppointmentManager from "./components/AppointmentManager";
+import AppointmentManagerNew from "./components/AppointmentManagerNew";
 import NotificationManager from "./components/NotificationManager";
 import SevenDayProgressChart from "./components/SevenDayProgressChart";
 import NotificationHistory from "./NotificationHistory";
@@ -844,7 +844,7 @@ const Dashboard = () => {
 
       case TABS.APPOINTMENT:
         return (
-          <AppointmentManager
+          <AppointmentManagerNew
           />
         );
 

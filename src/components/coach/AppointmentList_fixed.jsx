@@ -118,26 +118,6 @@ export default function AppointmentList() {
             return
         }
 
-        // Kiểm tra overlap với các slot đã có
-        const hasOverlap = slots.some(existingSlot => {
-            if (existingSlot.appointmentDate === newSlot.appointmentDate) {
-                const newStart = newSlot.startTime
-                const newEnd = newSlot.endTime
-                const existingStart = existingSlot.startTime.substring(0, 5) // Lấy HH:MM từ HH:MM:SS
-                const existingEnd = existingSlot.endTime.substring(0, 5)
-                
-                // Kiểm tra overlap: 
-                // New slot starts before existing ends AND new slot ends after existing starts
-                return (newStart < existingEnd && newEnd > existingStart)
-            }
-            return false
-        })
-
-        if (hasOverlap) {
-            toast.error(`Slot bị trùng với slot đã có trong ngày ${newSlot.appointmentDate}! Vui lòng chọn thời gian khác.`)
-            return
-        }
-
         // Payload đúng theo API documentation + seconds format
         const payload = {
             availabilities: [{
@@ -163,29 +143,17 @@ export default function AppointmentList() {
             console.error("Data:", error.response?.data)
             
             let errorMessage = 'Lỗi khi tạo slot rảnh!'
-            
             if (error.response?.status === 401) {
                 errorMessage = 'Bạn không có quyền! Kiểm tra đăng nhập.'
             } else if (error.response?.status === 403) {
                 errorMessage = 'Truy cập bị từ chối! Bạn có phải Coach không?'
             } else if (error.response?.status === 400) {
-                // Kiểm tra nếu response.data là string trực tiếp (như overlap error)
-                if (typeof error.response?.data === 'string') {
-                    errorMessage = error.response.data
-                } else {
-                    // Kiểm tra validation errors object
-                    const errors = error.response?.data?.errors
-                    if (errors) {
-                        const errorKeys = Object.keys(errors)
-                        errorMessage = `Validation lỗi: ${errorKeys.join(', ')}`
-                    } else if (error.response?.data?.message) {
-                        errorMessage = error.response.data.message
-                    } else if (error.response?.data?.title) {
-                        errorMessage = error.response.data.title
-                    }
+                const errors = error.response?.data?.errors
+                if (errors) {
+                    const errorKeys = Object.keys(errors)
+                    errorMessage = `Validation lỗi: ${errorKeys.join(', ')}`
                 }
             }
-            
             toast.error(errorMessage)
         }
     }

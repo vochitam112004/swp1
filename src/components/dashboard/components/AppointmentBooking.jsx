@@ -1,65 +1,99 @@
-import React, { useState } from 'react';
-import { Box, Typography, TextField, MenuItem, Button, Grid, FormControl, InputLabel, Select } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { 
+  Box, 
+  Typography, 
+  TextField, 
+  MenuItem, 
+  Button, 
+  Grid, 
+  FormControl, 
+  InputLabel, 
+  Select,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Alert,
+  CircularProgress
+} from '@mui/material';
 import { toast } from 'react-toastify';
 import api from '../../../api/axios';
 
-const AppointmentBooking = ({ coaches, onAppointmentCreated }) => {
-  const [appointmentData, setAppointmentData] = useState({
-    date: '',
-    time: '',
-    consultationType: '',
-    notes: ''
-  });
+const AppointmentBooking = ({ onAppointmentCreated }) => {
+  const [coaches, setCoaches] = useState([]);
   const [selectedCoach, setSelectedCoach] = useState(null);
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setAppointmentData({ ...appointmentData, [name]: value });
+  // Fetch coaches
+  useEffect(() => {
+    const fetchCoaches = async () => {
+      try {
+        const response = await api.get('/Coach');
+        setCoaches(response.data);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách coach:', error);
+        toast.error('Lỗi khi lấy danh sách coach');
+      }
+    };
+    fetchCoaches();
+  }, []);
+
+  // Fetch available slots when coach is selected
+  const fetchCoachSlots = async (coachId) => {
+    setLoadingSlots(true);
+    try {
+      const response = await api.get(`/Appointment/Member/CoachSlots/${coachId}`);
+      setAvailableSlots(response.data.filter(slot => slot.status === 'Available'));
+    } catch (error) {
+      console.error('Lỗi khi lấy slot của coach:', error);
+      toast.error('Lỗi khi lấy lịch rảnh của coach');
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
   };
 
   const handleCoachChange = (e) => {
-    const coach = coaches.find((c) => c.id === e.target.value);
+    const coach = coaches.find((c) => c.coachId === e.target.value);
     setSelectedCoach(coach);
+    if (coach) {
+      fetchCoachSlots(coach.coachId);
+    } else {
+      setAvailableSlots([]);
+    }
   };
 
-  const getEndTime = (start, type) => {
-    const [hours, minutes] = start.split(':').map(Number);
-    const duration = type === 'online' ? 60 : type === 'support' ? 45 : 30;
-    const end = new Date(0, 0, 0, hours, minutes + duration);
-    return end.toTimeString().slice(0, 5);
-  };
-
-  const handleBookingSubmit = async () => {
-    if (!selectedCoach || !appointmentData.date || !appointmentData.time || !appointmentData.consultationType) {
-      toast.error('Vui lòng điền đầy đủ thông tin và chọn HLV.');
+  const handleBookSlot = async (appointmentId) => {
+    if (!appointmentId) {
+      toast.error('Vui lòng chọn slot để đặt lịch.');
       return;
     }
 
-    const bookingData = {
-      stagerId: selectedCoach.id,
-      startTime: appointmentData.time,
-      endTime: getEndTime(appointmentData.time, appointmentData.consultationType),
-      appointmentDate: appointmentData.date,
-      status: 'Pending',
-      notes: appointmentData.notes,
-      createdAt: new Date().toISOString(),
-      meetingLink: ''
-    };
-
     try {
       setLoading(true);
-      await api.post('/Appointment/CreateAppointment', bookingData);
+      await api.post(`/Appointment/Member/Book/${appointmentId}`);
       toast.success('Đặt lịch hẹn thành công!');
       onAppointmentCreated?.();
-      // Reset form
-      setAppointmentData({ date: '', time: '', consultationType: '', notes: '' });
-      setSelectedCoach(null);
+      // Refresh slots
+      if (selectedCoach) {
+        fetchCoachSlots(selectedCoach.coachId);
+      }
     } catch (error) {
+      console.error('Lỗi khi đặt lịch:', error);
       toast.error('Lỗi khi đặt lịch hẹn. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
   };
 
   return (
@@ -67,76 +101,74 @@ const AppointmentBooking = ({ coaches, onAppointmentCreated }) => {
       <Typography variant="h6" gutterBottom>Đặt lịch hẹn với HLV</Typography>
 
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12}>
           <FormControl fullWidth>
             <InputLabel>Chọn HLV</InputLabel>
-            <Select value={selectedCoach?.id || ''} onChange={handleCoachChange} label="Chọn HLV">
+            <Select value={selectedCoach?.coachId || ''} onChange={handleCoachChange} label="Chọn HLV">
               {coaches.map((coach) => (
-                <MenuItem key={coach.id} value={coach.id}>
-                  {coach.name || coach.username || coach.email}
+                <MenuItem key={coach.coachId} value={coach.coachId}>
+                  {coach.displayName || coach.username || coach.email}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
         </Grid>
 
-        <Grid item xs={6} sm={3}>
-          <TextField
-            label="Ngày"
-            type="date"
-            fullWidth
-            name="date"
-            value={appointmentData.date}
-            onChange={handleChange}
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
-
-        <Grid item xs={6} sm={3}>
-          <TextField
-            label="Giờ"
-            type="time"
-            fullWidth
-            name="time"
-            value={appointmentData.time}
-            onChange={handleChange}
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Loại tư vấn</InputLabel>
-            <Select
-              label="Loại tư vấn"
-              name="consultationType"
-              value={appointmentData.consultationType}
-              onChange={handleChange}
-            >
-              <MenuItem value="online">Tư vấn online</MenuItem>
-              <MenuItem value="support">Hỗ trợ bỏ thuốc</MenuItem>
-              <MenuItem value="other">Khác</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            label="Ghi chú"
-            name="notes"
-            fullWidth
-            multiline
-            minRows={2}
-            value={appointmentData.notes}
-            onChange={handleChange}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <Button variant="contained" color="primary" fullWidth onClick={handleBookingSubmit} disabled={loading}>
-            {loading ? 'Đang gửi...' : 'Đặt lịch hẹn'}
-          </Button>
-        </Grid>
+        {selectedCoach && (
+          <Grid item xs={12}>
+            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+              Lịch rảnh của {selectedCoach.displayName || selectedCoach.username}
+            </Typography>
+            
+            {loadingSlots ? (
+              <Box display="flex" justifyContent="center" p={2}>
+                <CircularProgress />
+              </Box>
+            ) : availableSlots.length === 0 ? (
+              <Alert severity="info">Coach này chưa có lịch rảnh nào.</Alert>
+            ) : (
+              <TableContainer component={Paper} sx={{ mt: 1 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Ngày</TableCell>
+                      <TableCell>Thời gian</TableCell>
+                      <TableCell>Trạng thái</TableCell>
+                      <TableCell>Hành động</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {availableSlots.map((slot) => (
+                      <TableRow key={slot.appointmentId}>
+                        <TableCell>{formatDate(slot.appointmentDate)}</TableCell>
+                        <TableCell>{slot.startTime} - {slot.endTime}</TableCell>
+                        <TableCell>
+                          <span style={{ 
+                            color: slot.status === 'Available' ? 'green' : 'orange',
+                            fontWeight: 'bold'
+                          }}>
+                            {slot.status === 'Available' ? 'Có thể đặt' : slot.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            onClick={() => handleBookSlot(slot.appointmentId)}
+                            disabled={loading || slot.status !== 'Available'}
+                          >
+                            {loading ? 'Đang đặt...' : 'Đặt lịch'}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Grid>
+        )}
       </Grid>
     </Box>
   );
