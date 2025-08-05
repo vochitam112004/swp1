@@ -17,7 +17,7 @@ namespace WebSmokingSupport.Controllers
             _context = context;
         }
         [HttpGet]
-        [Authorize(Roles = "Coach, Admin")]
+        [Authorize(Roles = "Coach, Admin, Member")]
         public async Task<ActionResult<IEnumerable<AchievementTemplate>>> GetAll()
         {
             return await _context.AchievementTemplates.ToListAsync();
