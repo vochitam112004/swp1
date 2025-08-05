@@ -68,10 +68,22 @@ const SevenDayProgressChart = () => {
   const generateWeeklyProgressData = () => {
     if (!weeklyData.length) return [];
     
-    return weeklyData.map((week) => {
+    return weeklyData.map((week, index) => {
       const startDate = new Date(week.startDate);
       const endDate = new Date(week.endDate);
       const today = new Date();
+      
+      // Kiểm tra điều kiện tính phần trăm cho tuần
+      let shouldCalculateProgress = true;
+      
+      // Nếu không phải tuần đầu tiên, kiểm tra tuần trước đã qua ngày kết thúc chưa
+      if (index > 0) {
+        const previousWeek = weeklyData[index - 1];
+        const previousEndDate = new Date(previousWeek.endDate);
+        
+        // Chỉ tính phần trăm nếu đã qua ngày kết thúc của tuần trước
+        shouldCalculateProgress = today > previousEndDate;
+      }
       
       // Tính số ngày thực tế trong tuần từ startDate và endDate của API
       const daysInWeek = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
@@ -91,30 +103,37 @@ const SevenDayProgressChart = () => {
       let percentSmoked = 0;
       let percentQuit = 0;
       
-      if (weeklyTarget > 0) {
-        // % đã hút = (Số điếu đã hút / Tổng số điếu mục tiêu) × 100
-        percentSmoked = Math.round((weekCigarettesSmoked / weeklyTarget) * 100);
-        
-        // % đã cai = ((Tổng số điếu - Số điếu đã hút) / Tổng số điếu) × 100
-        const cigarettesQuit = Math.max(0, weeklyTarget - weekCigarettesSmoked);
-        percentQuit = Math.round((cigarettesQuit / weeklyTarget) * 100);
-        
-        // Đảm bảo tổng không vượt quá 100%
-        if (percentSmoked > 100) {
-          percentSmoked = 100;
-          percentQuit = 0;
+      // Chỉ tính phần trăm nếu thỏa mãn điều kiện
+      if (shouldCalculateProgress) {
+        if (weeklyTarget > 0) {
+          // % đã hút = (Số điếu đã hút / Tổng số điếu mục tiêu) × 100
+          percentSmoked = Math.round((weekCigarettesSmoked / weeklyTarget) * 100);
+          
+          // % đã cai = ((Tổng số điếu - Số điếu đã hút) / Tổng số điếu) × 100
+          const cigarettesQuit = Math.max(0, weeklyTarget - weekCigarettesSmoked);
+          percentQuit = Math.round((cigarettesQuit / weeklyTarget) * 100);
+          
+          // Đảm bảo tổng không vượt quá 100%
+          if (percentSmoked > 100) {
+            percentSmoked = 100;
+            percentQuit = 0;
+          } else {
+            percentQuit = 100 - percentSmoked;
+          }
         } else {
-          percentQuit = 100 - percentSmoked;
+          // Nếu không có mục tiêu, mặc định là 100% cai thuốc nếu không hút
+          if (weekCigarettesSmoked === 0) {
+            percentSmoked = 0;
+            percentQuit = 100;
+          } else {
+            percentSmoked = 100;
+            percentQuit = 0;
+          }
         }
       } else {
-        // Nếu không có mục tiêu, mặc định là 100% cai thuốc nếu không hút
-        if (weekCigarettesSmoked === 0) {
-          percentSmoked = 0;
-          percentQuit = 100;
-        } else {
-          percentSmoked = 100;
-          percentQuit = 0;
-        }
+        // Nếu chưa đến lúc tính phần trăm, hiển thị 0%
+        percentSmoked = 0;
+        percentQuit = 0;
       }
       
       // Đảm bảo phần trăm luôn trong khoảng 0-100
@@ -125,7 +144,11 @@ const SevenDayProgressChart = () => {
       let quitStatus = 'Chưa cai được';
       let statusColor = 'danger';
       
-      if (percentQuit === 100) {
+      if (!shouldCalculateProgress && index > 0) {
+        // Nếu chưa đến lúc tính phần trăm cho tuần này
+        quitStatus = 'Tuần mới chưa bắt đầu';
+        statusColor = 'secondary';
+      } else if (percentQuit === 100) {
         quitStatus = 'Hoàn toàn cai thuốc';
         statusColor = 'success';
       } else if (percentQuit >= 70) {
@@ -150,6 +173,7 @@ const SevenDayProgressChart = () => {
         weeklyQuitTarget: weeklyTarget,
         weekCigarettesSmoked: weekCigarettesSmoked,
         cigarettesReduced: weeklyTarget - weekCigarettesSmoked,
+        shouldCalculateProgress: shouldCalculateProgress,
         percentSmoked: percentSmoked,
         percentQuit: percentQuit,
         quitStatus: quitStatus,
@@ -314,6 +338,15 @@ const SevenDayProgressChart = () => {
               <i className="fas fa-info-circle me-2"></i>
               Chưa có kế hoạch, hãy tạo một kế hoạch mới để theo dõi tiến trình của bạn.
             </div>
+          </div>
+        )}
+        
+        {/* Thông báo về các tuần chưa tính phần trăm */}
+        {weeklyProgress.some(week => week.quitStatus === 'Tuần mới chưa bắt đầu') && (
+          <div className="alert alert-info mt-3">
+            <i className="fas fa-clock me-2"></i>
+            <strong>Lưu ý:</strong> Các tuần có trạng thái "Tuần mới chưa bắt đầu" sẽ bắt đầu tính phần trăm tiến độ 
+            khi đã qua ngày kết thúc của tuần trước đó.
           </div>
         )}
         
