@@ -59,7 +59,6 @@ export default function Profile() {
       })
       .catch((err) => {
         console.error("Failed to fetch trigger factors", err);
-        toast.error(err.message || "Không thể tải yếu tố kích thích");
       });
   }, []);
 

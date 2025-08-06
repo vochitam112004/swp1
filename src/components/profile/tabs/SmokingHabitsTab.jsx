@@ -550,7 +550,7 @@ export default function SmokingHabitsTab({ memberProfile, setMemberProfile }) {
                 fontSize: '1rem'
               }}
             >
-              Chưa có yếu tố kích thích nào. {triggerFactors ? `(Array length: ${triggerFactors.length})` : '(No data)'} Hãy thêm các tình huống thường khiến bạn muốn hút thuốc.
+              Chưa có yếu tố kích thích nào. {triggerFactors ? `(${triggerFactors.length})` : '(No data)'} Hãy thêm các tình huống thường khiến bạn muốn hút thuốc.
             </Typography>
           )}
         </Paper>

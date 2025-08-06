@@ -26,7 +26,6 @@ export default function BadgesTab() {
         }
       } catch (error) {
         console.error("Error fetching badges:", error);
-        toast.error("Không lấy được huy hiệu!");
       }
     };
 
