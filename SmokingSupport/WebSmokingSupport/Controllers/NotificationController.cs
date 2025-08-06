@@ -20,6 +20,7 @@ namespace WebSmokingSupport.Controllers
         {
             this._context = context;
         }
+
         [HttpGet("GetNotifications")]
         [Authorize(Roles = "Member, Coach, Admin")]
         public async Task<ActionResult<IEnumerable<DTONotificationForRead>>> GetNotifications()
@@ -52,6 +53,7 @@ namespace WebSmokingSupport.Controllers
             }
             return Ok(notifications);
         }
+
         [HttpGet("GetNotificationsForMember/{memberId}")]
         [Authorize(Roles = "Coach, Admin")]
         public async Task<ActionResult<IEnumerable<DTONotificationForRead>>> GetNotificationsForMember(int memberId)
@@ -112,6 +114,7 @@ namespace WebSmokingSupport.Controllers
                 IsRead = notification.IsRead
             });
         }
+
         [HttpPut("UpdateNotification/{notificationId}")]
         [Authorize(Roles = "Member, Coach, Admin")]
         public async Task<IActionResult> UpdateNotification(int notificationId, [FromBody] DTONotificationForCreate dto)
@@ -128,6 +131,7 @@ namespace WebSmokingSupport.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
         [HttpDelete("DeleteNotification/{notificationId}")]
         [Authorize(Roles = "Member, Coach, Admin")]
         public async Task<IActionResult> DeleteNotification(int notificationId)
@@ -142,8 +146,9 @@ namespace WebSmokingSupport.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
         [HttpPut("MarkAsRead/{notificationId}")]
-        [Authorize(Roles = "Member, Coach, Admin")] // Cho phép Coach, Admin cũng có quyền này
+        [Authorize(Roles = "Member, Coach, Admin")] 
         public async Task<IActionResult> MarkAsRead(int notificationId)
         {
             try
@@ -157,7 +162,7 @@ namespace WebSmokingSupport.Controllers
 
                 if (currentMemberProfile == null)
                 {
-                    // Nếu không tìm thấy MemberProfile, có thể người dùng chưa hoàn tất hồ sơ
+                    
                     return NotFound("Hồ sơ thành viên không tìm thấy cho người dùng này.");
                 }
 
@@ -167,19 +172,15 @@ namespace WebSmokingSupport.Controllers
                 if (notification == null)
                     return NotFound("Thông báo không tìm thấy.");
 
-                // Kiểm tra quyền:
-                // 1. Nếu người dùng là "Member" VÀ MemberId của thông báo KHÔNG khớp với MemberId của người dùng hiện tại
-                if (User.IsInRole("Member") && notification.MemberId != currentMemberProfile.MemberId) // <-- ĐÃ SỬA: So sánh với MemberProfile.MemberId
+                if (User.IsInRole("Member") && notification.MemberId != currentMemberProfile.MemberId) 
                 {
                     return Forbid("Bạn không có quyền đánh dấu thông báo này.");
                 }
-                // 2. Nếu là Coach/Admin, họ có thể đánh dấu bất kỳ thông báo nào (logic này đã được bỏ qua nếu không phải Member)
 
                 notification.IsRead = true;
-                // context.Notifications.Update(notification); // Không cần dòng này nếu bạn chỉ thay đổi thuộc tính và SaveChangesAsync
-                await _context.SaveChangesAsync(); // Lưu thay đổi
+                await _context.SaveChangesAsync(); 
 
-                return NoContent(); // Trả về 204 No Content cho thao tác PUT thành công không có nội dung trả về
+                return NoContent();
             }
             catch (UnauthorizedAccessException ex)
             {
