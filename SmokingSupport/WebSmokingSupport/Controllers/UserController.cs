@@ -231,7 +231,7 @@ namespace WebSmokingSupport.Controllers
                 if (user == null)
                     return NotFound(new { message = "User not found." });
 
-                // ====== Lấy các ID liên quan ======
+                
                 var memberIds = _context.MemberProfiles
                     .Where(m => m.UserId == userId)
                     .Select(m => m.MemberId)
@@ -252,12 +252,12 @@ namespace WebSmokingSupport.Controllers
                     .Select(p => p.PostId)
                     .ToList();
 
-                // ====== Xóa dữ liệu phụ thuộc ======
+                //  Xóa dữ liệu phụ thuộc 
                 _context.ChatMessages.RemoveRange(_context.ChatMessages
                     .Where(c => c.SenderId == userId || c.ReceiverId == userId));
 
                 _context.Feedbacks.RemoveRange(_context.Feedbacks.Where(f => f.UserId == userId));
-                //_context.Rankings.RemoveRange(_context.Rankings.Where(r => r.UserId == userId));
+               
                 _context.SystemReports.RemoveRange(_context.SystemReports.Where(s => s.ReporterId == userId));
                 _context.PasswordResetTokens.RemoveRange(_context.PasswordResetTokens.Where(p => p.UserId == userId));
                 _context.UserBadges.RemoveRange(_context.UserBadges.Where(b => b.UserId == userId));

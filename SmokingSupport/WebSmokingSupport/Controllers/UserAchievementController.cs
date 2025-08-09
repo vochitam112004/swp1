@@ -72,7 +72,6 @@ namespace WebSmokingSupport.Controllers
                         totalSaved += reduced * pricePerCigarette;
                 }
             }
-
             // Lấy danh sách achievement có yêu cầu về số tiền tiết kiệm
             var moneyAchievements = await _context.AchievementTemplates
                 .Where(a => a.RequiredSmokeFreeDays != null)

@@ -82,7 +82,7 @@ namespace WebSmokingSupport.Controllers
                 .ToListAsync();
             if (goalPlans == null || goalPlans.Count == 0)
             {
-                return NotFound("Bạn không có Goal Plan hiện tại nào đang hoạt động.");
+                return NotFound("Bạn khô có Goal Plan hiện tại nào đang hoạt động.");
             }
 
             var goalPlanResponses = goalPlans.Select(gp => new DTOGoalPlanForRead

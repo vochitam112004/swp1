@@ -59,9 +59,6 @@ namespace WebSmokingSupport.Controllers
             await _chatMessageRepository.CreateAsync(newchatMessage);
             return Ok("Message sent successfully.");
         }
-        /// <summary>
-        /// lấy lịch sử trò chuyện với người dùng khác
-        /// </summary>
         [HttpGet("history/{otherUserId}")]
         [Authorize(Roles = "Member, Coach")]
         public async Task<ActionResult> GetChatHistory(int otherUserId)
@@ -93,9 +90,7 @@ namespace WebSmokingSupport.Controllers
             }).ToList();
             return Ok(chatHistoryResponse);
         }
-        /// <summary>
-        /// đánh dấu một tin nhắn cụ thể là đã đọc
-        /// <summary>
+
         [HttpPost("mark-as-read/{messageId}")]
         [Authorize(Roles = "Member,Coach")]
         public async Task<ActionResult> MarkMessageAsRead(int messageId)
