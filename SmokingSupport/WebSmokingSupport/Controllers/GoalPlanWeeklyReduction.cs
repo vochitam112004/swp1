@@ -23,10 +23,9 @@ namespace WebSmokingSupport.Controllers
         [Authorize(Roles = "Member")]
         public async Task<IActionResult> GenerateWeeklySchedule()
         {
-            // Lấy userId từ token đăng nhập
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Tìm GoalPlan đang hoạt động (isCurrentGoal = true)
             var goalPlan = await _context.GoalPlans
                 .Where(gp => gp.UserId == int.Parse(userId) && gp.isCurrentGoal == true)
                 .FirstOrDefaultAsync();
