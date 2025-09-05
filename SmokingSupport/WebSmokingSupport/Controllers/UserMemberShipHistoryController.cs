@@ -23,6 +23,7 @@ namespace WebSmokingSupport.Controllers
             _context = context;
             _userMembershipHistoryRepository = userMembershipHistoryRepository;
         }
+
         [HttpGet]
         [Authorize(Roles = "Coach, Admin")]
         public async Task<ActionResult<IEnumerable<DTOUserMemberShipHistoryForRead>>> GetAllUserMemberShipHistory()
@@ -69,6 +70,7 @@ namespace WebSmokingSupport.Controllers
                 return StatusCode(500, $"Lỗi nội bộ máy chủ khi lấy lịch sử đăng ký thành viên: {ex.Message}");
             }
         }
+
         [HttpGet("my-history")]
         [Authorize(Roles = "Member")]
         public async Task<ActionResult<IEnumerable<DTOUserMemberShipHistoryForRead>>> GetMyUserMemberShipHistory()
@@ -116,7 +118,7 @@ namespace WebSmokingSupport.Controllers
 
             int userId = int.Parse(userIdClaim.Value);
 
-            // Tìm gói membership mới nhất còn hiệu lực
+            
             var currentMembership = await _context.UserMembershipHistories
                 .Include(umh => umh.Plan)
                 .Include(umh => umh.User)
@@ -129,7 +131,7 @@ namespace WebSmokingSupport.Controllers
                 return NotFound("No active membership found.");
             }
 
-            // Trả về DTO gọn nhẹ
+            
             return Ok(new DTOUserMemberShipHistoryForRead
             {
                 HistoryId = currentMembership.HistoryId,

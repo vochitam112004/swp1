@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 namespace WebSmokingSupport.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]")]         
     [ApiController]
     public class NotificationController : ControllerBase
     {

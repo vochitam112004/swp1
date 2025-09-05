@@ -39,6 +39,7 @@ namespace WebSmokingSupport.Controllers
                 }).ToListAsync();
             return Ok(comments);
         }
+
         [HttpPost("Create-Comment")]
         [Authorize(Roles ="Coach,Admin,Member")]
         public async Task<ActionResult<DTOCommunityInteractionForRead>> CreateCommunityInteraction([FromBody] DTOCommunityInteractionForCreate dto)
@@ -66,6 +67,7 @@ namespace WebSmokingSupport.Controllers
             await _communityInteractionRepository.CreateAsync(newCommunityInteraction);
             return Ok("comment created");
         }
+
         [HttpPut("UpdateComment/{id}")]
         [Authorize(Roles = "Admin, Member, Coach")]
         public async Task<ActionResult<DTOCommunityInteractionForRead>> UpdateCommunityInteraction(int id ,DTOCommunityInteractionForUpdate dto)
@@ -90,6 +92,7 @@ namespace WebSmokingSupport.Controllers
             await _context.SaveChangesAsync();
             return Ok("Update Commented");
         }
+
         [HttpDelete("DeleteComment/{id}")]
         [Authorize(Roles = "Member,Admin,Coach")]
         public async Task<ActionResult> deleteCommunityInteraction(int id)

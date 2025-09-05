@@ -315,8 +315,6 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(members);
         }
-
-        
         private DTOAppointmentForRead MapToDTO(Appointment a)
         {
             return new DTOAppointmentForRead

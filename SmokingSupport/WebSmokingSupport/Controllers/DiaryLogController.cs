@@ -18,6 +18,7 @@ namespace WebSmokingSupport.Controllers
         {
             _context = context;
         }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDiaryLog>>> GetAllLogs()
         {
@@ -82,6 +83,7 @@ namespace WebSmokingSupport.Controllers
             };
             return Ok(updatedLog);
         }
+
         [Authorize(Roles ="Member")]
         [HttpDelete("{logId}")]
         public async Task<IActionResult> DeleteLog(int logId)

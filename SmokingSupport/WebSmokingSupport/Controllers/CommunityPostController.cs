@@ -22,6 +22,7 @@ namespace WebSmokingSupport.Controllers
         {
             _context = context;
         }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<DTOCommunityPostForRead>>> GetCommunityPosts()
@@ -41,6 +42,7 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(posts);
         }
+
         [HttpPost]
         [Authorize(Roles ="Member")]
         public async Task<ActionResult> CreateCommunityPost([FromForm] DTOCommunityPostForCreate dto, [FromServices] IWebHostEnvironment _env)
@@ -80,6 +82,7 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(new { message = "Post created successfully." });
         }
+
         [Authorize(Roles = "Member")]
         [HttpPost("Update/{postId}")]
         public async Task<ActionResult<DTOCommunityPostForRead>> UpdatePost(int postId, [FromForm] DTOComunityPostForUpdate dto, [FromServices] IWebHostEnvironment _env)
@@ -130,6 +133,7 @@ namespace WebSmokingSupport.Controllers
             };
             return Ok(updatedPost);
         }
+
         [HttpDelete("{postId}")]
         [Authorize(Roles = "Member , Admin")]
         public async Task<IActionResult> DeletePost(int postId)

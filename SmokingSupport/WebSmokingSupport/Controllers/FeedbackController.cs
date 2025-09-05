@@ -22,6 +22,7 @@ namespace WebSmokingSupport.Controllers
             this._context = context;
             this._feedbackRepository = feedbackRepository;
         }
+
         [HttpPost("SubmitFeedback")]
         [Authorize(Roles = "Member, Coach")]
         public async Task<ActionResult<DTOFeedbackForCreate>> CreateFeedback([FromBody] DTOFeedbackForCreate dto)
@@ -60,6 +61,7 @@ namespace WebSmokingSupport.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Lỗi nội bộ máy chủ: {ex.Message}");
             }
         }
+
         [HttpPut("UpdateFeedbackById/{FeedbackId}")]
         [Authorize(Roles = "Member, Coach")]
         public async Task<ActionResult<DTOFeedbackForRead>> UpdateFeedbackById(int FeedbackId, [FromBody] DTOFeedbackForCreate dto)
@@ -111,6 +113,7 @@ namespace WebSmokingSupport.Controllers
             };
             return Ok(feedbackReponse);
         }
+
         [HttpGet("GetAllFeedbacksMemberByAdmin")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<DTOFeedbackForRead>> GetAllFeedbackMember()
@@ -142,6 +145,7 @@ namespace WebSmokingSupport.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Lỗi nội bộ máy chủ: {ex.Message}");
             }
         }
+
         [HttpGet("GetFeedbacksMemberForCoachByAdmin")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<DTOFeedbackForRead>> GetSystemFeedbacks()
@@ -173,6 +177,7 @@ namespace WebSmokingSupport.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Lỗi nội bộ máy chủ: {ex.Message}");
             }
         }
+
         [HttpGet("PublicSystemFeedbacks")]
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<DTOFeedbackForRead>>> GetPublicSystemFeedbacks()
@@ -197,6 +202,7 @@ namespace WebSmokingSupport.Controllers
 
             return Ok(result);
         }
+
         [HttpDelete("DeleteFeedback/{FeedbackId}")]
         [Authorize(Roles = "Admin,Member")]
         public async Task<ActionResult> DeleteFeedback(int FeedbackId)

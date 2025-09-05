@@ -149,7 +149,7 @@ namespace WebSmokingSupport.Controllers
                 Amount = amount.ToString(),
                 OrderId = orderId.ToString(),
                 OrderInfo = orderInfo.ToString(),
-                FullName = "" // FullName có thể để trống hoặc lấy từ dịch vụ người dùng nếu cần
+                FullName = "" 
             });
         }
     }
