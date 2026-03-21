@@ -1,54 +1,81 @@
-# React + TypeScript + Vite
+# 🚭 Smoking Cessation Support System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack web application designed to help users quit smoking by tracking progress, setting goals, and receiving coaching support.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📌 Overview
+This system provides tools for users to:
+- Track daily smoking habits
+- Set personalized quit plans
+- Monitor progress and achievements
+- Interact with coaches and community
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🧠 Features
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+### 👤 User Features
+- User registration & authentication (JWT)
+- Create and manage quit plans
+- Track smoking reduction progress
+- Receive notifications and achievements
+- Join community discussions
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 🧑‍⚕️ Coach Features
+- Manage appointments with users
+- Provide consultation and support
+- Monitor user progress
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 🛠️ Admin Features
+- Manage users and system data
+- View system reports
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+---
+
+## 🏗️ System Architecture
+
+- **Backend:** ASP.NET Core Web API
+- **Frontend:** ReactJS (Vite)
+- **Database:** SQL Server
+- **Authentication:** JWT (Role-based: Admin, Member, Coach)
+
+---
+
+## ⚙️ Technologies Used
+
+### Backend
+- C# (.NET Core)
+- Entity Framework Core
+- RESTful API
+- SQL Server
+
+### Frontend
+- ReactJS
+- Vite
+- TypeScript
+
+### Tools
+- Git & GitHub
+- Postman (API testing)
+
+---
+
+## 📊 Database
+
+- Designed with 20+ relational tables
+- Includes:
+  - User, MemberProfile, CoachProfile
+  - GoalPlan, ProgressLog
+  - Appointment, Feedback
+  - Notification, Badge, Ranking
+
+---
+
+## 🚀 How to Run the Project
+
+### Backend
+```bash
+cd WebSmokingSupport
+dotnet restore
+dotnet run
