@@ -1,0 +1,17 @@
+﻿# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build output
+bin/
+obj/
+
+# NuGet
+*.nupkg
+packages/
+
+# Others
+*.log
+*.db
+*.DS_Store
